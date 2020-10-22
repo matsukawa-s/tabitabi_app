@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'navigationbar_provider.dart';
 
 import 'result_provider.dart';
-import 'navigationbar_provider.dart';
 
 void main() {
   runApp(
@@ -23,21 +22,6 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-//  static const MaterialColor customSwatch = const MaterialColor(
-//    0xFFA4C639,
-//    const <int, Color>{
-//      50: const Color(0xFFF4F8E7),
-//      100: const Color(0xFFE4EEC4),
-//      200: const Color(0xFFD2E39C),
-//      300: const Color(0xFFBFD774),
-//      400: const Color(0xFFB2CF57),
-//      500: const Color(0xFFA4C639),
-//      600: const Color(0xFF9CC033),
-//      700: const Color(0xFF92B92C),
-//      800: const Color(0xFF89B124),
-//      900: const Color(0xFF78A417),
-//    },
-//  );
   @override
   Widget build(BuildContext context) {
     return  MaterialApp(
@@ -50,17 +34,37 @@ class MyApp extends StatelessWidget {
   }
 }
 class MyHomePage extends StatelessWidget {
+  AppBar _appBar (context){
+    int pageIndex = Provider.of<NavigationBarProvider>(context).selectedIndex;
+    PreferredSizeWidget _appBarBottom;
+    if(pageIndex == 3){
+      return AppBar(
+        title: const Text('title',
+          style: TextStyle(color: Colors.white),),
+        bottom: ColoredTabBar(
+          color: Colors.white,
+          tabBar: TabBar(
+            indicatorColor: Colors.orangeAccent,
+//          controller: _controller,
+            tabs: Provider.of<NavigationBarProvider>(context).tabs.map((TabInfo tab) {
+              return Tab(text: tab.label);
+            }).toList(),
+          ),
+        ),
+      );
+    }else{
+      return AppBar(
+        title: Text('title',
+          style: TextStyle(color: Colors.white),),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: Provider.of<NavigationBarProvider>(context).getTabLength(),
+      length: Provider.of<NavigationBarProvider>(context).tabs.length,
       child: Scaffold(
-        appBar: AppBar(
-//          backgroundColor: Colors.white,
-          title: const Text('title',
-            style: TextStyle(color: Colors.white),),
-          bottom: Provider.of<NavigationBarProvider>(context).getAppBarBottom(),
-        ),
+        appBar: _appBar(context),
         body: Consumer<NavigationBarProvider>(
             builder: (_, model, __) {
               return model.getPage();
@@ -99,8 +103,21 @@ class MyHomePage extends StatelessWidget {
     );
   }
 }
-//class MyHomePage extends StatefulWidget {
-////  @override
-////  _MyHomePageState createState() => _MyHomePageState();
-////}
 
+class ColoredTabBar extends StatelessWidget implements PreferredSizeWidget {
+  final PreferredSizeWidget tabBar;
+  final Color color;
+
+  ColoredTabBar({@required this.tabBar, @required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Ink(
+      color: color,
+      child: tabBar,
+    );
+  }
+
+  @override
+  Size get preferredSize => tabBar.preferredSize;
+}
