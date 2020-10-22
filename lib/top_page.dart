@@ -1,8 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'result_provider.dart';
-import 'todays_plan.dart';
 
 class TopPage extends StatelessWidget {
   final String title;
