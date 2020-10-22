@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:location/location.dart';
+import 'package:google_maps_webservice/places.dart';
 
 class MapPage extends StatefulWidget {
   final String title;
@@ -17,23 +19,6 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   var _keyWordController = TextEditingController();
-  LocationData currentLocation;
-  Location _locationService = new Location();
-  String error;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    initPlatformState();
-    _locationService.onLocationChanged.listen((LocationData result) async {
-      if(this.mounted) {
-        setState(() {
-          currentLocation = result;
-        });
-      }
-    });
-  }
 
   @override
   void dispose() {
@@ -57,22 +42,12 @@ class _MapPageState extends State<MapPage> {
           child: GoogleMap(
             mapType: MapType.terrain,
             initialCameraPosition: _kGooglePlex,
-//        initialCameraPosition: CameraPosition(
-//          target: LatLng(currentLocation.latitude,currentLocation.longitude),
-//          zoom: 1.7
-//        ),
             onMapCreated: (GoogleMapController controller) {
               _controller.complete(controller);
             },
           ),
         ),
         Positioned(
-//          child: Form(
-//            child: TextFormField(
-//              controller: _keyWordController,
-//              onFieldSubmitted: searchPlaces(),
-//            ),
-//          ),
             child: Container(
               margin: EdgeInsets.all(8.0),
               decoration: BoxDecoration(
@@ -100,37 +75,24 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  void initPlatformState() async{
-    LocationData myLocation;
-    try {
-      myLocation = await _locationService.getLocation();
-      error = "";
-    }on PlatformException catch(e){
-      if(e.code == 'PERMISSION_DENITED')
-        error = 'Permission denited';
-      else if(e.code == 'PERMISSION_DENITED_NEVER_ASK')
-        error = 'Permission denited - please ask the user to enable it from the app settings';
-      myLocation = null;
-    }
-    if(this.mounted){
-      setState(() {
-        currentLocation = myLocation;
-      });
-    }
-  }
-
 // Google Places APIを叩いて場所を検索する
-  searchPlaces() {
+  Future<void> searchPlaces() async{
+    const kGoogleApiKey = "AIzaSyC2VCSOjFsBo9sPArzQde0aN_R5ZU8Rt0w";
+    GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: kGoogleApiKey);
+
     print("searchPlaces");
     if(_keyWordController.text.isEmpty){
       print("キーワードが空なので何もしない");
     }else{
       print("検索処理をする");
-      if(this.mounted){
-        setState(() {
-          _keyWordController.clear();
-        });
-      }
+      PlacesAutocompleteResponse res =
+        await _places.autocomplete(_keyWordController.text.toString(),language: "ja");
+
+      print(res);
+      res.predictions.map(
+              (Prediction prediction) => print(prediction.description)
+      );
+      print("検索関数の終わり");
     }
   }
 }
