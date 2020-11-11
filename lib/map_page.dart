@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:location/location.dart';
 import 'package:google_maps_webservice/places.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:tabitabi_app/map_search_page.dart';
+
+final _kGoogleApiKey = "AIzaSyC2VCSOjFsBo9sPArzQde0aN_R5ZU8Rt0w";
 
 class MapPage extends StatefulWidget {
   final String title;
@@ -18,23 +23,34 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  var _keyWordController = TextEditingController();
+
+  Set<Marker> _markers = {};
+  Completer<GoogleMapController> _controller = Completer();
+  CameraPosition _kGooglePlex;
+  bool isView = false;
+  Map placeDetails = {
+    'name' : '',
+    'photo' : ''
+  };
+
+  var lat; // 緯度
+  var lng; // 経度
 
   @override
-  void dispose() {
-    // TODO: implement dispose
-    _keyWordController.dispose();
-    super.dispose();
-  }
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    lat = 34.706452;
+    lng = 135.503327;
+    _kGooglePlex = CameraPosition(
+      target: LatLng(lat,lng),
+      zoom: 14.4746,
+    );
+}
 
   @override
   Widget build(BuildContext context) {
     final titleTextStyle = Theme.of(context).textTheme.title;
-    Completer<GoogleMapController> _controller = Completer();
-    final CameraPosition _kGooglePlex = CameraPosition(
-      target: LatLng(34.706452, 135.503327),
-      zoom: 14.4746,
-    );
 
     return Stack(
       children: [
@@ -42,24 +58,32 @@ class _MapPageState extends State<MapPage> {
           child: GoogleMap(
             mapType: MapType.terrain,
             initialCameraPosition: _kGooglePlex,
+            markers: _markers,
+            zoomControlsEnabled: false, //拡大縮小ボタンを非表示
             onMapCreated: (GoogleMapController controller) {
               _controller.complete(controller);
+              setState(() {
+                _markers.add(
+                  Marker(
+                    markerId: MarkerId("now point"),
+                    position: LatLng(lat, lng)
+                  )
+                );
+              });
             },
           ),
         ),
         Positioned(
             child: Container(
-              margin: EdgeInsets.all(8.0),
+              margin: EdgeInsets.only(top: 30,left: 8,right: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border.all(color: Colors.black),
                 borderRadius: BorderRadius.circular(90)
               ),
               child: TextField(
-                onSubmitted: (String str){
-                  searchPlaces();
-                },
-                controller: _keyWordController,
+                autofocus: false,
+                onTap: () => onFocusedTextForm(),
                 style: TextStyle(
                   fontSize: 18
                 ),
@@ -71,28 +95,139 @@ class _MapPageState extends State<MapPage> {
               ),
             )
         ),
+        if(isView) _buildPlaceInfo(placeDetails)
       ],
     );
   }
 
-// Google Places APIを叩いて場所を検索する
-  Future<void> searchPlaces() async{
-    const kGoogleApiKey = "AIzaSyC2VCSOjFsBo9sPArzQde0aN_R5ZU8Rt0w";
-    GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: kGoogleApiKey);
+  void onFocusedTextForm() async{
+    // resultには前画面からplaceIdが戻ってくる
+    final result = await Navigator.push(
+      context,
+      PageTransition(
+          type: PageTransitionType.fade,
+          child: MapSearchPage(),
+          inheritTheme: true,
+          ctx: context
+      ),
+    );
 
-    print("searchPlaces");
-    if(_keyWordController.text.isEmpty){
-      print("キーワードが空なので何もしない");
-    }else{
-      print("検索処理をする");
-      PlacesAutocompleteResponse res =
-        await _places.autocomplete(_keyWordController.text.toString(),language: "ja");
-
-      print(res);
-      res.predictions.map(
-              (Prediction prediction) => print(prediction.description)
-      );
-      print("検索関数の終わり");
+    if(result != null){
+      movePoint(result);
     }
+
+    setState(() {
+      isView = true;
+    });
+  }
+
+  //検索結果から選択した一つの地点へ移動する
+  Future<void> movePoint(placeId) async{
+    GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: _kGoogleApiKey);
+    PlacesDetailsResponse placesDetailsResponse =
+        await _places.getDetailsByPlaceId(placeId,language: "ja");
+    print(placesDetailsResponse.result.name);
+    var location = placesDetailsResponse.result.geometry.location;
+    //座標を変更する
+    setState(() {
+      lat = placesDetailsResponse.result.geometry.location.lat;
+      lng = placesDetailsResponse.result.geometry.location.lng;
+    });
+    print("lat : ${lat}");
+    print("lng : ${lng}");
+
+    List<Photo> photos = placesDetailsResponse.result.photos;
+
+    final photoRequest =
+        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&maxheight=150'
+        '&photoreference=${photos[0].photoReference}'
+        '&key=${_kGoogleApiKey}';
+    print(photoRequest);
+
+    setState(() {
+      placeDetails["name"] = placesDetailsResponse.result.name;
+      placeDetails["photo"] = photoRequest;
+    });
+
+    final _newPoint = CameraPosition(target: LatLng(lat,lng),zoom: 14.4746,);
+
+    setState(() {
+      _markers.clear();
+      _markers.add(
+          Marker(
+              markerId: MarkerId("now point"),
+              position: LatLng(lat, lng)
+          )
+      );
+    });
+
+    FocusScope.of(context).unfocus(); //キーボード閉じる
+    _goToTheLake(_newPoint);
+
+    setState(() {
+      isView = true;
+    });
+  }
+
+  Future<void> _goToTheLake(_newPoint) async {
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(_newPoint));
+  }
+
+  Widget _buildPlaceInfo(placeDetails){
+    return Positioned(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height / 3,
+        bottom: 0,
+        child: Container(
+          margin: EdgeInsets.all(8.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black26,
+                  spreadRadius: 1.0,
+                  blurRadius: 10.0,
+              )
+            ]
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Container(
+                  height: 100,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      Container(
+                        margin: EdgeInsets.only(right: 4.0),
+                        child: Image.network(placeDetails["photo"]),
+                      ),
+                      Container(
+                        margin: EdgeInsets.only(right: 4.0),
+                        child: Image.network(placeDetails["photo"]),
+                      ),
+                      Container(
+                        margin: EdgeInsets.only(right: 4.0),
+                        child: Image.network(placeDetails["photo"]),
+                      ),
+                    ],
+                  ),
+                ),
+                SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Text(placeDetails["name"]),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        )
+    );
   }
 }

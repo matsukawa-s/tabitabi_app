@@ -52,6 +52,8 @@ class MyHomePage extends StatelessWidget {
           ),
         ),
       );
+    }else if(pageIndex == 2){
+        return null;
     }else{
       return AppBar(
         title: Text('title',
