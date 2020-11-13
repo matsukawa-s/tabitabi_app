@@ -67,10 +67,12 @@ class MyHomePage extends StatelessWidget {
       length: Provider.of<NavigationBarProvider>(context).tabs.length,
       child: Scaffold(
         appBar: _appBar(context),
-        body: Consumer<NavigationBarProvider>(
-            builder: (_, model, __) {
-              return model.getPage();
-            }
+        body: SafeArea(
+          child: Consumer<NavigationBarProvider>(
+              builder: (_, model, __) {
+                return model.getPage();
+              }
+          ),
         ),
         bottomNavigationBar: Consumer<NavigationBarProvider>(
             builder: (_, model, __) {

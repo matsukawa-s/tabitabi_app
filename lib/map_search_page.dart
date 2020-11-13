@@ -29,50 +29,52 @@ class _MapSearchPageState extends State<MapSearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        child: Column(
-          children: [
-            Container(
-              margin: EdgeInsets.only(top: 30,left: 8,right: 8),
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.black),
-                  borderRadius: BorderRadius.circular(90)
-              ),
-              child: TextField(
-                focusNode: focusNode,
-                autofocus: true,
-                onSubmitted: (String str) => searchPlaces(),
-                controller: _keyWordController,
-                style: TextStyle(
-                    fontSize: 18
+      body: SafeArea(
+        child: Container(
+          child: Column(
+            children: [
+              Container(
+                margin: EdgeInsets.only(top: 16,left: 8,right: 8),
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.black),
+                    borderRadius: BorderRadius.circular(90)
                 ),
-                decoration: InputDecoration(
-                  prefixIcon: IconButton(
-                    icon: Icon(Icons.arrow_back_ios),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      FocusScope.of(context).unfocus(); //キーボード閉じる
-                    },
+                child: TextField(
+                  focusNode: focusNode,
+                  autofocus: true,
+                  onSubmitted: (String str) => searchPlaces(),
+                  controller: _keyWordController,
+                  style: TextStyle(
+                      fontSize: 18
                   ),
-                  hintText: '検索',
-                  border: InputBorder.none,
+                  decoration: InputDecoration(
+                    prefixIcon: IconButton(
+                      icon: Icon(Icons.arrow_back_ios),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        FocusScope.of(context).unfocus(); //キーボード閉じる
+                      },
+                    ),
+                    hintText: '検索',
+                    border: InputBorder.none,
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: items.length,
-                  itemBuilder: (BuildContext context,int index){
-                    return ListTile(
-                      title: Text(items[index].description.substring(3)),
-                      onTap: () => onTapPlace(items[index].placeId),
-                    );
-                  }
-              ),
-            )
-          ],
+              Expanded(
+                child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: items.length,
+                    itemBuilder: (BuildContext context,int index){
+                      return ListTile(
+                        title: Text(items[index].description.substring(3)),
+                        onTap: () => onTapPlace(items[index].placeId),
+                      );
+                    }
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

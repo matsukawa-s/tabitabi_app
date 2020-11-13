@@ -10,6 +10,7 @@ import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:location/location.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:tabitabi_app/map_search_page.dart';
 
 final _kGoogleApiKey = "AIzaSyC2VCSOjFsBo9sPArzQde0aN_R5ZU8Rt0w";
@@ -30,7 +31,10 @@ class _MapPageState extends State<MapPage> {
   bool isView = false;
   Map placeDetails = {
     'name' : '',
-    'photo' : ''
+    'address' : '',
+    'phone_number' : '',
+    'reviews' : '',
+    'photos' : []
   };
 
   var lat; // 緯度
@@ -75,7 +79,7 @@ class _MapPageState extends State<MapPage> {
         ),
         Positioned(
             child: Container(
-              margin: EdgeInsets.only(top: 30,left: 8,right: 8),
+              margin: EdgeInsets.only(top: 16,left: 8,right: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border.all(color: Colors.black),
@@ -95,7 +99,8 @@ class _MapPageState extends State<MapPage> {
               ),
             )
         ),
-        if(isView) _buildPlaceInfo(placeDetails)
+//        if(isView) _buildPlaceInfo(placeDetails),
+        _buildPlaceDetalsSlidingSheet(placeDetails)
       ],
     );
   }
@@ -133,20 +138,29 @@ class _MapPageState extends State<MapPage> {
       lat = placesDetailsResponse.result.geometry.location.lat;
       lng = placesDetailsResponse.result.geometry.location.lng;
     });
-    print("lat : ${lat}");
-    print("lng : ${lng}");
 
     List<Photo> photos = placesDetailsResponse.result.photos;
+    List photoRequests = [];
+    photos.forEach((element) {
+      photoRequests.add(
+          'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
+              '&photoreference=${element.photoReference}'
+              '&key=${_kGoogleApiKey}'
+      );
+    });
 
-    final photoRequest =
-        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&maxheight=150'
-        '&photoreference=${photos[0].photoReference}'
-        '&key=${_kGoogleApiKey}';
-    print(photoRequest);
+    print("営業時間");
+//    print(placesDetailsResponse.result.openingHours.periods[0].open.time.toString());
+    placesDetailsResponse.result.openingHours.periods.forEach(
+            (e) => print(e.open.time.toString())
+    );
+
 
     setState(() {
       placeDetails["name"] = placesDetailsResponse.result.name;
-      placeDetails["photo"] = photoRequest;
+      placeDetails["address"] = placesDetailsResponse.result.formattedAddress;
+      placeDetails["phone_number"] = placesDetailsResponse.result.formattedPhoneNumber;
+      placeDetails["photos"] = photoRequests;
     });
 
     final _newPoint = CameraPosition(target: LatLng(lat,lng),zoom: 14.4746,);
@@ -174,6 +188,63 @@ class _MapPageState extends State<MapPage> {
     controller.animateCamera(CameraUpdate.newCameraPosition(_newPoint));
   }
 
+  Widget _buildPlaceDetalsSlidingSheet(placeDetails){
+    return SlidingSheet(
+      elevation: 8,
+      cornerRadius: 16,
+      snapSpec: const SnapSpec(
+        snap: true,
+        snappings: [120, 500, double.infinity],
+        positioning: SnapPositioning.pixelOffset,
+      ),
+      builder: (context, state) {
+        return Container(
+          height: 500,
+          child: Container(
+            child: Column(
+              children: [
+                ListTile(leading: Icon(Icons.add_location),title: Text(placeDetails["address"])??'',),
+                ListTile(leading: Icon(Icons.phone),title: Text(placeDetails["phone_number"])??'',),
+              ],
+            ),
+          )
+        );
+      },
+      headerBuilder: (context, state) {
+          return Container(
+            height: 120,
+            alignment: Alignment.topLeft,
+            child: Column(
+              children: [
+                Container(
+                  height: 80,
+                  child: placeDetails['photos'].length == 0 ? Container() :ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: placeDetails['photos'].length,
+                      itemBuilder: (BuildContext context, int index){
+                        return Container(
+                          margin: EdgeInsets.only(right: 4.0),
+                          child: Image.network(placeDetails['photos'][index]),
+                        );
+                      }
+                  ),
+                ),
+                Container(
+                    height: 40,
+                    child: Text(
+                        placeDetails["name"],
+                      style: TextStyle(fontSize: 20),
+                    )
+                ),
+              ],
+            ),
+          );
+      },
+    );
+  }
+
+
+  //　＊＊＊＊＊＊＊＊＊＊　以下不要物　＊＊＊＊＊＊＊＊＊＊＊＊＊
   Widget _buildPlaceInfo(placeDetails){
     return Positioned(
         width: MediaQuery.of(context).size.width,
