@@ -36,6 +36,8 @@ dependencies:
   google_maps_webservice: ^0.0.18
   page_transition: ^1.1.7+2
   sliding_sheet: ^0.4.1
+  like_button: ^1.0.4
+  flutter_rating_bar: ^3.2.0
 
 dev_dependencies:
   flutter_test:

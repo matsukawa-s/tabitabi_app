@@ -7,11 +7,13 @@ import 'package:flutter/services.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
+import 'package:like_button/like_button.dart';
 import 'package:location/location.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:tabitabi_app/map_search_page.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 final _kGoogleApiKey = "AIzaSyC2VCSOjFsBo9sPArzQde0aN_R5ZU8Rt0w";
 
@@ -34,7 +36,9 @@ class _MapPageState extends State<MapPage> {
     'address' : '',
     'phone_number' : '',
     'reviews' : '',
-    'photos' : []
+    'photos' : [],
+    'openingHours' : [],
+    'nowOpen' : null
   };
 
   var lat; // 緯度
@@ -78,6 +82,7 @@ class _MapPageState extends State<MapPage> {
           ),
         ),
         Positioned(
+          //検索フォーム
             child: Container(
               margin: EdgeInsets.only(top: 16,left: 8,right: 8),
               decoration: BoxDecoration(
@@ -87,6 +92,7 @@ class _MapPageState extends State<MapPage> {
               ),
               child: TextField(
                 autofocus: false,
+                readOnly: true,
                 onTap: () => onFocusedTextForm(),
                 style: TextStyle(
                   fontSize: 18
@@ -100,7 +106,7 @@ class _MapPageState extends State<MapPage> {
             )
         ),
 //        if(isView) _buildPlaceInfo(placeDetails),
-        _buildPlaceDetalsSlidingSheet(placeDetails)
+        _buildPlaceDetailsSlidingSheet(placeDetails)
       ],
     );
   }
@@ -129,8 +135,13 @@ class _MapPageState extends State<MapPage> {
   //検索結果から選択した一つの地点へ移動する
   Future<void> movePoint(placeId) async{
     GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: _kGoogleApiKey);
-    PlacesDetailsResponse placesDetailsResponse =
-        await _places.getDetailsByPlaceId(placeId,language: "ja");
+    var placesDetailsResponse =
+        await _places.getDetailsByPlaceId(
+          placeId,
+          language: "ja",
+//          取得するデータを絞りたいけど上手く取れない
+//          fields: ["name","formattedAddress","formattedPhoneNumber","photoReference","location","photos"],
+        );
     print(placesDetailsResponse.result.name);
     var location = placesDetailsResponse.result.geometry.location;
     //座標を変更する
@@ -141,31 +152,39 @@ class _MapPageState extends State<MapPage> {
 
     List<Photo> photos = placesDetailsResponse.result.photos;
     List photoRequests = [];
-    photos.forEach((element) {
+    //プレイスの画像を5枚取得
+    for(int i = 0;i < 5;i++){
       photoRequests.add(
           'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
-              '&photoreference=${element.photoReference}'
+              '&photoreference=${photos[i].photoReference}'
               '&key=${_kGoogleApiKey}'
       );
-    });
+    }
+//    photos.forEach((element) { });
 
-    print("営業時間");
-//    print(placesDetailsResponse.result.openingHours.periods[0].open.time.toString());
-    placesDetailsResponse.result.openingHours.periods.forEach(
-            (e) => print(e.open.time.toString())
-    );
-
+    if(placesDetailsResponse.result.openingHours != null){
+      setState(() {
+        placeDetails["openingHours"] = placesDetailsResponse.result.openingHours.periods;
+      });
+      print("test : ${placeDetails["openingHours"][0].open.time}");
+      placesDetailsResponse.result.openingHours.periods.forEach(
+              (e) => print(e.open.day.toString() + e.open.time.toString()??'')
+      );
+    }
 
     setState(() {
       placeDetails["name"] = placesDetailsResponse.result.name;
       placeDetails["address"] = placesDetailsResponse.result.formattedAddress;
       placeDetails["phone_number"] = placesDetailsResponse.result.formattedPhoneNumber;
+      placeDetails["nowOpen"] = placesDetailsResponse.result.openingHours.openNow;
       placeDetails["photos"] = photoRequests;
     });
+    print(placeDetails);
 
     final _newPoint = CameraPosition(target: LatLng(lat,lng),zoom: 14.4746,);
 
     setState(() {
+//      マーカーの位置を変更
       _markers.clear();
       _markers.add(
           Marker(
@@ -183,28 +202,111 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+//  マップを移動させる
   Future<void> _goToTheLake(_newPoint) async {
     final GoogleMapController controller = await _controller.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(_newPoint));
   }
 
-  Widget _buildPlaceDetalsSlidingSheet(placeDetails){
+  bool isExpandedOpeningHoursTiles = false;
+
+  Widget _buildPlaceDetailsSlidingSheet(placeDetails){
+    final dayOfWeek = ["日","月","火","水","木","金","土"];
+    //区切り線の設定
+    final borderDesign = BoxDecoration(
+        border: Border(
+//            top: BorderSide(color: Colors.black12),
+            bottom: BorderSide(color: Colors.black12)
+        )
+    );
+
+    final ratingIcon = Icon(Icons.star_border,size: 2,);
+
     return SlidingSheet(
       elevation: 8,
       cornerRadius: 16,
       snapSpec: const SnapSpec(
         snap: true,
-        snappings: [120, 500, double.infinity],
+        snappings: [140, 600, double.infinity],
         positioning: SnapPositioning.pixelOffset,
       ),
       builder: (context, state) {
         return Container(
-          height: 500,
-          child: Container(
+          height: 600,
+          child: SingleChildScrollView(
             child: Column(
               children: [
-                ListTile(leading: Icon(Icons.add_location),title: Text(placeDetails["address"])??'',),
-                ListTile(leading: Icon(Icons.phone),title: Text(placeDetails["phone_number"])??'',),
+                Container(
+                    decoration: borderDesign,
+                    child: ListTile(leading: Icon(Icons.add_location),title: Text(placeDetails["address"])??'',)
+                ),
+                Container(
+                    decoration: borderDesign,
+                    child: ListTile(leading: Icon(Icons.phone),title: Text(placeDetails["phone_number"])??'',)
+                ),
+                Theme(
+                  data: Theme.of(context).copyWith(
+                      dividerColor: Colors.transparent,
+                      accentColor: Colors.black54
+                  ),
+                  child: Container(
+                    decoration: borderDesign,
+                    child: ExpansionTile(
+                      leading: Icon(Icons.access_time),
+                      title: Row(
+                        children: [
+                          Text("営業時間"),
+                          Icon(Icons.keyboard_arrow_down)
+                        ],
+                      ),
+                      trailing: Container(
+                        child: placeDetails["nowOpen"] != null && placeDetails["nowOpen"] ? Text("営業中") : Text("営業時間外")
+                      ),
+                      children: [
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            if(placeDetails["openingHours"].isNotEmpty)
+//                          if(false)
+                              for(int i = 0; i < 7; i++)
+                                Container(
+                                  padding: EdgeInsets.only(left: 74,right: 74),//直接指定してるので端末によって変わる？？
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(dayOfWeek[i] + "曜日"),
+                                      Text(
+                                          "${placeDetails["openingHours"][i].open.time} ~ "
+                                              "${placeDetails["openingHours"][i].close.time}"
+                                      )
+                                    ],
+                                  ),
+                                )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                ListTile(
+                  title: Text("このスポットが入っているプラン"),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0,right: 16.0),
+                  child: SizedBox(
+                    height: 80,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        Container(
+                          width: 160,
+                          color: Colors.yellow,
+                          margin: EdgeInsets.only(right: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
               ],
             ),
           )
@@ -212,9 +314,10 @@ class _MapPageState extends State<MapPage> {
       },
       headerBuilder: (context, state) {
           return Container(
-            height: 120,
-            alignment: Alignment.topLeft,
+            height: 140,
+            decoration: borderDesign,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   height: 80,
@@ -230,11 +333,43 @@ class _MapPageState extends State<MapPage> {
                   ),
                 ),
                 Container(
-                    height: 40,
-                    child: Text(
-                        placeDetails["name"],
-                      style: TextStyle(fontSize: 20),
-                    )
+                  padding: EdgeInsets.only(left: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+//                          height: 40,
+                              child: Text(
+                                placeDetails["name"]??'',
+                                style: TextStyle(fontSize: 20),
+                              )
+                          ),
+                          RatingBar.builder(
+                            itemSize: 16,
+                            initialRating: 3.5,
+                            direction: Axis.horizontal,
+                            allowHalfRating: true,
+                            itemCount: 5,
+                            itemBuilder: (context, _) => Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                            ),
+                            itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
+                            onRatingUpdate: (rating) {
+                              print(rating);
+                            },
+                          ),
+                        ],
+                      ),
+                      Container(
+                          margin: EdgeInsets.only(top: 4.0,right: 4.0),
+                          child: LikeButton(size: 36,)
+                      )
+                    ],
+                  ),
                 ),
               ],
             ),

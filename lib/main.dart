@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'model/map.dart';
 import 'navigationbar_provider.dart';
 
 import 'result_provider.dart';
@@ -14,6 +15,9 @@ void main() {
         ChangeNotifierProvider<NavigationBarProvider>(
           create: (context) => NavigationBarProvider(),
         ),
+        ChangeNotifierProvider<MapViewModel>(
+          create:(_) => MapViewModel()
+        )
       ],
       child: MaterialApp(
         home: MyApp(),
