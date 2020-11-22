@@ -9,18 +9,31 @@ class MapViewModel extends ChangeNotifier{
   }
 }
 
+// Google Map & Places Api Util Class
+class Map {
+  final photoUrl = "https://maps.googleapis.com/maps/api/place/photo";
+}
+
 class Place {
   final String placeId;
-  final List<Photo> photos;
+  final List photos;
   final String name;
   final String formattedAddress;
   final String formattedPhoneNumber;
+  final double rating;
+  final List reviews;
+  final openingHours; //営業時間
+  final nowOpen; //営業中フラグ
 
   Place({
     this.placeId,
     this.photos,
     this.name,
     this.formattedAddress,
-    this.formattedPhoneNumber
+    this.formattedPhoneNumber,
+    this.rating,
+    this.reviews,
+    this.openingHours,
+    this.nowOpen
   });
 }
