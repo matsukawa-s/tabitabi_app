@@ -22,8 +22,8 @@ class Place {
   final String formattedPhoneNumber;
   final double rating;
   final List reviews;
-  final openingHours; //営業時間
-  final nowOpen; //営業中フラグ
+  final openingHours; //営業時間(null:apiのレスポンスに存在しない)
+  final nowOpen; //営業中フラグ(null:apiのレスポンスに存在しない)
 
   Place({
     this.placeId,
