@@ -11,7 +11,7 @@ import 'package:like_button/like_button.dart';
 import 'package:location/location.dart' as loc;
 import 'package:google_maps_webservice/places.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:permission_handler/permission_handler.dart';
+//import 'package:permission_handler/permission_handler.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:tabitabi_app/map_search_page.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -29,6 +29,8 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   loc.Location location = loc.Location(); // 位置情報
+  bool _serviceEnabled;
+  loc.PermissionStatus _permissionGranted;
   loc.LocationData _locationData;
   Set<Marker> _markers = {}; //地図上のマーク
   Completer<GoogleMapController> _controller = Completer();
@@ -45,16 +47,31 @@ class _MapPageState extends State<MapPage> {
   Future initGetCurrentLocation() async{
     GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: _kGoogleApiKey);
 
-    if (await Permission.location.request().isGranted){
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == loc.PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != loc.PermissionStatus.granted) {
+        return;
+      }
+    }
+
+//    if (await Permission.location.request().isGranted){
       //現在地情報の取得
       _locationData = await location.getLocation();
       lat = _locationData.latitude;
       lng = _locationData.longitude;
-    }else{
+//    }else{
       // 位置情報が許可されなかった場合
-      lat = 34.7024898;
-      lng = 135.4937619;
-    }
+//      lat = 34.7024898;
+//      lng = 135.4937619;
+//    }
 
     //周辺半径５００メートル以内のスポットを取得する
     PlacesSearchResponse response
@@ -207,11 +224,15 @@ class _MapPageState extends State<MapPage> {
       photos: photoRequests,
       name: placesDetailsResponse.result.name,
       formattedAddress: placesDetailsResponse.result.formattedAddress,
-      formattedPhoneNumber: placesDetailsResponse.result.formattedPhoneNumber,
-      rating: placesDetailsResponse.result.rating,
+      formattedPhoneNumber: placesDetailsResponse.result.formattedPhoneNumber != null
+        ? placesDetailsResponse.result.formattedPhoneNumber : null,
+      rating: placesDetailsResponse.result.rating != null
+        ? placesDetailsResponse.result.rating : null,
       reviews: placesDetailsResponse.result.reviews,
-      nowOpen: placesDetailsResponse.result.openingHours.openNow,
-      openingHours: placesDetailsResponse.result.openingHours.periods,
+      nowOpen: placesDetailsResponse.result.openingHours != null
+        ? placesDetailsResponse.result.openingHours.openNow : null,
+      openingHours: placesDetailsResponse.result.openingHours != null
+        ? placesDetailsResponse.result.openingHours.periods : null,
     );
 
     final _newPoint = CameraPosition(target: LatLng(lat,lng),zoom: 14.4746,);
@@ -331,8 +352,9 @@ class _MapPageState extends State<MapPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                   margin: EdgeInsets.all(2.0),
-                    child: Text("この地域のスポット")
+                  height: 20,
+                  margin: EdgeInsets.all(2.0),
+                  child: Text("この地域のスポット")
                 ),
                 Container(
                   height: 100,
@@ -343,23 +365,23 @@ class _MapPageState extends State<MapPage> {
                       ListView.builder(
                           scrollDirection: Axis.horizontal,
                           //とりあえず３つ表示にしている
-                          itemCount: 3,
+                          itemCount: 4,
                           shrinkWrap: true,
                           itemBuilder: (BuildContext context,int index){
                             return InkWell(
                               onTap: (){
-                                print("clicked");
+                                movePoint(places[index].placeId);
                               },
-                              child: Stack(
+                              child: Column(
                                 children: [
                                   Container(
                                     margin: EdgeInsets.only(right: 8),
-                                    height: 100,
-                                    width: 120,
+                                    height: 80,
+                                    width: 130,
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8.0),
                                       child: Image.network(
-                                        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&maxheight=200'
+                                        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=300'
                                             '&photoreference=${places[index].photos[0].photoReference}'
                                             '&key=${_kGoogleApiKey}',
                                         fit:BoxFit.fill,
@@ -367,10 +389,13 @@ class _MapPageState extends State<MapPage> {
                                     ),
                                   ),
                                   Container(
+                                    height: 18,
                                     alignment: Alignment.bottomCenter,
-                                    child: Text(
-                                        places[index].name,
-                                        style: TextStyle(color: Colors.white),
+                                    child: FittedBox(
+                                      child: Text(
+                                          places[index].name ?? '',
+//                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ),
                                   )
                                 ],
@@ -393,58 +418,64 @@ class _MapPageState extends State<MapPage> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    Container(
-                        decoration: borderDesign,
-                        child: ListTile(leading: Icon(Icons.add_location),title: Text(place.formattedAddress)??'',)
-                    ),
-                    Container(
-                        decoration: borderDesign,
-                        child: ListTile(leading: Icon(Icons.phone),title: Text(place.formattedPhoneNumber)??'',)
-                    ),
-                    Theme(
-                      data: Theme.of(context).copyWith(
-                          dividerColor: Colors.transparent,
-                          accentColor: Colors.black54
+                    if(place.formattedAddress != null)
+                      Container(
+                          decoration: borderDesign,
+                          child: ListTile(
+                            leading: Icon(Icons.add_location),
+                            title: Text(place.formattedAddress ?? ''),
+                          )
                       ),
-                      child: Container(
-                        decoration: borderDesign,
-                        child: ExpansionTile(
-                          leading: Icon(Icons.access_time),
-                          title: Row(
+                    if(place.formattedPhoneNumber != null)
+                      Container(
+                          decoration: borderDesign,
+                          child: ListTile(
+                            leading: Icon(Icons.phone),
+                            title: Text(place.formattedPhoneNumber ?? ''),
+                          )
+                      ),
+                    if(place.openingHours != null)
+                      Theme(
+                        data: Theme.of(context).copyWith(
+                            dividerColor: Colors.transparent,
+                            accentColor: Colors.black54
+                        ),
+                        child: Container(
+                          decoration: borderDesign,
+                          child: ExpansionTile(
+                            leading: Icon(Icons.access_time),
+                            title: Row(
+                              children: [
+                                Text("営業時間"),
+                                place.nowOpen != null && place.nowOpen ? Text("(営業中)") : Text("(営業時間外)")
+  //                              Icon(Icons.keyboard_arrow_down)
+                              ],
+                            ),
                             children: [
-                              Text("営業時間"),
-                              place.nowOpen != null && place.nowOpen ? Text("(営業中)") : Text("(営業時間外)")
-//                              Icon(Icons.keyboard_arrow_down)
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  if(place.openingHours != null)
+                                    for(int i = 0; i < 7; i++)
+                                      Container(
+                                        padding: EdgeInsets.only(left: 74,right: 74),//直接指定してるので端末によって変わる？？
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(dayOfWeek[i] + "曜日"),
+                                            Text(
+                                                "${place.openingHours[i].open.time} ~ "
+                                                    "${place.openingHours[i].close.time}"
+                                            )
+                                          ],
+                                        ),
+                                      )
+                                ],
+                              )
                             ],
                           ),
-//                          trailing: Container(
-//                              child: placeDetails["nowOpen"] != null && placeDetails["nowOpen"] ? Text("営業中") : Text("営業時間外")
-//                          ),
-                          children: [
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                if(place.openingHours.isNotEmpty)
-                                  for(int i = 0; i < 7; i++)
-                                    Container(
-                                      padding: EdgeInsets.only(left: 74,right: 74),//直接指定してるので端末によって変わる？？
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(dayOfWeek[i] + "曜日"),
-                                          Text(
-                                              "${place.openingHours[i].open.time} ~ "
-                                                  "${place.openingHours[i].close.time}"
-                                          )
-                                        ],
-                                      ),
-                                    )
-                              ],
-                            )
-                          ],
                         ),
                       ),
-                    ),
                     ListTile(
                       title: Text("このスポットが入っているプラン"),
                     ),
