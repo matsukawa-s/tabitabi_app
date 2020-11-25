@@ -3,14 +3,15 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:flutter_google_places/flutter_google_places.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:like_button/like_button.dart';
 import 'package:location/location.dart' as loc;
 import 'package:google_maps_webservice/places.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:provider/provider.dart';
 //import 'package:permission_handler/permission_handler.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:tabitabi_app/map_search_page.dart';
@@ -38,6 +39,7 @@ class _MapPageState extends State<MapPage> {
   bool bottomSheetSwitchFlag = false; // true : 検索時,false : 最初の表示（現在値情報）
   Place place; //プレイス情報クラス変数
   List<PlacesSearchResult> places = []; //現在地周辺スポット
+  TextEditingController _searchKeywordController; //検索キーワード用コントローラー
 
   var lat; // 緯度
   var lng; // 経度
@@ -47,6 +49,12 @@ class _MapPageState extends State<MapPage> {
   Future initGetCurrentLocation() async{
     GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: _kGoogleApiKey);
 
+    final MapViewModel mapModel = Provider.of<MapViewModel>(context);
+    _searchKeywordController = TextEditingController(text: mapModel.getSearchText());
+
+    await initializeDateFormatting("jp_JP");
+
+    //パーミッション確認
     _serviceEnabled = await location.serviceEnabled();
     if (!_serviceEnabled) {
       _serviceEnabled = await location.requestService();
@@ -62,41 +70,16 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
-//    if (await Permission.location.request().isGranted){
-      //現在地情報の取得
-      _locationData = await location.getLocation();
-      lat = _locationData.latitude;
-      lng = _locationData.longitude;
-//    }else{
-      // 位置情報が許可されなかった場合
-//      lat = 34.7024898;
-//      lng = 135.4937619;
-//    }
+    //現在地情報の取得
+    _locationData = await location.getLocation();
+    lat = _locationData.latitude;
+    lng = _locationData.longitude;
 
     //周辺半径５００メートル以内のスポットを取得する
     PlacesSearchResponse response
       = await _places.searchNearbyWithRadius(Location(lat,lng), 500,language: "ja",type: "tourist_attraction");
 
     places = response.results;
-
-//    response.results.forEach((element) {
-//      print(element.name);
-//      print(element.openingHours);
-//      places.add(
-//          Place(
-//            placeId: element.placeId,
-//            photos: [],
-//            name: element.name,
-//            formattedAddress: element.formattedAddress,
-//            formattedPhoneNumber: "",
-//            rating: element.rating,
-//            reviews: [],
-//            nowOpen: element.openingHours.openNow ?? null,
-//            openingHours: [],
-//          )
-//      );
-//      print("foreach end");
-//    });
 
     _kGooglePlex = CameraPosition(
       target: LatLng(lat,lng),
@@ -147,6 +130,7 @@ class _MapPageState extends State<MapPage> {
                     child: TextField(
                       autofocus: false,
                       readOnly: true,
+                      controller: _searchKeywordController,
                       onTap: () => onFocusedTextForm(),
                       style: TextStyle(
                           fontSize: 18
@@ -208,32 +192,41 @@ class _MapPageState extends State<MapPage> {
       lng = placesDetailsResponse.result.geometry.location.lng;
     });
 
-    List<Photo> photos = placesDetailsResponse.result.photos;
     List photoRequests = [];
-    //プレイスの画像を5枚取得
-    for(int i = 0;i < 5;i++){
-      photoRequests.add(
-          'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
-              '&photoreference=${photos[i].photoReference}'
-              '&key=${_kGoogleApiKey}'
-      );
+
+    if(placesDetailsResponse.result.photos != null){
+      List<Photo> photos = placesDetailsResponse.result.photos;
+      //プレイスの画像を5枚取得
+      for(int i = 0;i < 5;i++){
+        photoRequests.add(
+            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
+                '&photoreference=${photos[i].photoReference}'
+                '&key=${_kGoogleApiKey}'
+        );
+      }
     }
+
 
     place = Place(
       placeId: placesDetailsResponse.result.placeId,
-      photos: photoRequests,
+      photos: photoRequests.isNotEmpty ? photoRequests : [],
       name: placesDetailsResponse.result.name,
       formattedAddress: placesDetailsResponse.result.formattedAddress,
       formattedPhoneNumber: placesDetailsResponse.result.formattedPhoneNumber != null
         ? placesDetailsResponse.result.formattedPhoneNumber : null,
       rating: placesDetailsResponse.result.rating != null
-        ? placesDetailsResponse.result.rating : null,
+        ? placesDetailsResponse.result.rating.toDouble() : null,
       reviews: placesDetailsResponse.result.reviews,
       nowOpen: placesDetailsResponse.result.openingHours != null
         ? placesDetailsResponse.result.openingHours.openNow : null,
-      openingHours: placesDetailsResponse.result.openingHours != null
-        ? placesDetailsResponse.result.openingHours.periods : null,
+      weekdayText: placesDetailsResponse.result.openingHours != null
+        ? placesDetailsResponse.result.openingHours.weekdayText : null,
     );
+    print(place.placeId);
+
+    final MapViewModel mapModel = Provider.of<MapViewModel>(context,listen: false);
+    mapModel.searchPlacesTextUpdate(place.name);
+    print(mapModel.getSearchText());
 
     final _newPoint = CameraPosition(target: LatLng(lat,lng),zoom: 14.4746,);
 
@@ -277,7 +270,7 @@ class _MapPageState extends State<MapPage> {
       cornerRadius: 16,
       snapSpec: const SnapSpec(
         snap: true,
-        snappings: [140, 700, double.infinity],
+        snappings: [140, 800, double.infinity],
         positioning: SnapPositioning.pixelOffset,
       ),
       headerBuilder: (context, state) {
@@ -291,7 +284,13 @@ class _MapPageState extends State<MapPage> {
               children: [
                 Container(
                   height: 80,
-                  child: place.photos.length == 0 ? Container() :ListView.builder(
+                  child: place.photos.length == 0
+                      ? Container(
+                        constraints: BoxConstraints.expand(),
+                        color: Colors.black26,
+                        child: Center(child: Text("画像がありません")),
+                      )
+                      : ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: place.photos.length,
                       itemBuilder: (BuildContext context, int index){
@@ -317,21 +316,24 @@ class _MapPageState extends State<MapPage> {
                                 style: TextStyle(fontSize: 20),
                               )
                           ),
-                          RatingBar.builder(
-                            itemSize: 16,
-                            initialRating: 3.5,
-                            direction: Axis.horizontal,
-                            allowHalfRating: true,
-                            itemCount: 5,
-                            itemBuilder: (context, _) => Icon(
-                              Icons.star,
-                              color: Colors.amber,
+                          if(place.rating != null)
+                            Row(
+                              children: [
+                                RatingBar.builder(
+                                  itemSize: 16,
+                                  initialRating: place.rating,
+                                  direction: Axis.horizontal,
+                                  allowHalfRating: true,
+                                  itemCount: 5,
+                                  itemBuilder: (context, _) => Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                  ),
+                                  itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
+                                ),
+                                Text(place.rating.toString())
+                              ],
                             ),
-                            itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
-                            onRatingUpdate: (rating) {
-                              print(rating);
-                            },
-                          ),
                         ],
                       ),
                       Container(
@@ -414,7 +416,7 @@ class _MapPageState extends State<MapPage> {
       builder: (context, state) {
         if(bottomSheetSwitchFlag){
           return Container(
-              height: 700,
+              height: 800,
               child: SingleChildScrollView(
                 child: Column(
                   children: [
@@ -434,7 +436,7 @@ class _MapPageState extends State<MapPage> {
                             title: Text(place.formattedPhoneNumber ?? ''),
                           )
                       ),
-                    if(place.openingHours != null)
+                    if(place.weekdayText != null)
                       Theme(
                         data: Theme.of(context).copyWith(
                             dividerColor: Colors.transparent,
@@ -455,19 +457,24 @@ class _MapPageState extends State<MapPage> {
                               Column(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  if(place.openingHours != null)
+                                  if(place.weekdayText != null)
                                     for(int i = 0; i < 7; i++)
                                       Container(
                                         padding: EdgeInsets.only(left: 74,right: 74),//直接指定してるので端末によって変わる？？
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(dayOfWeek[i] + "曜日"),
-                                            Text(
-                                                "${place.openingHours[i].open.time} ~ "
-                                                    "${place.openingHours[i].close.time}"
-                                            )
-                                          ],
+                                            children: [
+                                              Text(place.weekdayText[i])
+                                            ],
+//                                          children: [
+//                                            Text(dayOfWeek[i] + "曜日"),
+//                                            Text(
+//                                                "${place.openingHours[i].open.time.toString().substring(0,2)}:"
+//                                                    "${place.openingHours[i].open.time.toString().substring(2,4)} ~ "
+//                                                "${place.openingHours[i].close.time.toString().substring(0,2)}:"
+//                                                    "${place.openingHours[i].close.time.toString().substring(2,4)}"
+//                                            )
+//                                          ],
                                         ),
                                       )
                                 ],
@@ -499,20 +506,60 @@ class _MapPageState extends State<MapPage> {
                     ListTile(
                       title: Text("レビュー"),
                     ),
-                    Container(
-                      padding: EdgeInsets.only(left: 16.0,right: 16.0),
-                      child: ListView(
-                        shrinkWrap: true,
-                        scrollDirection: Axis.vertical,
-                        children: [
-                          ListTile(title: Text("********"),tileColor: Colors.green,),
-                          ListTile(title: Text("********"),tileColor: Colors.green,)
-                        ],
+                    if(place.reviews != null)
+                      Container(
+                        padding: EdgeInsets.only(left: 16.0,right: 16.0),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          scrollDirection: Axis.vertical,
+                          itemCount: place.reviews.length,
+                          itemBuilder: (BuildContext context, int index){
+                            return InkWell(
+                              onTap: (){
+                                showReviewDialog(place.reviews[index]);
+                              },
+                              child: Container(
+                                margin: EdgeInsets.only(bottom: 4.0),
+                                padding: EdgeInsets.all(4.0),
+                                decoration: BoxDecoration(
+                                    color: Colors.black12,
+                                  borderRadius: BorderRadius.circular(10)
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                            place.reviews[index].authorName,
+                                            style: TextStyle(fontWeight: FontWeight.w600),
+                                        ),
+                                        RatingBar.builder(
+                                          itemSize: 12,
+                                          initialRating: place.reviews[index].rating.toDouble(),
+                                          direction: Axis.horizontal,
+                                          allowHalfRating: true,
+                                          itemCount: 5,
+                                          itemBuilder: (context, _) => Icon(
+                                            Icons.star,
+                                            color: Colors.amber,
+                                          ),
+                                          itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      place.reviews[index].text ?? "",
+                                      overflow: TextOverflow.ellipsis,
+                                    )
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                        ),
                       ),
-                    ),
-                    ListTile(
-                      title: Text("++++++++++++"),
-                    )
                   ],
                 ),
               )
@@ -527,6 +574,32 @@ class _MapPageState extends State<MapPage> {
 
       },
 
+    );
+  }
+
+  void showReviewDialog(review) {
+    var formatter = DateFormat('yyyy/MM/dd(E) HH:mm', "ja_JP");
+    var formatted = formatter.format(DateTime.fromMillisecondsSinceEpoch(review.time * 1000)); // DateからString
+
+    showDialog(
+      context: context,
+      builder: (context){
+        return SimpleDialog(
+          children: [
+            Container(
+              padding: EdgeInsets.all(6.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(review.authorName,style: TextStyle(fontWeight: FontWeight.w600),),
+                  Text(formatted,style: TextStyle(fontSize: 10),),
+                  Text(review.text)
+                ],
+              ),
+            )
+          ],
+        );
+      }
     );
   }
 }

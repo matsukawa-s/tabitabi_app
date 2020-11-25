@@ -4,7 +4,12 @@ import 'package:google_maps_webservice/places.dart';
 class MapViewModel extends ChangeNotifier{
   String _searchText; //検索テキスト
 
-  void searchPlaces(){
+  String getSearchText () => _searchText;
+
+  //検索時に検索バーの文字を更新する
+  void searchPlacesTextUpdate(String searchText){
+    print("searchPlacesTextUpdate : ${searchText}");
+    _searchText = searchText;
     notifyListeners();
   }
 }
@@ -22,7 +27,7 @@ class Place {
   final String formattedPhoneNumber;
   final double rating;
   final List reviews;
-  final openingHours; //営業時間(null:apiのレスポンスに存在しない)
+  final weekdayText; //営業時間(null:apiのレスポンスに存在しない)
   final nowOpen; //営業中フラグ(null:apiのレスポンスに存在しない)
 
   Place({
@@ -33,7 +38,7 @@ class Place {
     this.formattedPhoneNumber,
     this.rating,
     this.reviews,
-    this.openingHours,
+    this.weekdayText,
     this.nowOpen
   });
 }
