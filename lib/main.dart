@@ -5,6 +5,8 @@ import 'navigationbar_provider.dart';
 import 'result_provider.dart';
 import 'navigationbar_provider.dart';
 
+import 'makeplan/makeplan_initial_page.dart';
+
 void main() {
   runApp(
     MultiProvider(
@@ -53,23 +55,20 @@ class MyHomePage extends StatelessWidget {
               items: const <BottomNavigationBarItem>[
                 BottomNavigationBarItem(
                   icon: Icon(Icons.home),
-                  label: 'Home',
+                  title: Text("Home"),
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.search),
-                  label: 'Search',
+                  title: Text("Search"),
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.map),
-                  label: 'Map',
+                  title: Text("map"),
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.menu),
-                  label: 'TimeLine',
-                ),
+
                 BottomNavigationBarItem(
                   icon: Icon(Icons.star),
-                  label: 'Favorite',
+                  title: Text("Favorite"),
                 ),
               ],
               currentIndex: model.selectedIndex,
@@ -78,6 +77,18 @@ class MyHomePage extends StatelessWidget {
               },
             );
           }
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => MakePlanInitial(),
+              )
+          );
+        },
+        label: Text('test'),
+        icon: Icon(Icons.add),
+        backgroundColor: Colors.pink,
       ),
     );
   }
