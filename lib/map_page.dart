@@ -17,8 +17,9 @@ import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:tabitabi_app/map_search_page.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tabitabi_app/model/map.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-final _kGoogleApiKey = "AIzaSyC2VCSOjFsBo9sPArzQde0aN_R5ZU8Rt0w";
+final _kGoogleApiKey = "";
 
 class MapPage extends StatefulWidget {
   final String title;
@@ -206,7 +207,6 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
-
     place = Place(
       placeId: placesDetailsResponse.result.placeId,
       photos: photoRequests.isNotEmpty ? photoRequests : [],
@@ -223,6 +223,19 @@ class _MapPageState extends State<MapPage> {
         ? placesDetailsResponse.result.openingHours.weekdayText : null,
     );
     print(place.placeId);
+
+    //検索履歴を保存する
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    var history = {};
+//    Map history = Map<String,String>();
+    if (prefs.containsKey('history')) {
+      history = jsonDecode(prefs.getString('history'));
+    }
+    history[place.placeId] = place.name;
+//    history.insert(0, place.name);
+    print(history);
+    print(history.length);
+    prefs.setString('history', jsonEncode(history));
 
     final MapViewModel mapModel = Provider.of<MapViewModel>(context,listen: false);
     mapModel.searchPlacesTextUpdate(place.name);
@@ -358,6 +371,7 @@ class _MapPageState extends State<MapPage> {
                   margin: EdgeInsets.all(2.0),
                   child: Text("この地域のスポット")
                 ),
+                if(places.isNotEmpty)
                 Container(
                   height: 100,
                   child: ListView(
@@ -460,7 +474,7 @@ class _MapPageState extends State<MapPage> {
                                   if(place.weekdayText != null)
                                     for(int i = 0; i < 7; i++)
                                       Container(
-                                        padding: EdgeInsets.only(left: 74,right: 74),//直接指定してるので端末によって変わる？？
+                                        padding: EdgeInsets.only(left: 74),
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
@@ -522,7 +536,7 @@ class _MapPageState extends State<MapPage> {
                                 margin: EdgeInsets.only(bottom: 4.0),
                                 padding: EdgeInsets.all(4.0),
                                 decoration: BoxDecoration(
-                                    color: Colors.black12,
+                                  color: Colors.black12,
                                   borderRadius: BorderRadius.circular(10)
                                 ),
                                 child: Column(
@@ -532,8 +546,9 @@ class _MapPageState extends State<MapPage> {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                            place.reviews[index].authorName,
-                                            style: TextStyle(fontWeight: FontWeight.w600),
+                                          place.reviews[index].authorName,
+                                          style: TextStyle(fontWeight: FontWeight.w600),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                         RatingBar.builder(
                                           itemSize: 12,
@@ -560,6 +575,7 @@ class _MapPageState extends State<MapPage> {
                           }
                         ),
                       ),
+                    Container()
                   ],
                 ),
               )
