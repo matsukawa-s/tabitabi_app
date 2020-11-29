@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
+import 'model/map.dart';
+import 'navigationbar_provider.dart';
 import 'package:tabitabi_app/plan_search_detail_page.dart';
 import 'package:tabitabi_app/top_page.dart';
 import 'plan_search_history.dart';
 import 'package:http/http.dart';
-
 import 'result_provider.dart';
 import 'navigationbar_provider.dart';
 import 'plan_search_provider.dart';
@@ -19,6 +20,9 @@ void main() {
         ),
         ChangeNotifierProvider<NavigationBarProvider>(
           create: (context) => NavigationBarProvider(),
+        ),
+        ChangeNotifierProvider<MapViewModel>(
+          create:(_) => MapViewModel()
         ),
         ChangeNotifierProvider<PlanSearchProvider>(
           create: (context) => PlanSearchProvider(),
@@ -51,10 +55,12 @@ class MyHomePage extends StatelessWidget {
       length: Provider.of<NavigationBarProvider>(context).tabs.length,
       child: Scaffold(
         appBar: _appBar(context),
-        body: Consumer<NavigationBarProvider>(
-            builder: (_, model, __) {
-              return model.getPage();
-            }
+        body: SafeArea(
+          child: Consumer<NavigationBarProvider>(
+              builder: (_, model, __) {
+                return model.getPage();
+              }
+          ),
         ),
         drawer: Container(
           width: 295,
