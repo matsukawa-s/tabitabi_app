@@ -311,22 +311,23 @@ class MyHomePage extends StatelessWidget {
           onPressed: () => Scaffold.of(context).openDrawer(),
         ),
       ),
-      title: TextField(
-        cursorColor: iconColor,
-        decoration: InputDecoration(
-//              border: OutlineInputBorder(
-//                borderRadius: BorderRadius.circular(25.0),
-//                  borderSide: BorderSide(
-//                    color: Colors.white,
-//                  ),
-//              ),
-          border: InputBorder.none,
-          filled: true,
-          hintStyle: TextStyle(color: Colors.grey[500]),
-          hintText: "Type in your text",
-//              fillColor: Colors.grey
-        ),
-      ),
+      title: Text("お気に入り"),
+//      title: TextField(
+//        cursorColor: iconColor,
+//        decoration: InputDecoration(
+////              border: OutlineInputBorder(
+////                borderRadius: BorderRadius.circular(25.0),
+////                  borderSide: BorderSide(
+////                    color: Colors.white,
+////                  ),
+////              ),
+//          border: InputBorder.none,
+//          filled: true,
+//          hintStyle: TextStyle(color: Colors.grey[500]),
+//          hintText: "Type in your text",
+////              fillColor: Colors.grey
+//        ),
+//      ),
       actions: [
         IconButton(
           icon: Icon(Icons.settings_outlined),

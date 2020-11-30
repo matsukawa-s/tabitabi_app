@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tabitabi_app/main.dart';
+import 'package:tabitabi_app/register.dart';
 
 import 'network_utils/api.dart';
 
@@ -28,60 +30,79 @@ class _LoginPageState extends State<LoginPage> {
         child: Container(
           padding: EdgeInsets.all(16.0),
           child: Center(
-              child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        decoration: InputDecoration(
-                          icon: Icon(Icons.email),
-                          border: OutlineInputBorder(),
-                          labelText: 'メールアドレス',
-                        ),
-                        validator: (inputEmail){
-                          if(inputEmail.isEmpty){
-                            return 'メールアドレスを入力してください';
-                          }
-                          _email = inputEmail;
-                          return null;
-                        },
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(top: 12.0,bottom: 12.0),
-                        child: TextFormField(
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            icon: Icon(Icons.vpn_key),
-                            border: OutlineInputBorder(),
-                            labelText: 'パスワード',
+              child: Column(
+                children: [
+                  Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            decoration: InputDecoration(
+                              icon: Icon(Icons.email),
+                              border: OutlineInputBorder(),
+                              labelText: 'メールアドレス',
+                            ),
+                            validator: (inputEmail){
+                              if(inputEmail.isEmpty){
+                                return 'メールアドレスを入力してください';
+                              }
+                              _email = inputEmail;
+                              return null;
+                            },
                           ),
-                          validator: (inputPassword){
-                            if(inputPassword.isEmpty){
-                              return 'パスワードを入力してください';
+                          Container(
+                            margin: EdgeInsets.only(top: 12.0,bottom: 12.0),
+                            child: TextFormField(
+                              obscureText: true,
+                              decoration: InputDecoration(
+                                icon: Icon(Icons.vpn_key),
+                                border: OutlineInputBorder(),
+                                labelText: 'パスワード',
+                              ),
+                              validator: (inputPassword){
+                                if(inputPassword.isEmpty){
+                                  return 'パスワードを入力してください';
+                                }
+                                _password = inputPassword;
+                                return null;
+                              },
+                            ),
+                          ),
+                          RaisedButton(
+                            child: Text("ログイン"),
+                            color: Colors.grey,
+                            textColor: Colors.white,
+                            onPressed: (){
+                              if(_formKey.currentState.validate()){
+                                _login();
+                              }
                             }
-                            _password = inputPassword;
-                            return null;
-                          },
-                        ),
-                      ),
-                      RaisedButton(
-                        child: Text("ログイン"),
-                        color: Colors.grey,
-                        textColor: Colors.white,
-                        onPressed: (){
-                          if(_formKey.currentState.validate()){
-                            _login();
-                          }
-                        }
-                      ),
-                      Container(
-                        child: Text(
-                          errorMessage,
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
+                          ),
+                          Container(
+                            child: Text(
+                              errorMessage,
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      )
+                  ),
+                  Divider(),
+                  FlatButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                              type: PageTransitionType.fade,
+                              child: RegisterPage(),
+                              inheritTheme: true,
+                              ctx: context
+                          ),
+                        );
+                      },
+                      child: Text("新規登録はこちら")
                   )
+                ],
               ),
           ),
         ),
