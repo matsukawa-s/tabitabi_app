@@ -123,10 +123,17 @@ class _LoginPageState extends State<LoginPage> {
       SharedPreferences localStorage = await SharedPreferences.getInstance();
       localStorage.setString('token', json.encode(body['token']));
       localStorage.setString('user', json.encode(body['user']));
+      print(body['token']);
 
-      Navigator.pushReplacement(context, MaterialPageRoute(
-          builder: (context) => MyHomePage()
-      ));
+      Navigator.pushReplacement(
+          context,
+          PageTransition(
+            type: PageTransitionType.fade,
+            child: MyHomePage(),
+            inheritTheme: true,
+            ctx: context
+        ),
+      );
 
     }else{
       setState(() {

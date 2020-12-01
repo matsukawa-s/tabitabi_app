@@ -209,7 +209,7 @@ class MyHomePage extends StatelessWidget {
     }else if(pageIndex == 3){           // FavoritePageAppBar
       return favoritePageAppBar(context);
     }else if(pageIndex == 4){           // UserPageAppBar
-
+      return userPageAppbar();
     }
   }
   // TopPageAppBar
@@ -348,6 +348,13 @@ class MyHomePage extends StatelessWidget {
       ),
     );
   }
+
+  AppBar userPageAppbar(){
+    return AppBar(
+      title: Text("マイページ"),
+    );
+  }
+
 }
 
 class ColoredTabBar extends StatelessWidget implements PreferredSizeWidget {

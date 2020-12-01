@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tabitabi_app/favorite_plan_page.dart';
 import 'package:tabitabi_app/favorite_spot_page.dart';
+import 'package:tabitabi_app/user_page.dart';
 
 import 'top_page.dart';
 import 'plan_search_page.dart';
@@ -18,7 +19,7 @@ class NavigationBarProvider extends ChangeNotifier {
     PlanSearchPage(),
     MapPage(title: 'MAP'),
     FavoritePage(title: 'FAVORITE'),
-    TopPage(title: 'TOP'),
+    UserPage(),
   ];
   final List<TabInfo> _tabs = [
     TabInfo(0,"Plan", FavoritePlanPage()),
