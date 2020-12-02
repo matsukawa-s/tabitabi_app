@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
+import 'package:tabitabi_app/data/tag_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
 import 'model/map.dart';
@@ -13,6 +14,8 @@ import 'result_provider.dart';
 import 'navigationbar_provider.dart';
 import 'plan_search_provider.dart';
 
+import 'makeplan/makeplan_initial_page.dart';
+
 void main() {
   runApp(
     MultiProvider(
@@ -23,6 +26,8 @@ void main() {
         ChangeNotifierProvider<NavigationBarProvider>(
           create: (context) => NavigationBarProvider(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => TagDataProvider(),
         ChangeNotifierProvider<MapViewModel>(
           create:(_) => MapViewModel()
         ),
