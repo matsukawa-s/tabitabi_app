@@ -1,8 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'result_provider.dart';
-import 'todays_plan.dart';
 
 class TopPage extends StatelessWidget {
   final String title;
@@ -32,9 +29,35 @@ class TopPage extends StatelessWidget {
       ),
     );
   }
-//          FloatingActionButton(
-//            onPressed: (){},
-//            tooltip: 'Increment',
-//            child: Icon(Icons.add),
-//          ),
+
+  Widget appBar(){
+    Color iconColor = Colors.orange[300];
+    return AppBar(
+      backgroundColor: Colors.white,
+      leading: Builder(
+        builder: (context) => IconButton(
+          color: iconColor,
+          icon: new Icon(Icons.menu),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.settings_outlined),
+          color: iconColor,
+          onPressed: () {
+
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget floatingActionButton(){
+    return FloatingActionButton(
+      onPressed: (){},
+      tooltip: 'Increment',
+      child: Icon(Icons.add),
+    );
+  }
 }
