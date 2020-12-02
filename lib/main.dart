@@ -27,7 +27,8 @@ void main() {
           create: (context) => NavigationBarProvider(),
         ),
         ChangeNotifierProvider(
-          create: (_) => TagDataProvider(),
+          create: (_) => TagDataProvider()
+        ),
         ChangeNotifierProvider<MapViewModel>(
           create:(_) => MapViewModel()
         ),
