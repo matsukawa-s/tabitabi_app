@@ -13,7 +13,7 @@ class MapSearchPage extends StatefulWidget {
 
 class _MapSearchPageState extends State<MapSearchPage> {
   TextEditingController _searchKeywordController = TextEditingController();
-  final kGoogleApiKey = "";
+  final kGoogleApiKey = "AIzaSyD07VLMTdrGMk3Fcar4CmTF2BMoVeRKw68";
   List items = [];
   var focusNode = new FocusNode(); //検索バーのフォーカス制御用
   MapViewModel mapModel;

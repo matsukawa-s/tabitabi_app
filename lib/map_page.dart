@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:like_button/like_button.dart';
 import 'package:location/location.dart' as loc;
+import 'package:http/http.dart' as http;
 import 'package:google_maps_webservice/places.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
@@ -19,7 +20,9 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tabitabi_app/model/map.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final _kGoogleApiKey = "";
+import 'network_utils/api.dart';
+
+final _kGoogleApiKey = "AIzaSyD07VLMTdrGMk3Fcar4CmTF2BMoVeRKw68";
 
 class MapPage extends StatefulWidget {
   final String title;
@@ -198,19 +201,22 @@ class _MapPageState extends State<MapPage> {
     if(placesDetailsResponse.result.photos != null){
       List<Photo> photos = placesDetailsResponse.result.photos;
       //プレイスの画像を5枚取得
-      for(int i = 0;i < 5;i++){
-        photoRequests.add(
-            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
-                '&photoreference=${photos[i].photoReference}'
-                '&key=${_kGoogleApiKey}'
-        );
+      for(int i = 0;i < 3;i++){
+        photoRequests.add(photos[i].photoReference);
       }
     }
 
+    print(placesDetailsResponse.result.types);
+    print("lat : ${lat}");
+    print("lng : ${lng}");
+
     place = Place(
+//      spotId: null,
       placeId: placesDetailsResponse.result.placeId,
       photos: photoRequests.isNotEmpty ? photoRequests : [],
       name: placesDetailsResponse.result.name,
+      lat: lat,
+      lng: lng,
       formattedAddress: placesDetailsResponse.result.formattedAddress,
       formattedPhoneNumber: placesDetailsResponse.result.formattedPhoneNumber != null
         ? placesDetailsResponse.result.formattedPhoneNumber : null,
@@ -221,20 +227,28 @@ class _MapPageState extends State<MapPage> {
         ? placesDetailsResponse.result.openingHours.openNow : null,
       weekdayText: placesDetailsResponse.result.openingHours != null
         ? placesDetailsResponse.result.openingHours.weekdayText : null,
+//      isFavorite: null
     );
-    print(place.placeId);
+
+    //スポットがお気に入り登録されているかどうか取得する
+    http.Response res = await Network().getData("getOneFavorite/${placesDetailsResponse.result.placeId}");
+
+    var body = jsonDecode(res.body);
+//    print(body);
+
+    place.isFavorite = body["isFavorite"];
+    place.spotId = body["spot_id"];
+    print("spotId : ${place.spotId}");
+
+//    print(place.isFavorite);
 
     //検索履歴を保存する
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     var history = {};
-//    Map history = Map<String,String>();
     if (prefs.containsKey('history')) {
       history = jsonDecode(prefs.getString('history'));
     }
     history[place.placeId] = place.name;
-//    history.insert(0, place.name);
-    print(history);
-    print(history.length);
     prefs.setString('history', jsonEncode(history));
 
     final MapViewModel mapModel = Provider.of<MapViewModel>(context,listen: false);
@@ -308,8 +322,14 @@ class _MapPageState extends State<MapPage> {
                       itemCount: place.photos.length,
                       itemBuilder: (BuildContext context, int index){
                         return Container(
-                          margin: EdgeInsets.only(right: 4.0),
-                          child: Image.network(place.photos[index]),
+                          width: MediaQuery.of(context).size.width / 3,
+//                          margin: EdgeInsets.only(right: 4.0),
+                          child: Image.network(
+                              'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
+                              '&photoreference=${place.photos[index]}'
+                              '&key=${_kGoogleApiKey}',
+                            fit: BoxFit.fill,
+                          ),
                         );
                       }
                   ),
@@ -351,7 +371,11 @@ class _MapPageState extends State<MapPage> {
                       ),
                       Container(
                           margin: EdgeInsets.only(top: 4.0,right: 4.0),
-                          child: LikeButton(size: 36,)
+                          child: LikeButton(
+                            size: 36,
+                            onTap: onLikeButtonTapped,
+                            isLiked: place.isFavorite,
+                          )
                       )
                     ],
                   ),
@@ -617,5 +641,25 @@ class _MapPageState extends State<MapPage> {
         );
       }
     );
+  }
+
+  //スポットをお気に入り登録ボタンを押したとき
+  Future<bool> onLikeButtonTapped(bool isLiked) async{
+    var data = place.toJson();
+    print(data);
+
+    http.Response res = await Network().postData(data, 'postFavoriteSpot');
+
+    var body = json.decode(res.body);
+    print(res.statusCode);
+    print(res.body);
+
+    if(res.statusCode == 200){
+      place.isFavorite = !place.isFavorite;
+      place.spotId = body["spot_id"];
+    }
+
+    return place.isFavorite;
+
   }
 }
