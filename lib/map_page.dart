@@ -19,6 +19,7 @@ import 'package:tabitabi_app/map_search_page.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tabitabi_app/model/map.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 import 'network_utils/api.dart';
 
@@ -187,6 +188,9 @@ class _MapPageState extends State<MapPage> {
 //          fields: ["name","formattedAddress","formattedPhoneNumber","photoReference","location","photos"],
         );
 
+    String jsonString = await rootBundle.loadString('json/prefectures.json');
+    Map<String,dynamic> prefectures = json.decode(jsonString);
+
     var data = placesDetailsResponse.result;
 
     var location = placesDetailsResponse.result.geometry.location;
@@ -200,15 +204,34 @@ class _MapPageState extends State<MapPage> {
 
     if(placesDetailsResponse.result.photos != null){
       List<Photo> photos = placesDetailsResponse.result.photos;
-      //プレイスの画像を5枚取得
+      //プレイスの画像を3枚取得
       for(int i = 0;i < 3;i++){
         photoRequests.add(photos[i].photoReference);
       }
     }
 
     print(placesDetailsResponse.result.types);
-    print("lat : ${lat}");
-    print("lng : ${lng}");
+
+    var prefecture;
+    // スポットの都道府県を取得
+    placesDetailsResponse.result.addressComponents.forEach((element) {
+      element.types.forEach((type) {
+        if(type == 'administrative_area_level_1'){
+          //都道府県名を保存
+          prefecture = element.longName;
+        }
+      });
+    });
+
+    //一致する都道府県コードを検索・取得
+    final index = prefectures["prefectures"].indexWhere((item) => item["name"] == prefecture);
+    final prefectureId = index + 1;
+
+//    prefectures["prefectures"].foreach((element){
+//      if(element.containsKey(prefecture)){
+//        print(element.code);
+//      }
+//    });
 
     place = Place(
 //      spotId: null,
