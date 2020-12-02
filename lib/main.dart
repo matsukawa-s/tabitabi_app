@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tabitabi_app/data/tag_data.dart';
 import 'navigationbar_provider.dart';
 
 import 'result_provider.dart';
@@ -16,6 +17,9 @@ void main() {
         ),
         ChangeNotifierProvider<NavigationBarProvider>(
           create: (context) => NavigationBarProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => TagDataProvider(),
         ),
       ],
       child: MaterialApp(

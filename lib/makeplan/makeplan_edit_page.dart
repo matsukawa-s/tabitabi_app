@@ -5,13 +5,14 @@ import 'package:bubble/bubble.dart';
 
 import 'package:tabitabi_app/data/itinerary_part_data.dart';
 
-import 'package:tabitabi_app/makeplan/makeplan_edit_spot_part.dart';
-import 'package:tabitabi_app/makeplan/makeplan_edit_plan_part.dart';
-import 'package:tabitabi_app/makeplan/makeplan_edit_memo_part.dart';
+import 'package:tabitabi_app/components/makeplan_edit_spot_part.dart';
+import 'package:tabitabi_app/components/makeplan_edit_plan_part.dart';
+import 'package:tabitabi_app/components/makeplan_edit_memo_part.dart';
 import 'package:tabitabi_app/data/spot_data.dart';
 import 'package:tabitabi_app/data/itinerary_data.dart';
 import 'package:tabitabi_app/data/itinerary_part_data.dart';
-import 'package:tabitabi_app/makeplan/makeplan_edit_traffic_part.dart';
+import 'package:tabitabi_app/components/makeplan_edit_traffic_part.dart';
+import 'package:tabitabi_app/makeplan/makeplan_add_spot_page.dart';
 
 //ドラッグ&ドロップ時にデータ
 class DragAndDropData{
@@ -84,8 +85,10 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     });
   }
 
+
   @override
   void initState(){
+
     super.initState();
     _spots.clear();
     _itineraries.clear();
@@ -127,6 +130,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
   @override
   void dispose() {
     _tabController.dispose();
+    _menuTabController.dispose();
     super.dispose();
   }
 
@@ -193,8 +197,6 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           }
         }
       }
-
-      int len = _itineraries.length;
       setState(() {
         //行程リストに追加
         _itineraries[iniIndex].itineraryOrder = goOrder;
@@ -238,17 +240,30 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     int trafficTime = 40;
     int cost = 400;
 
-    int len = _id;
-    print('traffic_len:' + len.toString());
-    print('trafficID' + len.toString() + ' trafficType' + _dragAndDropData.dataId.toString());
+    int iniIndex = _itineraries.indexWhere((element) => element.itineraryID == _dragAndDropData.dataId);
 
-    setState(() {
-      //行程リストに追加
-      _itineraries.insert(index + 1, ItineraryData(len, _itineraries[index].itineraryOrder, 1,  _travelDateTime[_tabController.index], false));
-      //行程交通リストに追加
-      _trafficItineraries.add(TrafficItineraryData(len, trafficType, trafficTime, cost));
-    });
-    _id++;
+    if(_dragAndDropData.alreadyFlag){
+      int goOrder = _itineraries[index].itineraryOrder;
+      print("あああgoOrder:" + goOrder.toString() + " dataId:" + _dragAndDropData.dataId.toString());
+      //並び替え時
+      setState(() {
+        _itineraries[iniIndex].itineraryOrder = goOrder;
+        _itineraries.sort((a,b) => a.itineraryOrder.compareTo(b.itineraryOrder));
+      });
+    }else{
+      //追加時
+      int len = _id;
+      print('traffic_len:' + len.toString());
+      print('trafficID' + len.toString() + ' trafficType' + _dragAndDropData.dataId.toString());
+
+      setState(() {
+        //行程リストに追加
+        _itineraries.insert(index + 1, ItineraryData(len, _itineraries[index].itineraryOrder, 1,  _travelDateTime[_tabController.index], false));
+        //行程交通リストに追加
+        _trafficItineraries.add(TrafficItineraryData(len, trafficType, trafficTime, cost));
+      });
+      _id++;
+    }
   }
 
   //削除
@@ -298,6 +313,9 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
               Container(
                 constraints: BoxConstraints.expand(height: 150.0),
                 child: GoogleMap(
+                  onTap: (latLang){
+                    print(latLang.longitude.toString() + "," +latLang.latitude.toString());
+                  },
                   mapType: MapType.terrain,
                   onMapCreated: _onMapCreated,
                   initialCameraPosition: CameraPosition(
@@ -535,7 +553,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                  },
                  builder: (context, acceptedItem, rejectedItems) {
                    testId = i;
-                   print("testId" + testId.toString());
+                   //print("testId" + testId.toString());
                    Widget dragTargetBuilder = Container();
                    if(!_itineraries[i].accepting){
                      dragTargetBuilder = Container(
@@ -593,23 +611,30 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                          );
                          break;
                        case 1 :
+                         int itiId = _trafficItineraries.indexWhere((element) => element.itineraryId == _dragAndDropData.dataId);
                        // 1 : 交通
                          dragTargetBuilder = Column(
                            children: [
                              Container(
                                margin: EdgeInsets.only(left: 15.0, top: 10.0),
                                child: _buildPlanPart(
-                                   _itineraries[i].itineraryID,
-                                   _itineraries[i].itineraryOrder
+                                 _itineraries[i].itineraryID,
+                                 _itineraries[i].itineraryOrder
                                ),
                              ),
                              Container(
                                margin: EdgeInsets.only(left: 15.0, top: 10.0),
-                               child: TrafficPart(
-                                 trafficType: _dragAndDropData.dataId,
-                                 minutes: 0,
-                                 confirmFlag: false,
-                               ),
+                               child: _dragAndDropData.alreadyFlag?
+                                 TrafficPart(
+                                   trafficType: _trafficItineraries[itiId].trafficClass,
+                                   minutes: 0,
+                                   confirmFlag: false,
+                                 ):
+                                 TrafficPart(
+                                   trafficType: _dragAndDropData.dataId,
+                                   minutes: 0,
+                                   confirmFlag: false,
+                                 ),
                              ),
                            ],
                          );
@@ -797,7 +822,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
       data: itinerariesType == 2 ?
         DragAndDropData(itinerariesType, id, 0, _memoItineraries[index].memo, true):
           itinerariesType == 1 ?
-          DragAndDropData(itinerariesType, id, _trafficItineraries[index].trafficClass, null, true):
+          DragAndDropData(itinerariesType, id, _trafficItineraries[index].itineraryId, null, true):
           DragAndDropData(itinerariesType, id, _spotItineraries[index].itineraryId, null, true),
       onDragStarted: (){
         setState(() {
@@ -911,6 +936,45 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
 
             ),
           ),
+        Padding(
+          padding: EdgeInsets.only(left: 15.0, bottom: 20.0),
+          child: GestureDetector(
+            child:  SizedBox(
+              height: 90.0,
+              width: 100.0,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                  color: Theme.of(context).primaryColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      spreadRadius: 3,
+                      blurRadius: 7,
+                      offset: Offset(0, 2), // changes position of shadow
+                    ),
+                  ],
+                ),
+                child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add, color: Colors.white, size: 40.0,),
+                        Text("スポット追加", style: TextStyle(color: Colors.white),)
+                      ],
+                    )
+                ),
+              ),
+            ),
+            onTap: (){
+              Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => AddSpotPage(),
+                  )
+              );
+            },
+          ),
+        ),
       ],
     );
   }

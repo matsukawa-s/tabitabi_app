@@ -20,7 +20,7 @@ class _SpotPartState extends State<SpotPart> {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 90.0,
-      width: 110.0,
+      width: 100.0,
       child: Stack(
         children: [
           Container(

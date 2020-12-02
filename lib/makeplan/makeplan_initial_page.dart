@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:tabitabi_app/data/tag_data.dart';
 import 'makeplan_top_page.dart';
 import 'dart:ui';
+import 'package:tabitabi_app/components/add_tag_part.dart';
+import 'add_tag_page.dart';
 
 class MakePlanInitial extends StatelessWidget {
   @override
@@ -29,6 +32,7 @@ class _MakePlanInitialStateState extends State<MakePlanInitialState> {
   String _planDetail = "";
   DateTime _startDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   DateTime _endDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  List<TagData> _tag = [];
   String _mainImagePath = "images/2304099_m.jpg";
 
   //DatePickerを表示する
@@ -113,15 +117,15 @@ class _MakePlanInitialStateState extends State<MakePlanInitialState> {
           constraints: BoxConstraints.expand(),
           child: Column(
             children: [
-              Padding(
-                padding: EdgeInsets.only(top: 5.0),
-                child: Image(
-                  image: AssetImage("images/illustrain02-travel04.png"),
-                  width: 200.0,
-                  height: 80.0,
-                ),
-              ),
-              Text("基本情報入力", style: TextStyle(fontSize: 18.0, color: Colors.black54)),
+              // Padding(
+              //   padding: EdgeInsets.only(top: 5.0),
+              //   child: Image(
+              //     image: AssetImage("images/illustrain02-travel04.png"),
+              //     width: 200.0,
+              //     height: 80.0,
+              //   ),
+              // ),
+              // Text("基本情報入力", style: TextStyle(fontSize: 18.0, color: Colors.black54)),
               _buildTextField(Icons.flight_takeoff, "旅行名(*必須)"),
               _buildTextField(Icons.library_books, "旅行の説明"),
               _buildFormTitle(Icons.access_time, "日程"),
@@ -139,9 +143,86 @@ class _MakePlanInitialStateState extends State<MakePlanInitialState> {
                   ),
                 ],
               ),
+              _buildFormTitle(Icons.link, "タグ"),
+              _tag.length == 0 ?GestureDetector(
+                onTap: (){
+                  Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => AddTagPage(),
+                      )
+                  ).then((value){
+                    setState(() {
+                      _tag = context.read<TagDataProvider>().tagData;
+                    });
+                  });
+                },
+                child:Container(
+                  margin: EdgeInsets.only(top: 10.0),
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 100,
+                        width: 300,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Color(0xffACACAC), width: 1),
+                          borderRadius: BorderRadius.circular(10.0)
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text("目的に合ったタグをつけよう！"),
+                            Container(
+                              margin: EdgeInsets.only(top: 10.0),
+                              height: 30,
+                              width: 150,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.indigo,
+                              ),
+                              child: Center(
+                                child: Text("タグを追加する", style: TextStyle(color: Colors.white)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ):
+              GestureDetector(
+                onTap: (){
+                  Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => AddTagPage(),
+                      )
+                  ).then((value){
+                    setState(() {
+                      _tag = context.read<TagDataProvider>().tagData;
+                    });
+                  });
+                },
+                child: Container(
+                  margin: EdgeInsets.only(top: 10.0),
+                  padding: EdgeInsets.all(20.0),
+                  width: 300,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Color(0xffACACAC), width: 1),
+                    borderRadius: BorderRadius.circular(10.0)
+                  ),
+                  child: Wrap(
+                    spacing: 10.0,
+                    runSpacing: 10.0,
+                    children: [
+                      for(int i=0; i<_tag.length; i++)
+                        TagPart(title: _tag[i].tagName,)
+                    ],
+                   )
+                ),
+              ),
               _buildFormTitle(Icons.image, "メイン画像の登録"),
               Container(
-                margin: EdgeInsets.only(left: 24.0, top: 5.0, right: 24.0),
+                margin: EdgeInsets.only(left: 24.0, top: 10.0, right: 24.0),
                 child: Center(
                   child: Stack(
                     children: [
@@ -181,16 +262,16 @@ class _MakePlanInitialStateState extends State<MakePlanInitialState> {
                 child: Container(),
               ),
               Container(
-                margin: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 5.0),
+                margin: EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
                 child: SizedBox(
-                  width: double.infinity,
+                  width: MediaQuery.of(context).size.width,
                   child: RaisedButton(
                     child: Text("登録する", style: TextStyle(color: Colors.white, fontSize: 18.0)),
                     color: Colors.orange,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),
-                    elevation: 5.0,
+                    elevation: 3.0,
                     onPressed: (){
                       Navigator.of(context).pop();
                       Navigator.of(context).push(
@@ -220,15 +301,15 @@ class _MakePlanInitialStateState extends State<MakePlanInitialState> {
            labelStyle: TextStyle(color: Colors.black),
            prefixIcon: Icon(icon),
            enabledBorder: OutlineInputBorder(
-             borderRadius: BorderRadius.circular(20.0),
+             borderRadius: BorderRadius.circular(10.0),
              borderSide: BorderSide(
-               color: Colors.black,
+               color: Color(0xffACACAC),
              ),
            ),
            focusedBorder: OutlineInputBorder(
-             borderRadius: BorderRadius.circular(20.0),
+             borderRadius: BorderRadius.circular(10.0),
              borderSide: BorderSide(
-               color: Colors.black,
+               color: Color(0xffACACAC),
              ),
            ),
          ),
@@ -244,11 +325,11 @@ class _MakePlanInitialStateState extends State<MakePlanInitialState> {
          margin: EdgeInsets.only(top: 5.0, left: 16.0, right: 16.0),
          padding: EdgeInsets.all(10.0),
          decoration: BoxDecoration(
-           border: Border.all(color: Colors.black),
-           borderRadius: BorderRadius.circular(15.0),
+           border: Border.all(color: Color(0xffACACAC)),
+           borderRadius: BorderRadius.circular(10.0),
          ),
          child: Text(
-           date.year.toString() + "/" + date.month.toString() + "/" + date.day.toString(),
+           date.year.toString() + "/" + date.month.toString().padLeft(2, '0') + "/" + date.day.toString().padLeft(2, '0'),
            style: TextStyle(
              color: Colors.black,
              fontSize: 18.0,
@@ -266,17 +347,22 @@ class _MakePlanInitialStateState extends State<MakePlanInitialState> {
      return Container(
        margin: EdgeInsets.only(left: 16.0, top: 10.0),
        child: SizedBox(
-         width: double.infinity,
+         width: MediaQuery.of(context).size.width,
          child: RichText(
            textAlign: TextAlign.left,
            text: TextSpan(
              children: [
                WidgetSpan(
-                 child: Icon(icon, color: Colors.grey,),
+                 child: Padding(
+                   padding: EdgeInsets.only(top: 5.0),
+                   child: Icon(icon, color: Colors.grey, size: 24,),
+                 )
                ),
-               TextSpan(
-                 text: " " + title,
-                 style: TextStyle(color: Colors.black, fontSize: 18.0),
+               WidgetSpan(
+                 child: Padding(
+                   padding: EdgeInsets.only(top: 8.0),
+                   child: Text(" " + title, style: TextStyle(color: Colors.black, fontSize: 18.0),),
+                 )
                ),
              ]
            ),
