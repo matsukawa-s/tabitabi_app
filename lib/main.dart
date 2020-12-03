@@ -27,7 +27,7 @@ void main() {
           create: (context) => NavigationBarProvider(),
         ),
         ChangeNotifierProvider(
-          create: (_) => TagDataProvider(),
+          create: (_) => TagDataProvider()
         ),
         ChangeNotifierProvider<MapViewModel>(
           create:(_) => MapViewModel()
@@ -191,7 +191,13 @@ class MyHomePage extends StatelessWidget {
     //　TopPage(0), UserPage(4) の FAB
     if(pageIndex == 0 || pageIndex == 4){
       fab = FloatingActionButton(
-        onPressed: (){},
+        onPressed: (){
+          Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => MakePlanInitial(),
+              )
+          );
+        },
         tooltip: 'Increment',
         child: Icon(Icons.add),
       );
