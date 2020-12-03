@@ -34,6 +34,7 @@ class Place {
   final weekdayText; //営業時間(null:apiのレスポンスに存在しない)
   final nowOpen; //営業中フラグ(null:apiのレスポンスに存在しない)
   var isFavorite; //お気に入り登録フラグ
+  final prefectureId; //都道府県コード
 
   Place({
     this.spotId,
@@ -48,7 +49,8 @@ class Place {
     this.reviews,
     this.weekdayText,
     this.nowOpen,
-    this.isFavorite
+    this.isFavorite,
+    this.prefectureId
   });
 
   Map<String,dynamic> toJson() =>
@@ -59,7 +61,8 @@ class Place {
         'photo' : photos != [] ? photos[0] : '',
         'lat' : lat,
         'lng' : lng,
-        'isFavorite' : isFavorite
+        'isFavorite' : isFavorite,
+        'prefecture_id' : prefectureId
       };
 
 }

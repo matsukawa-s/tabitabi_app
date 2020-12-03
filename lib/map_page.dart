@@ -212,26 +212,20 @@ class _MapPageState extends State<MapPage> {
 
     print(placesDetailsResponse.result.types);
 
-    var prefecture;
+    var prefectureName; //都道府県名
     // スポットの都道府県を取得
     placesDetailsResponse.result.addressComponents.forEach((element) {
       element.types.forEach((type) {
         if(type == 'administrative_area_level_1'){
           //都道府県名を保存
-          prefecture = element.longName;
+          prefectureName = element.longName;
         }
       });
     });
 
-    //一致する都道府県コードを検索・取得
-    final index = prefectures["prefectures"].indexWhere((item) => item["name"] == prefecture);
+    //都道府県名に一致する都道府県コードを検索・取得
+    final index = prefectures["prefectures"].indexWhere((item) => item["name"] == prefectureName);
     final prefectureId = index + 1;
-
-//    prefectures["prefectures"].foreach((element){
-//      if(element.containsKey(prefecture)){
-//        print(element.code);
-//      }
-//    });
 
     place = Place(
 //      spotId: null,
@@ -250,6 +244,7 @@ class _MapPageState extends State<MapPage> {
         ? placesDetailsResponse.result.openingHours.openNow : null,
       weekdayText: placesDetailsResponse.result.openingHours != null
         ? placesDetailsResponse.result.openingHours.weekdayText : null,
+      prefectureId: prefectureId,
 //      isFavorite: null
     );
 
@@ -257,13 +252,10 @@ class _MapPageState extends State<MapPage> {
     http.Response res = await Network().getData("getOneFavorite/${placesDetailsResponse.result.placeId}");
 
     var body = jsonDecode(res.body);
-//    print(body);
 
     place.isFavorite = body["isFavorite"];
     place.spotId = body["spot_id"];
     print("spotId : ${place.spotId}");
-
-//    print(place.isFavorite);
 
     //検索履歴を保存する
     final SharedPreferences prefs = await SharedPreferences.getInstance();
