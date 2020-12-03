@@ -28,6 +28,7 @@ void main() {
         ),
         ChangeNotifierProvider(
           create: (_) => TagDataProvider(),
+        ),
         ChangeNotifierProvider<MapViewModel>(
           create:(_) => MapViewModel()
         ),
