@@ -18,7 +18,7 @@ class PlanSearchHistoryPage extends StatelessWidget {
           autofocus: true,
           controller: _searchWord,
           onSubmitted: (String value) {
-            Provider.of<PlanSearchProvider>(context, listen: false).fetchPostPlansList(value);
+            Provider.of<PlanSearchProvider>(context,listen: false).setKeyword(value);
             Navigator.of(context).pop();
           },
 //          cursorColor: iconColor,

@@ -4,51 +4,77 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 
-class PlanSearchProvider with ChangeNotifier {
 
+class PlanSearchProvider with ChangeNotifier {
   SearchProvider(){
-    fetchPlansList();
-//    fetchPostPlansList();
+    fetchPostPlansList();
   }
 
+  // プランリスト
   List _searchplanlist;
   get searchplanlist => _searchplanlist;
-  String _keyword;
-  get keyword => _keyword;
-
   void setSearchPlanList(planList) {
     _searchplanlist = planList;
   }
 
-  Future fetchPlansList() async {
-    var url = 'http://10.0.2.2:8000/api/index';
-    http.Response response = await http.get(url);
+  // 検索キーワード
+  String _keyword = "";
+  get keyword => _keyword;
+  void setKeyword(keyword){
+    _keyword = keyword;
+    fetchPostPlansList();
+    notifyListeners();
+  }
+
+  // ソートのインデックス
+  var _sortIndex = null;
+  get sortIndex => _sortIndex;
+  void setSort(sort) {
+    if(_sortIndex == sort){
+      _sortIndex = null;
+    }else{
+      _sortIndex = sort;
+    }
+    fetchPostPlansList();
+    notifyListeners();
+  }
+
+  // plan search post送信
+  Future fetchPostPlansList() async {
+    var url;
+    var response;
+    Map data;
+
+    if(_sortIndex != null){
+      var _sortItems = ["created_at","favorite_count","number_of_views","referenced_number"];
+      var _orders = ["asc","desc","desc","desc"];
+      data = {
+        "column" : _sortItems[_sortIndex],
+        "order" : _orders[_sortIndex],
+      };
+      print(data["col-index"]);
+    }
+
+    print(_keyword);
+
+    if(_keyword == ""){
+      url = 'index';
+      response = await Network().postData(data, url);
+    }else{
+      url = 'test/' + _keyword;
+      response = await Network().postData(data, url);
+    }
 
     print(convert.jsonDecode(response.body));
     var plans = convert.jsonDecode(response.body);
     setSearchPlanList(plans);
     notifyListeners();
-//    return plans;
   }
 
-  Future fetchPostPlansList(keyword) async {
-    print(keyword);
-    if(keyword == ''){
-      fetchPlansList();
-    }else{
-      var url = 'http://10.0.2.2:8000/api/search/' + keyword;
-      http.Response response = await http.get(url);
-      _keyword = keyword;
-
-      print(convert.jsonDecode(response.body));
-      var plans = convert.jsonDecode(response.body);
-      setSearchPlanList(plans);
-      notifyListeners();
-    }
-  }
-
+  // お気に入りカウントアップ
   favoritePlan(userId,favoritePlanId) async {
     Map data = {
       'user_id' : userId,
