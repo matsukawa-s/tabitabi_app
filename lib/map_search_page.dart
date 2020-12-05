@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,7 +14,7 @@ class MapSearchPage extends StatefulWidget {
 
 class _MapSearchPageState extends State<MapSearchPage> {
   TextEditingController _searchKeywordController = TextEditingController();
-  final kGoogleApiKey = "AIzaSyD07VLMTdrGMk3Fcar4CmTF2BMoVeRKw68";
+  final kGoogleApiKey = DotEnv().env['Google_API_KEY'];
   List items = [];
   var focusNode = new FocusNode(); //検索バーのフォーカス制御用
   MapViewModel mapModel;

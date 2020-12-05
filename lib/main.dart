@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,7 +15,8 @@ import 'result_provider.dart';
 import 'navigationbar_provider.dart';
 import 'plan_search_provider.dart';
 
-void main() {
+Future main() async{
+  await DotEnv().load('.env');
   runApp(
     MultiProvider(
       providers: [

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
@@ -20,10 +21,11 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tabitabi_app/model/map.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:tabitabi_app/model/spot_model.dart';
 
 import 'network_utils/api.dart';
 
-final _kGoogleApiKey = "AIzaSyD07VLMTdrGMk3Fcar4CmTF2BMoVeRKw68";
+final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
 class MapPage extends StatefulWidget {
   final String title;
@@ -672,6 +674,7 @@ class _MapPageState extends State<MapPage> {
     if(res.statusCode == 200){
       place.isFavorite = !place.isFavorite;
       place.spotId = body["spot_id"];
+      Provider.of<FavoriteSpotViewModel>(context,listen: false).getFavoriteSpots();
     }
 
     return place.isFavorite;
