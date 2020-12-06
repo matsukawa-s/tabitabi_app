@@ -17,19 +17,19 @@ class FavoriteSpotPage extends StatefulWidget {
 
 class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
   List<int> _selects = [];
-  var model;
 
   @override
-  void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
-    super.didChangeDependencies();
-    model = Provider.of<FavoriteSpotViewModel>(context);
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<FavoriteSpotViewModel>(context,listen: false).getFavoriteSpots();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-
-
+   final model = Provider.of<FavoriteSpotViewModel>(context);
         return model.spots == null ? Container(
           child: Text("お気に入り登録しているスポットがありません"),
         ) :

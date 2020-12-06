@@ -9,9 +9,9 @@ import 'package:http/http.dart' as http;
 
 // スポットのお気に入りページのProvider
 class FavoriteSpotViewModel extends ChangeNotifier{
-  FavoriteSpotViewModel(){
-    getFavoriteSpots();
-  }
+//  FavoriteSpotViewModel(){
+//    getFavoriteSpots();
+//  }
 
   List<Spot> spots;
   List<Spot> showSpots;
