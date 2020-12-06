@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
+import 'package:tabitabi_app/data/tag_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
 import 'model/map.dart';
@@ -14,6 +15,7 @@ import 'package:http/http.dart';
 import 'result_provider.dart';
 import 'navigationbar_provider.dart';
 import 'plan_search_provider.dart';
+import 'makeplan/makeplan_initial_page.dart';
 
 Future main() async{
   await DotEnv().load('.env');
@@ -25,6 +27,9 @@ Future main() async{
         ),
         ChangeNotifierProvider<NavigationBarProvider>(
           create: (context) => NavigationBarProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => TagDataProvider()
         ),
         ChangeNotifierProvider<MapViewModel>(
           create:(_) => MapViewModel()
@@ -191,7 +196,13 @@ class MyHomePage extends StatelessWidget {
     //　TopPage(0), UserPage(4) の FAB
     if(pageIndex == 0 || pageIndex == 4){
       fab = FloatingActionButton(
-        onPressed: (){},
+        onPressed: (){
+          Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => MakePlanInitial(),
+              )
+          );
+        },
         tooltip: 'Increment',
         child: Icon(Icons.add),
       );
