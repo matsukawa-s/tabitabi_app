@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tabitabi_app/plan_search_provider.dart';
+import 'package:tabitabi_app/plan_search_model.dart';
 
 class PlanSearchHistoryPage extends StatelessWidget {
   // textfield の　コントローラー
@@ -10,7 +10,7 @@ class PlanSearchHistoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var _searchWord =
-    TextEditingController(text: Provider.of<PlanSearchProvider>(context).keyword);
+    TextEditingController(text: Provider.of<PlanSearchModel>(context).keyword);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -18,7 +18,7 @@ class PlanSearchHistoryPage extends StatelessWidget {
           autofocus: true,
           controller: _searchWord,
           onSubmitted: (String value) {
-            Provider.of<PlanSearchProvider>(context,listen: false).setKeyword(value);
+            Provider.of<PlanSearchModel>(context,listen: false).setKeyword(value);
             Navigator.of(context).pop();
           },
 //          cursorColor: iconColor,

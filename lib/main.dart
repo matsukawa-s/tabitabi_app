@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
 import 'model/map.dart';
+import 'model/plan.dart';
 import 'navigationbar_provider.dart';
 import 'package:tabitabi_app/plan_search_detail_page.dart';
 import 'package:tabitabi_app/top_page.dart';
@@ -11,7 +12,7 @@ import 'plan_search_history.dart';
 import 'package:http/http.dart';
 import 'result_provider.dart';
 import 'navigationbar_provider.dart';
-import 'plan_search_provider.dart';
+import 'plan_search_model.dart';
 
 void main() {
   runApp(
@@ -26,8 +27,8 @@ void main() {
         ChangeNotifierProvider<MapViewModel>(
           create:(_) => MapViewModel()
         ),
-        ChangeNotifierProvider<PlanSearchProvider>(
-          create: (context) => PlanSearchProvider(),
+        ChangeNotifierProvider<PlanSearchModel>(
+          create: (context) => PlanSearchModel(),
         ),
       ],
       child: MaterialApp(
@@ -237,7 +238,7 @@ class MyHomePage extends StatelessWidget {
   // SearchPageAppBar
   AppBar searchPageAppBar(context){
     var _textEditingController =
-    TextEditingController(text: Provider.of<PlanSearchProvider>(context).keyword);
+    TextEditingController(text: Provider.of<PlanSearchModel>(context).keyword);
     return AppBar(
       backgroundColor: Colors.white,
       leading: Builder(
@@ -261,7 +262,6 @@ class MyHomePage extends StatelessWidget {
               PageTransition(
                 type: PageTransitionType.fade,
                 child: PlanSearchHistoryPage(),
-
                 ctx: context,
               ),
           );
@@ -291,7 +291,6 @@ class MyHomePage extends StatelessWidget {
               PageTransition(
                 type: PageTransitionType.fade,
                 child: PlanSearchDetailPage(),
-
                 ctx: context,
               ),
             );

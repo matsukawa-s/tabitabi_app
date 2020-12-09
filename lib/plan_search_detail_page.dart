@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tabitabi_app/plan_search_provider.dart';
+import 'package:tabitabi_app/plan_search_model.dart';
 
 class PlanSearchDetailPage extends StatelessWidget {
   final double space = 15;
@@ -19,7 +19,7 @@ class PlanSearchDetailPage extends StatelessWidget {
 //        height: ,
         child: Container(
 //          height: 100,
-          child: Consumer<PlanSearchProvider>(
+          child: Consumer<PlanSearchModel>(
             builder: (_,model, __){
               return Container(
                 child: ListView(
