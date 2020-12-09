@@ -11,6 +11,7 @@ class Network{
   final String _url = 'http://localhost:8000/api/';
 
 
+
   static var token;
 
   Future<void> _getToken() async {
