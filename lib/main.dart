@@ -14,7 +14,7 @@ import 'plan_search_history.dart';
 import 'package:http/http.dart';
 import 'result_provider.dart';
 import 'navigationbar_provider.dart';
-import 'plan_search_provider.dart';
+import 'plan_search_model.dart';
 import 'makeplan/makeplan_initial_page.dart';
 
 Future main() async{
@@ -34,8 +34,8 @@ Future main() async{
         ChangeNotifierProvider<MapViewModel>(
           create:(_) => MapViewModel()
         ),
-        ChangeNotifierProvider<PlanSearchProvider>(
-          create: (context) => PlanSearchProvider(),
+        ChangeNotifierProvider<PlanSearchModel>(
+          create: (context) => PlanSearchModel(),
         ),
         ChangeNotifierProvider<FavoriteSpotViewModel>(
             create: (context) => FavoriteSpotViewModel()
@@ -254,7 +254,7 @@ class MyHomePage extends StatelessWidget {
   // SearchPageAppBar
   AppBar searchPageAppBar(context){
     var _textEditingController =
-    TextEditingController(text: Provider.of<PlanSearchProvider>(context).keyword);
+    TextEditingController(text: Provider.of<PlanSearchModel>(context).keyword);
     return AppBar(
       backgroundColor: Colors.white,
       leading: Builder(
@@ -278,7 +278,6 @@ class MyHomePage extends StatelessWidget {
               PageTransition(
                 type: PageTransitionType.fade,
                 child: PlanSearchHistoryPage(),
-
                 ctx: context,
               ),
           );
@@ -308,7 +307,6 @@ class MyHomePage extends StatelessWidget {
               PageTransition(
                 type: PageTransitionType.fade,
                 child: PlanSearchDetailPage(),
-
                 ctx: context,
               ),
             );

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tabitabi_app/plan_search_provider.dart';
+import 'package:tabitabi_app/plan_search_model.dart';
 
 class PlanSearchDetailPage extends StatelessWidget {
   final double space = 15;
@@ -19,14 +19,20 @@ class PlanSearchDetailPage extends StatelessWidget {
 //        height: ,
         child: Container(
 //          height: 100,
-          child: ListView(
-            children: [
-              _listTitle('並べ替え'),
-              _listItem('アップロード'),
-              _listItem('お気に入り数'),
-              _listItem('閲覧数'),
-              _listItem('参考数'),
-            ],
+          child: Consumer<PlanSearchModel>(
+            builder: (_,model, __){
+              return Container(
+                child: ListView(
+                  children: [
+                    _listTitle('並べ替え'),
+                    _listItem('アップロード', model,context,0),
+                    _listItem('お気に入り数', model,context,1),
+                    _listItem('閲覧数', model,context,2),
+                    _listItem('参考数', model,context,3),
+                  ],
+                ),
+              );
+            }
           ),
         ),
 //        child: ListView.separated(
@@ -53,17 +59,16 @@ class PlanSearchDetailPage extends StatelessWidget {
               fontSize: 18.0
           ),
         ),
-        onTap: () {
-          print("onTap called.");
-        }, // タップ
-        onLongPress: () {
-          print("onLongTap called.");
-        }, // 長押し
       ),
     );
   }
 
-  Widget _listItem(String name) {
+  Widget _listItem(String name, model,context,index) {
+    var check;
+    if(model.sortIndex == index){
+      check = Icon(Icons.check);
+    }
+
     return Container(
       color: Colors.white,
       child: ListTile(
@@ -74,12 +79,15 @@ class PlanSearchDetailPage extends StatelessWidget {
               fontSize: 18.0
           ),
         ),
+        trailing: check,
         onTap: () {
-          print("onTap called.");
+          // 選択されたインデックスでプランリスト更新
+          model.setSort(index);
+
+          // プラン検索ページに戻る
+          Navigator.pop(context);
+          print(model.sortIndex);
         }, // タップ
-        onLongPress: () {
-          print("onLongTap called.");
-        },
       ),
     );
   }
