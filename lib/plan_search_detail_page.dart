@@ -5,16 +5,23 @@ import 'package:tabitabi_app/plan_search_model.dart';
 
 class PlanSearchDetailPage extends StatelessWidget {
   final double space = 15;
+  Color backColor = Colors.grey[200];
+  Color iconColor = Colors.orange[300];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
+        leading: IconButton(
+          color: iconColor,
+          icon: new Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text('検索フィルタ'),
       ),
       body: Container(
-        color: Colors.grey[200],
+        color: backColor,
         padding: EdgeInsets.all(space),
 //        height: ,
         child: Container(
@@ -24,7 +31,7 @@ class PlanSearchDetailPage extends StatelessWidget {
               return Container(
                 child: ListView(
                   children: [
-                    _listTitle('並べ替え'),
+                    _listTitle('並び替え'),
                     _listItem('アップロード', model,context,0),
                     _listItem('お気に入り数', model,context,1),
                     _listItem('閲覧数', model,context,2),
@@ -50,14 +57,30 @@ class PlanSearchDetailPage extends StatelessWidget {
 
   Widget _listTitle(String title) {
     return Container(
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: Colors.white,
+//        border: Border(
+//          bottom: BorderSide(
+//            color: Colors.black54,
+//            width: 1,
+//          ),
+//        ),
+      ),
       child: ListTile(
-        title: Text(
-          title,
-          style: TextStyle(
-              color:Colors.black,
-              fontSize: 18.0
-          ),
+        title: Row(
+          children: [
+            Icon(Icons.import_export,color: iconColor,),
+            SizedBox(
+              width: 12,
+            ),
+            Text(
+              title,
+              style: TextStyle(
+                  color:Colors.black,
+                  fontSize: 18.0
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -66,7 +89,7 @@ class PlanSearchDetailPage extends StatelessWidget {
   Widget _listItem(String name, model,context,index) {
     var check;
     if(model.sortIndex == index){
-      check = Icon(Icons.check);
+      check = Icon(Icons.check, color: iconColor);
     }
 
     return Container(

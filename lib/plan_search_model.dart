@@ -72,10 +72,22 @@ class PlanSearchModel with ChangeNotifier {
       print(plansRes.statusCode);
     }
 
-    print(plans);
+//    print(plans[1].isFavorite);
 //    Map planMap = convert.jsonDecode(plansRes.body);
 //    var plan = new Plan.fromJson(planMap);
     setPlans(plans);
+    notifyListeners();
+  }
+
+  // お気に入り処理
+  void setFavoriteChange(index){
+    var _plan = _plans[index];
+    if(_plan.isFavorite){
+      _plan.favoriteCount -= 1;
+    }else{
+      _plan.favoriteCount += 1;
+    }
+    _plan.isFavorite = !_plan.isFavorite;
     notifyListeners();
   }
 }
