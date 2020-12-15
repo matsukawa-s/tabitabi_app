@@ -368,6 +368,14 @@ class MyHomePage extends StatelessWidget {
 
   AppBar userPageAppbar(){
     return AppBar(
+      backgroundColor: Colors.white,
+      leading: Builder(
+        builder: (context) => IconButton(
+          color: iconColor,
+          icon: new Icon(Icons.menu),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       title: Text("マイページ"),
     );
   }

@@ -10,6 +10,7 @@ class PlanSearchHistoryPage extends StatelessWidget {
   // textfield の　コントローラー
   var _searchWord = TextEditingController();
   var prefsKey = 'plan_search_history';
+  Color iconColor = Colors.orange[300];
 
   Future setHistory(value) async {
     //検索履歴を保存する
@@ -17,6 +18,14 @@ class PlanSearchHistoryPage extends StatelessWidget {
     List<String> history = [];
     if (prefs.containsKey(prefsKey)) {
       history = prefs.getStringList(prefsKey);
+      print(history);
+      // すでに履歴に検索キーワードがあるとき
+      if(history.contains(value)){
+        // 検索キーワードのインデックスを取得
+        var index = history.indexOf(value);
+        // 既存のアイテムを削除
+        history.removeAt(index);
+      }
     }
     history.add(value);
     prefs.setStringList(prefsKey, history);
@@ -41,6 +50,11 @@ class PlanSearchHistoryPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
+        leading: IconButton(
+          color: iconColor,
+          icon: new Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: TextField(
           autofocus: true,
           controller: _searchWord,
@@ -79,6 +93,11 @@ class PlanSearchHistoryPage extends StatelessWidget {
                 itemBuilder:(BuildContext context, int index){
                   return ListTile(
                     title:Text(history[index]),
+                    onTap: (){
+                      Provider.of<PlanSearchModel>(context,listen: false).setKeyword(history[index]);
+                      setHistory(history[index]);
+                      Navigator.of(context).pop();
+                    },
                   );
                 }
             );
