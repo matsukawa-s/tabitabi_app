@@ -21,7 +21,6 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FavoriteSpotViewModel>(context,listen: false).getFavoriteSpots();

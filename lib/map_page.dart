@@ -566,6 +566,7 @@ class _MapPageState extends State<MapPage> {
                         padding: EdgeInsets.only(left: 16.0,right: 16.0),
                         child: ListView.builder(
                           shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
                           scrollDirection: Axis.vertical,
                           itemCount: place.reviews.length,
                           itemBuilder: (BuildContext context, int index){

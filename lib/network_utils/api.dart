@@ -24,6 +24,11 @@ class Network{
   }
 
   get getMultiHeaders => _multiHeaders();
+//
+//  String imagesDirectory(selectImageDirectory){
+//    var url = '${_baseUrl}public/storage/user_icons/' + selectImageDirectory;
+//    return url;
+//  }
 
   String imagesDirectory(selectImageDirectory){
     var url = '${_baseUrl}storage/' + selectImageDirectory + '/';
@@ -68,9 +73,11 @@ class Network{
 
     var request = http.MultipartRequest('POST', Uri.parse(fullUrl));
     request.fields['data'] = jsonEncode(data);
-    var pic = await http.MultipartFile.fromPath("image", file.path);
-    request.files.add(pic);
-    request.headers.addAll(_setHeaders());
+    if(file != null){
+      var pic = await http.MultipartFile.fromPath("image", file.path);
+      request.files.add(pic);
+    }
+    request.headers.addAll(_multiHeaders());
 
     http.StreamedResponse response = await request.send();
 
@@ -81,7 +88,6 @@ class Network{
 
     return res;
   }
-
 
   _setHeaders() => {
     'Content-type' : 'application/json',

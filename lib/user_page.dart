@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tabitabi_app/main.dart';
-import 'package:tabitabi_app/user_icon_edit.dart';
+import 'package:tabitabi_app/user_profile_edit_page.dart';
 
 import 'network_utils/api.dart';
 
@@ -30,52 +30,67 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
       builder: (context, snapshot) {
         if(snapshot.hasData){
           final userProfile = snapshot.data;
-          print(Network().imagesDirectory(userProfile["icon_path"]));
           return Container(
             padding: EdgeInsets.all(8.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Column(
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.black12,
-                        radius: 50.0,
-                        backgroundImage: NetworkImage(Network().imagesDirectory(userProfile["icon_path"])),
+                      Container(
+                        child: Column(
+                          children: <Widget>[
+                            _buildIconImageInUserTop(userProfile["icon_path"]),
+                            Text(
+                              userProfile["name"],
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.w600
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      Text(userProfile["name"]),
+                      Container(
+                        margin: EdgeInsets.only(left: 12.0),
+                        decoration: BoxDecoration(
+                          color: Colors.black12,
+//                        border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: (){
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => UserProfileEditPage(userProfile: userProfile),
+                                )
+                              );
+                            },
+                        ),
+                      )
                     ],
                   ),
                 ),
-                ListTile(
-                  leading: Icon(Icons.edit),
-                  title: Text("ユーザー情報を変更する"),
-                  onTap: (){
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => UserIconEditPage(),
-                        )
-                    );
-                  },
-                ),
-                FlatButton(
-                    onPressed: () => logout(context),
-                    color: Colors.orange,
-                    child: Text("ログアウト")
-                ),
-                TabBar(
-                    controller: _tabController,
-                    tabs: [
-                      Padding(
-                        padding: EdgeInsets.only(bottom: 5.0),
-                        child: Text("作成したプラン"),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(bottom: 5.0),
-                        child: Text("参加しているプラン"),
-                      ),
-                    ]
+                Divider(),
+                Container(
+                  margin: EdgeInsets.only(top: 4.0),
+                  child: TabBar(
+                      controller: _tabController,
+                      tabs: [
+                        Padding(
+                          padding: EdgeInsets.only(bottom: 5.0),
+                          child: Text("作成したプラン"),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(bottom: 5.0),
+                          child: Text("参加しているプラン"),
+                        ),
+                      ]
+                  ),
                 ),
                 Expanded(
                     child: TabBarView(
@@ -98,7 +113,6 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
             child: CircularProgressIndicator(),
           );
         }
-
       }
     );
   }
@@ -110,22 +124,20 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
     return body;
   }
 
-  void logout(BuildContext context) async {
-    var res = await Network().getData('auth/logout');
-    var body = json.decode(res.body);
-    if (body['success']) {
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      localStorage.remove('user');
-      localStorage.remove('token');
-      Navigator.pushReplacement(
-          context,
-          PageTransition(
-              type: PageTransitionType.fade,
-              child: CheckAuth(),
-              inheritTheme: true,
-              ctx: context
-          ),
+  Widget _buildIconImageInUserTop(iconPath){
+    final double iconSize = 40.0;
+    if(iconPath == null){
+      return CircleAvatar(
+        backgroundColor: Colors.black12,
+        radius: iconSize,
+      );
+    }else{
+      return CircleAvatar(
+        backgroundColor: Colors.black12,
+        radius: iconSize,
+        backgroundImage: NetworkImage(Network().imagesDirectory("user_icons") + iconPath),
       );
     }
   }
+
 }
