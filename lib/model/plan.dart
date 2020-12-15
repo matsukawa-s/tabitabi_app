@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 class Plan{
   var id;
   var title;
@@ -30,6 +32,7 @@ class Plan{
       this.userId,
       this.createdAt,
       this.updateAt,
+      this.isFavorite
       );
 
   Plan.fromJson(Map<String, dynamic> json)
@@ -47,16 +50,5 @@ class Plan{
         userId = json['user_id'],
         createdAt = json['created_at'],
         updateAt   = json['update_at'],
-        isFavorite = false;
-
-  // お気に入り処理
-  void setFavoriteChange(){
-    if(isFavorite){
-      favoriteCount -= 1;
-    }else{
-      favoriteCount += 1;
-    }
-    isFavorite = !isFavorite;
-
-  }
+        isFavorite = json['islike'];
 }

@@ -5,6 +5,7 @@ import 'package:tabitabi_app/plan_search_model.dart';
 
 class PlanSearchDetailPage extends StatelessWidget {
   final double space = 15;
+  Color backColor = Colors.grey[200];
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +15,7 @@ class PlanSearchDetailPage extends StatelessWidget {
         title: Text('検索フィルタ'),
       ),
       body: Container(
-        color: Colors.grey[200],
+        color: backColor,
         padding: EdgeInsets.all(space),
 //        height: ,
         child: Container(
@@ -50,7 +51,15 @@ class PlanSearchDetailPage extends StatelessWidget {
 
   Widget _listTitle(String title) {
     return Container(
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.black54,
+            width: 1,
+          ),
+        ),
+      ),
       child: ListTile(
         title: Text(
           title,

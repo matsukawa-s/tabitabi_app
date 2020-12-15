@@ -1,11 +1,38 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tabitabi_app/plan_search_model.dart';
 
 class PlanSearchHistoryPage extends StatelessWidget {
   // textfield の　コントローラー
   var _searchWord = TextEditingController();
+  var prefsKey = 'plan_search_history';
+
+  Future setHistory(value) async {
+    //検索履歴を保存する
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> history = [];
+    if (prefs.containsKey(prefsKey)) {
+      history = prefs.getStringList(prefsKey);
+    }
+    history.add(value);
+    prefs.setStringList(prefsKey, history);
+  }
+
+  Future getHistory() async {
+    //検索履歴を表示する
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> history = [];
+    if (prefs.containsKey(prefsKey)) {
+      history = prefs.getStringList(prefsKey).reversed.toList();
+      return history;
+    } else {
+      return [];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +46,7 @@ class PlanSearchHistoryPage extends StatelessWidget {
           controller: _searchWord,
           onSubmitted: (String value) {
             Provider.of<PlanSearchModel>(context,listen: false).setKeyword(value);
+            setHistory(value);
             Navigator.of(context).pop();
           },
 //          cursorColor: iconColor,
@@ -41,7 +69,24 @@ class PlanSearchHistoryPage extends StatelessWidget {
           ),
         ),
       ),
-      body: Text("PlanSearchHistory"),
+      body: FutureBuilder(
+        future: getHistory(),
+        builder: (BuildContext context, AsyncSnapshot snapshot){
+          if(snapshot.hasData){
+            final List<String>history = snapshot.data;
+            return (history.length == null) ? Container() : ListView.builder(
+                itemCount: history.length,
+                itemBuilder:(BuildContext context, int index){
+                  return ListTile(
+                    title:Text(history[index]),
+                  );
+                }
+            );
+          }else{
+            return CircularProgressIndicator();
+          }
+        },
+      ),
     );
   }
 }
