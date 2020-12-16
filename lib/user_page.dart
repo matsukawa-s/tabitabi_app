@@ -124,7 +124,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
     return body;
   }
 
-  Widget _buildIconImageInUserTop(iconPath){
+  Widget _buildIconImageInUserTop(String iconPath){
     final double iconSize = 40.0;
     if(iconPath == null){
       return CircleAvatar(

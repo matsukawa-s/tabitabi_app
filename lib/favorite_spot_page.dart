@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -12,16 +13,28 @@ import 'package:smart_select/smart_select.dart';
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
 class FavoriteSpotPage extends StatefulWidget {
+  FavoriteSpotPage({
+    Key key,
+    this.mode = false,
+    this.callback
+  }) : super(key: key);
+
+  final bool mode; // true : 選択可能モード
+  Function callback; // 親Widgetにスポットを渡す関数
+
   @override
   _FavoriteSpotPageState createState() => _FavoriteSpotPageState();
 }
 
 class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
-  List<int> _selects = [];
+  List<int> _selects = []; // 都道府県の絞り込み
+  List<int> _selectedSpotItems = []; // 選択しているスポット(spotId)
 
   @override
   void initState() {
     super.initState();
+    print("favorite spot page initState");
+    _selectedSpotItems.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FavoriteSpotViewModel>(context,listen: false).getFavoriteSpots();
     });
@@ -30,10 +43,11 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
   @override
   Widget build(BuildContext context) {
    final model = Provider.of<FavoriteSpotViewModel>(context);
-        return model.spots == null ? Container(
-          child: Text("お気に入り登録しているスポットがありません"),
-        ) :
-        Column(
+        return model.spots == null ? Center(
+          child: CircularProgressIndicator()
+        )
+        : model.spots.isEmpty ? Text("お気に入り登録しているスポットがありません")
+        : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
@@ -69,14 +83,18 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
                 crossAxisSpacing: 10
               ),
               itemBuilder: (context,index){
-                return item(model.showSpots[index]);
+                if(widget.mode){
+                  return _buildSelectableItem(model.showSpots[index],model);
+                }else{
+                  return _buildSpotItem(model.showSpots[index]);
+                }
               },
             ),
           ],
         );
   }
 
-  Widget item(spot){
+  Widget _buildSpotItem(Spot spot){
     return Column(
       children: [
         Container(
@@ -96,6 +114,44 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
           overflow: TextOverflow.ellipsis,
         )
       ],
+    );
+  }
+
+  //選択可能なスポットアイテム(mode : true)
+  Widget _buildSelectableItem(spot,model){
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if(_selectedSpotItems.contains(spot.spotId)){
+            _selectedSpotItems.remove(spot.spotId);
+          }else{
+            _selectedSpotItems.add(spot.spotId);
+          }
+        });
+        List<Spot> returnValue = model.getSelectedSpots(_selectedSpotItems);
+//        print(returnValue);
+        widget.callback(returnValue);
+      },
+      child: !_selectedSpotItems.contains(spot.spotId) ? _buildSpotItem(spot)
+          : Stack(
+        children: [
+          _buildSpotItem(spot),
+          Container(
+            decoration: BoxDecoration(
+                color: Colors.black12.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8.0)
+            ),
+          ),
+          Positioned(
+            right: 0,
+            child: Icon(
+              Icons.check_circle,
+              color: Colors.orangeAccent,
+              size: 30.0,
+            ),
+          )
+        ],
+      ),
     );
   }
 }

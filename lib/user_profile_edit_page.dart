@@ -37,6 +37,7 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
 
   @override
   void initState() {
+    super.initState();
     _userNameController = TextEditingController(text: widget.userProfile["name"]);
   }
 

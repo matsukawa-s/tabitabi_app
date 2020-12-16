@@ -9,30 +9,27 @@ import 'package:http/http.dart' as http;
 
 // スポットのお気に入りページのProvider
 class FavoriteSpotViewModel extends ChangeNotifier{
-//  FavoriteSpotViewModel(){
-//    getFavoriteSpots();
-//  }
+  List<Spot> spots; //お気に入りしているスポット
+  List<Spot> showSpots; //表示するスポット
+  List<S2Choice<int>> prefectures; //都道府県の選択Widgetリスト
+  List<Spot> selectedSpots = []; //選択モード時の選択しているスポット
 
-  List<Spot> spots;
-  List<Spot> showSpots;
-  List<S2Choice<int>> prefectures;
-  List<int> selects = [];
+  List<Spot> getSelectedSpots(List<int> selectedSpotItems){
+    selectedSpots = spots.where((spot) => selectedSpotItems.indexOf(spot.spotId) != -1).toList();
+    return selectedSpots;
+  }
 
   //絞り込み
   refine(List<int> selects){
-    print("refine");
-    print(selects);
     if(selects.isEmpty){
       showSpots = spots;
     }else{
       showSpots = spots.where((spot) => selects.indexOf(spot.prefectureId) != -1).toList();
     }
-    print(showSpots);
     notifyListeners();
   }
 
   getFavoriteSpots() async{
-    print("getFavoriteSpots");
     //都道府県データをjsonから取得する
     String jsonString = await rootBundle.loadString('json/prefectures.json');
     List prefecturesMap = json.decode(jsonString)["prefectures"];
@@ -64,18 +61,24 @@ class FavoriteSpotViewModel extends ChangeNotifier{
 }
 
 class Spot {
+  final spotId;
+  final placeId;
   final spotName;
   final imageUrl;
   final int prefectureId;
 
   Spot({
+    this.spotId,
+    this.placeId,
     this.spotName,
     this.imageUrl,
     this.prefectureId
   });
 
   Spot.fromJson(Map<String,dynamic> json)
-    : spotName = json["spot_name"],
+    : spotId = json["id"],
+      placeId = json["place_id"],
+      spotName = json["spot_name"],
       imageUrl = json["image_url"],
       prefectureId = json["prefecture_id"];
 }
