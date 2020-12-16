@@ -46,7 +46,7 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
         return model.spots == null ? Center(
           child: CircularProgressIndicator()
         )
-        : model.spots.isEmpty ? Text("お気に入り登録しているスポットがありません")
+        : model.spots.isEmpty ? Center(child: Text("お気に入り登録しているスポットがありません"))
         : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -86,7 +86,7 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
                 if(widget.mode){
                   return _buildSelectableItem(model.showSpots[index],model);
                 }else{
-                  return _buildSpotItem(model.showSpots[index]);
+                  return _buildShowDetailsSpotItem(model.showSpots[index],model);
                 }
               },
             ),
@@ -114,6 +114,39 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
           overflow: TextOverflow.ellipsis,
         )
       ],
+    );
+  }
+
+  // お気に入りスポット画面のアイテム（タップ時に詳細ダイアログ開く）
+  Widget _buildShowDetailsSpotItem(spot,model){
+    return GestureDetector(
+      onTap: (){
+        showDialog(
+          context: context,
+          builder: (context) {
+            return SimpleDialog(
+                title: Text(spot.spotName),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text("詳細とか表示する"),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: RaisedButton(
+                        child: Text("このスポットを削除する"),
+                        onPressed: (){
+                          model.unlikeSpot(spot);
+                          Navigator.pop(context);
+                        }
+                    ),
+                  )
+                ],
+            );
+          },
+        );
+      },
+      child: _buildSpotItem(spot),
     );
   }
 

@@ -14,9 +14,17 @@ class FavoriteSpotViewModel extends ChangeNotifier{
   List<S2Choice<int>> prefectures; //都道府県の選択Widgetリスト
   List<Spot> selectedSpots = []; //選択モード時の選択しているスポット
 
+  //プラン作成のスポット選択
   List<Spot> getSelectedSpots(List<int> selectedSpotItems){
     selectedSpots = spots.where((spot) => selectedSpotItems.indexOf(spot.spotId) != -1).toList();
     return selectedSpots;
+  }
+
+  //お気に入り解除
+  unlikeSpot(spot) async{
+    final data = {"spot_id" : spot.spotId};
+    http.Response res = await Network().postData(data, 'postFavoriteSpot');
+    this.getFavoriteSpots();
   }
 
   //絞り込み
