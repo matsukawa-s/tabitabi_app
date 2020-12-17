@@ -8,6 +8,7 @@ import 'package:tabitabi_app/data/tag_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
 import 'model/map.dart';
+import 'model/plan.dart';
 import 'model/spot_model.dart';
 import 'navigationbar_provider.dart';
 import 'package:tabitabi_app/plan_search_detail_page.dart';
@@ -305,7 +306,8 @@ class MyHomePage extends StatelessWidget {
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.settings_outlined),
+//          icon: Icon(Icons.import_export),
+          icon: Icon(Icons.sort),
           color: iconColor,
           onPressed: () {
             Navigator.push(
@@ -372,6 +374,14 @@ class MyHomePage extends StatelessWidget {
 
   AppBar userPageAppbar(BuildContext context){
     return AppBar(
+      backgroundColor: Colors.white,
+      leading: Builder(
+        builder: (context) => IconButton(
+          color: iconColor,
+          icon: new Icon(Icons.menu),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       title: Text("マイページ"),
       centerTitle: true,
       actions: [
