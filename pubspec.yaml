@@ -45,6 +45,7 @@ dependencies:
   shared_preferences: ^0.5.12+4
   http: ^0.12.2
   smart_select: ^4.3.2
+  image_picker: ^0.6.7+14
 
 dev_dependencies:
   flutter_test:

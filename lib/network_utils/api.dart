@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 //import 'package:shared_preferences/shared_preferences.dart';
 
 class Network{
+  final _baseUrl = 'http://10.0.2.2:8000/';
 // アンドロイドエミュレーターの場合10.0.2.2:8000を使用
   final String _url = 'http://10.0.2.2:8000/api/';
 // IOSシミュレータの場合はlocalhostを使用
@@ -23,9 +24,14 @@ class Network{
   }
 
   get getMultiHeaders => _multiHeaders();
+//
+//  String imagesDirectory(selectImageDirectory){
+//    var url = '${_baseUrl}public/storage/user_icons/' + selectImageDirectory;
+//    return url;
+//  }
 
   String imagesDirectory(selectImageDirectory){
-    var url = 'http://10.0.2.2:8000/storage/' + selectImageDirectory + '/';
+    var url = '${_baseUrl}storage/' + selectImageDirectory + '/';
     return url;
   }
 
@@ -67,14 +73,21 @@ class Network{
 
     var request = http.MultipartRequest('POST', Uri.parse(fullUrl));
     request.fields['data'] = jsonEncode(data);
-    var pic = await http.MultipartFile.fromPath("image", file.path);
-    request.files.add(pic);
-//    request.headers.addAll(_setHeaders());
+    if(file != null){
+      var pic = await http.MultipartFile.fromPath("image", file.path);
+      request.files.add(pic);
+    }
+    request.headers.addAll(_multiHeaders());
 
-    var response = await request.send();
+    http.StreamedResponse response = await request.send();
+
+    http.Response res = await http.Response.fromStream(response);
+    print(res.body);
+
     if (response.statusCode == 200) print('Uploaded!');
-  }
 
+    return res;
+  }
 
   _setHeaders() => {
     'Content-type' : 'application/json',
