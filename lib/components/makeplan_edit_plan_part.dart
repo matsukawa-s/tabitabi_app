@@ -78,7 +78,7 @@ class _PlanPartState extends State<PlanPart> {
                       constraints: BoxConstraints.expand(width: MediaQuery.of(context).size.width / 6),
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                            image: AssetImage(widget.spotPath),
+                            image: AssetImage(widget.spotPath != null ? widget.spotPath : "images/osakajo.jpg"),
                             fit: BoxFit.cover
                         ),
                         borderRadius: BorderRadius.only(
@@ -94,7 +94,9 @@ class _PlanPartState extends State<PlanPart> {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        widget.spotName,
+                        widget.spotName != null ?
+                          widget.spotName:
+                          "",
                         style: TextStyle(
                           color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),
                           fontSize: 14.0,
