@@ -1,7 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:like_button/like_button.dart';
 import 'package:provider/provider.dart';
-import 'package:tabitabi_app/plan_search_provider.dart';
+import 'package:tabitabi_app/plan_search_model.dart';
+
+import 'network_utils/api.dart';
 
 //class SearchPage extends StatefulWidget {
 //  @override
@@ -9,129 +13,172 @@ import 'package:tabitabi_app/plan_search_provider.dart';
 //}
 //class SearchPageState extends State<SearchPage> {
 class PlanSearchPage extends StatelessWidget {
-//  final String title;
-//  var plansState;
-//  List plans;
-
-//  Future<void> _onRefresh() async {
-//    setState(() {
-//      plans = plansState.fetchPlansList();
-//    });
-//  }
+  bool isLiked;
+  Color iconColor = Colors.grey[800];
+  bool debugPaintSizeEnabled = true;
 
   @override
   Widget build(BuildContext context) {
-//    plansState = Provider.of<SearchProvider>(context);
-//    plans = plansState.searchplanlist;
-//    var plansState = Provider.of<SearchProvider>(context);
-//    List plans = plansState.searchplanlist;
+    final double _width = MediaQuery.of(context).size.width;
+    final double _height = MediaQuery.of(context).size.height;
+    return FutureBuilder(
+      future: Provider.of<PlanSearchModel>(context,listen: false).fetchPostPlansList(),
+      builder: (ctx,dataSnapshot){
+        return Consumer<PlanSearchModel>(
+            builder: (_, model, __) {
+              return RefreshIndicator(
+                onRefresh: () => model.fetchPostPlansList(),
+                child: model.plans == null
+                    // 検索結果がnullの間、ぐるぐる表示
+                    ? Center(
+                        child: CircularProgressIndicator() ,
+                      )
+                    : (model.plans.length == 0)
+                        // 検索結果が０件のとき
+                        ? Center(child: Text(model.keyword + ' に一致するプランは見つかりませんでした。'),)
+                        // 検索結果が見つかったとき
+                        : (_width > 600)
+                          ? _bigDisplay(model)
+                          : _smallDisplay(model),
+              );
+            }
+        );
+      },
+    );
+  }
 
-//    print(plans);
-//    print(plans[0]['title']);
-    return Consumer<PlanSearchProvider>(
-      builder: (_, model, __) {
-        return RefreshIndicator(
-          onRefresh: () => null,
-          //      onRefresh: ()=> _onRefresh(),
-          //      onRefresh: (){
-          //        plansState.fetchPlansList();
-          ////        return ;
-          //      },
+  Widget _bigDisplay(model){
+    return GridView.builder(
+        itemCount: model.plans.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          mainAxisSpacing: 30,
+          crossAxisSpacing: 10,
+          crossAxisCount: 2,
+          childAspectRatio: 1.5,
+        ),
+        itemBuilder: (BuildContext context, int index) {
+          return contents(model,index,context);
+        }
+    );
+  }
+
+  Widget _smallDisplay(model){
+    return GridView.builder(
+        itemCount: model.plans.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+//          mainAxisSpacing: 10,
+          crossAxisCount: 1,
+          childAspectRatio: 1.7,
+        ),
+        itemBuilder: (BuildContext context, int index) {
+          return contents(model,index,context);
+        }
+    );
+  }
+
+  Widget contents(model,index,context){
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        // プランの画像表示
+        Expanded(
+          flex: 5,
           child: Container(
-            color: Colors.grey[200],
-            child: model.searchplanlist == null
-                ? Container()
-                : ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemBuilder: (BuildContext context, int index) {
-                List<double> bottomMargin = []..length = model.searchplanlist.length;
-                if (index != 9) {
-                  bottomMargin[index] = 5;
-                } else {
-                  bottomMargin[index] = 0;
-                }
-                return Column(
-                  children: [
-                    Stack(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: NetworkImage(
-                                  "https://www.osakacastle.net/wordpress/wp-content/themes/osakacastle-sp/sp_img/contents/top_img.jpg"),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          height: 170.0,
-                          width: 500,
-                        ),
-                        Container(
-                          padding: EdgeInsets.all(5),
-                          child: CircleAvatar(
-                            radius: 24.0,
-                            backgroundColor: Colors.white,
-                            backgroundImage: NetworkImage(
-                                "https://pbs.twimg.com/profile_images/885510796691689473/rR9aWvBQ_400x400.jpg"),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      height: 28.0,
-                      width: 500,
-                      color: Colors.white,
-                      child: Text(model.searchplanlist[index]['title'],
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Container(
-                      margin: EdgeInsets.only(bottom: bottomMargin[index]),
-                      color: Colors.white,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(children: [
-                            IconButton(
-                                icon: Icon(Icons.stars),
-                                onPressed: (){
-                                  print('おきにいり');
-                                  model.favoritePlan(1, model.searchplanlist[index]['id']);
-                                }
-                            ),
-                            Text(model.searchplanlist[index]['favorite_count'].toString()),
-                            IconButton(
-                                icon: Icon(Icons.visibility),
-                                onPressed: (){
-                                  print('閲覧数');
-                                }),
-                            Text(model.searchplanlist[index]['number_of_views'].toString()),
-                            IconButton(
-                                icon: Icon(Icons.copy_outlined),
-                                onPressed: (){
-
-                                  print('参考数');
-                                }),
-                            Text(model.searchplanlist[index]['referenced_number'].toString()),
-                          ],),
-                          IconButton(
-                            icon: Icon(Icons.upload_rounded),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
-              itemCount: model.searchplanlist.length,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: NetworkImage(
+                    "https://www.osakacastle.net/wordpress/wp-content/themes/osakacastle-sp/sp_img/contents/top_img.jpg"),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-        );
-      }
+        ),
+        // プランのタイトル表示
+        Expanded(
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text(
+                  model.plans[index].title,
+                  textAlign: TextAlign.left,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+        // プランのサブアイテム表示
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Center(
+                child: Row(children: [
+                  IconButton(
+                    icon: (model.plans[index].isFavorite)? Icon(Icons.favorite,color: Colors.pink): Icon(Icons.favorite_outline,color: iconColor,),
+                    onPressed: (){
+                      // ローカルのお気に入りデータ更新
+                      model.setFavoriteChange(index);
+                      onPlanLikeButtonTapped(1, model.plans[index].id);
+                      print(model.plans[index].favoriteCount);
+                    },
+                  ),
+                  Text(
+                      NumberFormat.compact().format(model.plans[index].favoriteCount),
+                    style: TextStyle(
+                      color: iconColor,
+                    ),
+                  ),
+                  IconButton(
+                      icon: Icon(Icons.visibility_outlined,color: iconColor,),
+                      onPressed: (){
+//                      model.plans[index].numberOfViews += 1;
+                        print('閲覧数');
+                        print(iconColor.toString());
+                      }),
+                  Text(
+                    NumberFormat.compact().format(model.plans[index].numberOfViews),
+                    style: TextStyle(
+                      color: iconColor,
+                    ),
+                  ),
+                  IconButton(
+                      icon: Icon(Icons.copy_outlined,color: iconColor,),
+                      onPressed: (){
+
+                        print('参考数');
+                      }),
+                  Text(
+                    NumberFormat.compact().format(model.plans[index].referencedNumber),
+                    style: TextStyle(
+                      color: iconColor,
+                    ),
+                  ),
+                ],),
+              ),
+              IconButton(
+                icon: Icon(Icons.upload_rounded),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
+  }
+  // お気に入りカウントアップ
+  Future<bool> onPlanLikeButtonTapped(userId,favoritePlanId) async {
+    // お気に入り状態を更新するためのリクエストデータ
+    Map data = {
+      'user_id' : userId,
+      'favorite_plan_id' : favoritePlanId,
+    };
+    // データベースのお気に入りデータを更新
+    await Network().postData(data, 'favoritePlan');
   }
 }

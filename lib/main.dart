@@ -1,22 +1,31 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:tabitabi_app/data/tag_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
 import 'model/map.dart';
+import 'model/plan.dart';
+import 'model/spot_model.dart';
 import 'navigationbar_provider.dart';
 import 'package:tabitabi_app/plan_search_detail_page.dart';
 import 'package:tabitabi_app/top_page.dart';
+import 'network_utils/api.dart';
 import 'plan_search_history.dart';
 import 'package:http/http.dart';
 import 'result_provider.dart';
 import 'navigationbar_provider.dart';
-import 'plan_search_provider.dart';
-
+import 'plan_search_model.dart';
 import 'makeplan/makeplan_initial_page.dart';
 
-void main() {
+//右上ポップアップメニュー
+enum WhyFarther { Logout }
+
+Future main() async{
+  await DotEnv().load('.env');
   runApp(
     MultiProvider(
       providers: [
@@ -32,9 +41,12 @@ void main() {
         ChangeNotifierProvider<MapViewModel>(
           create:(_) => MapViewModel()
         ),
-        ChangeNotifierProvider<PlanSearchProvider>(
-          create: (context) => PlanSearchProvider(),
+        ChangeNotifierProvider<PlanSearchModel>(
+          create: (context) => PlanSearchModel(),
         ),
+        ChangeNotifierProvider<FavoriteSpotViewModel>(
+            create: (context) => FavoriteSpotViewModel()
+        )
       ],
       child: MaterialApp(
         home: MyApp(),
@@ -221,7 +233,7 @@ class MyHomePage extends StatelessWidget {
     }else if(pageIndex == 3){           // FavoritePageAppBar
       return favoritePageAppBar(context);
     }else if(pageIndex == 4){           // UserPageAppBar
-      return userPageAppbar();
+      return userPageAppbar(context);
     }
   }
   // TopPageAppBar
@@ -249,7 +261,7 @@ class MyHomePage extends StatelessWidget {
   // SearchPageAppBar
   AppBar searchPageAppBar(context){
     var _textEditingController =
-    TextEditingController(text: Provider.of<PlanSearchProvider>(context).keyword);
+    TextEditingController(text: Provider.of<PlanSearchModel>(context).keyword);
     return AppBar(
       backgroundColor: Colors.white,
       leading: Builder(
@@ -273,7 +285,6 @@ class MyHomePage extends StatelessWidget {
               PageTransition(
                 type: PageTransitionType.fade,
                 child: PlanSearchHistoryPage(),
-
                 ctx: context,
               ),
           );
@@ -295,7 +306,8 @@ class MyHomePage extends StatelessWidget {
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.settings_outlined),
+//          icon: Icon(Icons.import_export),
+          icon: Icon(Icons.sort),
           color: iconColor,
           onPressed: () {
             Navigator.push(
@@ -303,7 +315,6 @@ class MyHomePage extends StatelessWidget {
               PageTransition(
                 type: PageTransitionType.fade,
                 child: PlanSearchDetailPage(),
-
                 ctx: context,
               ),
             );
@@ -361,10 +372,55 @@ class MyHomePage extends StatelessWidget {
     );
   }
 
-  AppBar userPageAppbar(){
+  AppBar userPageAppbar(BuildContext context){
     return AppBar(
+      backgroundColor: Colors.white,
+      leading: Builder(
+        builder: (context) => IconButton(
+          color: iconColor,
+          icon: new Icon(Icons.menu),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
       title: Text("マイページ"),
+      centerTitle: true,
+      actions: [
+        PopupMenuButton(
+            onSelected: (WhyFarther result) {
+              switch(result){
+                case WhyFarther.Logout:
+                  logout(context);
+                  break;
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<WhyFarther>>[
+              const PopupMenuItem<WhyFarther>(
+                value: WhyFarther.Logout,
+                child: Text('ログアウト'),
+              ),
+            ]
+        )
+      ],
     );
+  }
+
+  void logout(BuildContext context) async {
+    var res = await Network().getData('auth/logout');
+    var body = json.decode(res.body);
+    if (body['success']) {
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      localStorage.remove('user');
+      localStorage.remove('token');
+      Navigator.pushReplacement(
+        context,
+        PageTransition(
+            type: PageTransitionType.fade,
+            child: CheckAuth(),
+            inheritTheme: true,
+            ctx: context
+        ),
+      );
+    }
   }
 
 }

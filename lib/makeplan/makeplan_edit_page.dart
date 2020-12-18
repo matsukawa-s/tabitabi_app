@@ -1082,12 +1082,13 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                 ),
               ),
             ),
-            onTap: (){
-              Navigator.of(context).push(
+            onTap: () async {
+              var result = await Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => AddSpotPage(),
                   )
               );
+              print(result);
             },
           ),
         ),
