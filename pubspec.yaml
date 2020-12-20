@@ -44,6 +44,8 @@ dependencies:
   intl: ^0.16.1
   shared_preferences: ^0.5.12+4
   http: ^0.12.2
+  image_picker: ^0.6.7+17
+  smart_select: ^4.3.2
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +66,7 @@ flutter:
   assets:
     - images/
     - .env
+    - json/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
