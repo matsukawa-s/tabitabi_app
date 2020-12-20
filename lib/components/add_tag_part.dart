@@ -12,7 +12,7 @@ class AddTagPart extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       //height: 40,
-      width:  (title.length.toDouble() * 20) + 45,
+      width:  (title.length.toDouble() * 23) + 45,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.0),
         color: Theme.of(context).primaryColor,

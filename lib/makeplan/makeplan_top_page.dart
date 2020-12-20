@@ -1,15 +1,83 @@
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:tabitabi_app/network_utils/api.dart';
 import 'makeplan_edit_page.dart';
 
 class MakePlanTop extends StatefulWidget {
+
+  final int planId;
+
+  MakePlanTop({
+    Key key,
+    this.planId,
+  }):super(key: key);
+
   @override
   _MakePlanTopState createState() => _MakePlanTopState();
 }
 
 class _MakePlanTopState extends State<MakePlanTop> {
 
-  String _planName = "旅行名旅行名旅行名旅行名";
-  String _planDetail = "旅行の説明です。旅行の説明です。旅行の説明です。旅行の説明です。旅行の説明です。旅行の説明です。";
+  String _planName = "";
+  String _planDetail = "";
+  DateTime _startDateTime = DateTime.now();
+  DateTime _endDateTime = DateTime.now();
+  List<DateTime> _planDates = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _getPlan();
+  }
+
+  Future<int> _getPlan() async{
+    http.Response response = await Network().getData("plan/get/" + widget.planId.toString());
+    List list = json.decode(response.body);
+    print(list[0].toString());
+
+    setState(() {
+      _planName = list[0]["title"];
+      _planDetail = list[0]["description"] == null ? "" : list[0]["description"];
+    });
+    _startDateTime = DateTime.parse(list[0]["start_day"]);
+    _endDateTime = DateTime.parse(list[0]["end_day"]);
+
+    setState(() {
+      _planDates = _getDateTimeList(_dateTimeFunc(_startDateTime), _dateTimeFunc(_endDateTime));
+    });
+
+    print(_planDates.length);
+    return _planDates.length;
+
+  }
+
+  //日付のリストを作る
+  List<DateTime> _getDateTimeList(DateTime startDate, DateTime endDate){
+    List<DateTime> dateList = [];
+    print("aa");
+
+    //1日だけのとき
+    if(startDate == endDate){
+      dateList.add(startDate);
+      return dateList;
+    }
+
+    //2日以上あるとき
+    DateTime date = startDate;
+    DateTime lastDate = DateTime(endDate.year, endDate.month, endDate.day+1);
+    while(date != lastDate){
+      dateList.add(date);
+      date = DateTime(date.year, date.month, date.day+1);
+    }
+
+    return dateList;
+  }
+
+  DateTime _dateTimeFunc(DateTime date){
+    return DateTime(date.year, date.month, date.day);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +109,11 @@ class _MakePlanTopState extends State<MakePlanTop> {
               expandedHeight: 200.0,
               actions: [
                 IconButton(
-                  icon: Icon(Icons.share),
+                  icon: Icon(Icons.share, color: Colors.white,),
                   onPressed: (){},
                 ),
                 IconButton(
-                  icon: Icon(Icons.more_vert),
+                  icon: Icon(Icons.more_vert, color: Colors.white,),
                   onPressed: (){},
                 ),
               ],
@@ -102,69 +170,168 @@ class _MakePlanTopState extends State<MakePlanTop> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                _buildTitle("10/23"),
                                 Expanded(
                                   child: DefaultTabController(
-                                    length: 3,
+                                    length: _planDates.length,
                                     child: Builder(
-                                      builder: (BuildContext context) => Stack(
-                                        children: [
-                                          Container(
-                                            height: 400,
-                                            width: 500,
-                                            child: TabBarView(
-                                              children: [
-                                                _buildSchedule("1"),
-                                                _buildSchedule("2"),
-                                                _buildSchedule("3"),
-                                              ],
+                                      builder: (BuildContext context){
+                                        final TabController controller = DefaultTabController.of(context);
+                                        return  Stack(
+                                          children: [
+                                            Container(
+                                              margin: EdgeInsets.only(top: 10.0),
+                                              height: 400,
+                                              width: 500,
+                                              child: TabBarView(
+                                                children: [
+                                                  for(int i=0; i<_planDates.length; i++)
+                                                    _buildSchedule("1", _planDates[i]),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                          Positioned(
-                                            bottom: 0.0,
-                                            left: 0.0,
-                                            right: 0.0,
-                                            child: Align(
-                                              alignment: Alignment.center,
-                                              child: TabPageSelector(),
-                                            )
-                                          ),
-                                          Positioned(
-                                            top: 0.0,
-                                            bottom: 0.0,
-                                            left: -30.0,
-                                            child: IconButton(
-                                              icon: Icon(Icons.chevron_left),
-                                              iconSize: 80.0,
-                                              color: Colors.orange,
-                                              onPressed: (){
-                                                final TabController controller = DefaultTabController.of(context);
-                                                if(!(controller.index == 0)){
-                                                  controller.animateTo(controller.index - 1);
-                                                }
-                                              },
+                                            Positioned(
+                                                bottom: 0.0,
+                                                left: 0.0,
+                                                right: 0.0,
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: TabPageSelector(),
+                                                )
                                             ),
-                                          ),
-                                          Positioned(
-                                            top: 0.0,
-                                            bottom: 0.0,
-                                            right: -30,
-                                            child: IconButton(
-                                              icon: Icon(Icons.chevron_right),
-                                              iconSize: 80.0,
-                                              color: Colors.orange,
-                                              onPressed: (){
-                                                final TabController controller = DefaultTabController.of(context);
-                                                if(!(controller.index == 2)){
-                                                  controller.animateTo(controller.index + 1);
-                                                }
-                                              },
+                                            Positioned(
+                                              top: 0.0,
+                                              bottom: 0.0,
+                                              left: -30.0,
+                                              child: IconButton(
+                                                icon: Icon(Icons.chevron_left),
+                                                iconSize: 80.0,
+                                                color: Colors.orange,
+                                                onPressed: (){
+                                                  if(!(controller.index == 0)){
+                                                    controller.animateTo(controller.index - 1);
+                                                  }
+                                                },
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                            Positioned(
+                                              top: 0.0,
+                                              bottom: 0.0,
+                                              right: -30,
+                                              child: IconButton(
+                                                icon: Icon(Icons.chevron_right),
+                                                iconSize: 80.0,
+                                                color: Colors.orange,
+                                                onPressed: (){
+                                                  if(!(controller.index == _planDates.length)){
+                                                    controller.animateTo(controller.index + 1);
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      }
                                     ),
                                   ),
+                                  // child: FutureBuilder(
+                                  //   future: _getPlan(),
+                                  //   builder: (BuildContext context, AsyncSnapshot<int> snapshot){
+                                  //     print(snapshot.hasError);
+                                  //     print(snapshot.error.toString());
+                                  //
+                                  //     if (snapshot.connectionState != ConnectionState.done) {
+                                  //       return Center(
+                                  //         child: CircularProgressIndicator(),
+                                  //       );
+                                  //     }
+                                  //
+                                  //     if (snapshot.hasError) {
+                                  //       return Text(snapshot.error.toString());
+                                  //     }
+                                  //
+                                  //     if(snapshot.hasData){
+                                  //       int length = snapshot.data;
+                                  //       if(_planDates.length == 0){
+                                  //         return Container();
+                                  //       }
+                                  //
+                                  //       return DefaultTabController(
+                                  //         length: _planDates.length,
+                                  //         child: Builder(
+                                  //           builder: (BuildContext context) => Stack(
+                                  //             children: [
+                                  //               Positioned(
+                                  //                 top: 0.0,
+                                  //                 left: 0.0,
+                                  //                 height: 50.0,
+                                  //                 width: 320,
+                                  //                 child: Center(
+                                  //                   child: _buildTitle("10/23"),
+                                  //                 ),
+                                  //               ),
+                                  //               Container(
+                                  //                 margin: EdgeInsets.only(top: 50.0),
+                                  //                 height: 400,
+                                  //                 width: 500,
+                                  //                 child: TabBarView(
+                                  //                   children: [
+                                  //                     for(int i=0; i<_planDates.length; i++)
+                                  //                       _buildSchedule("1"),
+                                  //                   ],
+                                  //                 ),
+                                  //               ),
+                                  //               Positioned(
+                                  //                   bottom: 0.0,
+                                  //                   left: 0.0,
+                                  //                   right: 0.0,
+                                  //                   child: Align(
+                                  //                     alignment: Alignment.center,
+                                  //                     child: TabPageSelector(),
+                                  //                   )
+                                  //               ),
+                                  //               Positioned(
+                                  //                 top: 0.0,
+                                  //                 bottom: 0.0,
+                                  //                 left: -30.0,
+                                  //                 child: IconButton(
+                                  //                   icon: Icon(Icons.chevron_left),
+                                  //                   iconSize: 80.0,
+                                  //                   color: Colors.orange,
+                                  //                   onPressed: (){
+                                  //                     final TabController controller = DefaultTabController.of(context);
+                                  //                     if(!(controller.index == 0)){
+                                  //                       controller.animateTo(controller.index - 1);
+                                  //                     }
+                                  //                   },
+                                  //                 ),
+                                  //               ),
+                                  //               Positioned(
+                                  //                 top: 0.0,
+                                  //                 bottom: 0.0,
+                                  //                 right: -30,
+                                  //                 child: IconButton(
+                                  //                   icon: Icon(Icons.chevron_right),
+                                  //                   iconSize: 80.0,
+                                  //                   color: Colors.orange,
+                                  //                   onPressed: (){
+                                  //                     final TabController controller = DefaultTabController.of(context);
+                                  //                     if(!(controller.index == _planDates.length)){
+                                  //                       controller.animateTo(controller.index + 1);
+                                  //                     }
+                                  //                   },
+                                  //                 ),
+                                  //               ),
+                                  //             ],
+                                  //           ),
+                                  //         ),
+                                  //       );
+                                  //     }else{
+                                  //       return Center(
+                                  //         child: Container(child: Text("sa"),),
+                                  //       );
+                                  //     }
+                                  //   },
+                                  // ),
                                 ),
                                 Container(
                                   alignment: Alignment.bottomRight,
@@ -172,13 +339,17 @@ class _MakePlanTopState extends State<MakePlanTop> {
                                   child: FloatingActionButton(
                                     heroTag: 'planEdit',
                                     backgroundColor: Colors.orange,
-                                    child: Icon(Icons.edit),
+                                    child: Icon(Icons.edit, color: Colors.white,),
                                     onPressed: (){
                                       Navigator.of(context).push(
                                           MaterialPageRoute(
-                                            builder: (context) => MakePlanEdit(),
+                                            builder: (context) => MakePlanEdit(planId: widget.planId, startDateTime: _dateTimeFunc(_startDateTime), endDateTime: _dateTimeFunc(_endDateTime),),
                                           )
-                                      );
+                                      ).then((value){
+                                        setState(() {
+                                          _getPlan();
+                                        });
+                                      });
                                     },
                                   ),
                                 ),
@@ -223,7 +394,7 @@ class _MakePlanTopState extends State<MakePlanTop> {
                                 child: FloatingActionButton(
                                   heroTag: 'memberAdd',
                                   backgroundColor: Colors.orange,
-                                  child: Icon(Icons.add),
+                                  child: Icon(Icons.add, color: Colors.white,),
                                   onPressed: (){},
                                 ),
                               ),
@@ -254,7 +425,7 @@ class _MakePlanTopState extends State<MakePlanTop> {
                                 child: FloatingActionButton(
                                   heroTag: 'albumAdd',  //これを指定しないと複数FloatingActionButtonが使えない
                                   backgroundColor: Colors.orange,
-                                  child: Icon(Icons.add),
+                                  child: Icon(Icons.add, color: Colors.white,),
                                   onPressed: (){},
                                 ),
                               ),
@@ -282,11 +453,17 @@ class _MakePlanTopState extends State<MakePlanTop> {
   }
 
   //各日程のスケジュール
-  Widget _buildSchedule(String test){
+  Widget _buildSchedule(String test, DateTime date){
     return Container(
       margin: EdgeInsets.only(left: 16.0, top: 5.0, right: 16.0),
       color: Colors.greenAccent,
-      child: Text(test),
+      child: Column(
+        children: [
+          Container(
+            child: Text(date.month.toString() + "/" + date.day.toString(), style: TextStyle(fontSize: 18.0),),
+          )
+        ],
+      ),
     );
   }
 }

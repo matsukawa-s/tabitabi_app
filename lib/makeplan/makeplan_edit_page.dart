@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:bubble/bubble.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:ui';
+import 'package:intl/intl.dart';
+import 'package:tabitabi_app/network_utils/api.dart';
 
 import 'package:tabitabi_app/data/itinerary_part_data.dart';
 
@@ -34,6 +39,17 @@ class TrafficPartData{
 }
 
 class MakePlanEdit extends StatefulWidget {
+  final int planId;
+  final DateTime startDateTime;
+  final DateTime endDateTime;
+
+  MakePlanEdit({
+    Key key,
+    this.planId,
+    this.startDateTime,
+    this.endDateTime,
+  }):super(key: key);
+
   @override
   _MakePlanEditState createState() => _MakePlanEditState();
 }
@@ -46,6 +62,10 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
 
   //ItineraryDataのIDあとでDBからとってくるようにする。
   int _id = 1;
+
+  //開始日
+  DateTime _startDateTime;
+  DateTime _endDateTime;
 
   //行程のリスト
   List<ItineraryData> _itineraries = [];
@@ -77,7 +97,6 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
   //旅行の日程　とりあえず仮
   List<DateTime> _travelDateTime = [];
 
-  DateTime lastDateTime = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 6);
 
   void _onMapCreated(GoogleMapController controller) {
     setState(() {
@@ -95,36 +114,71 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     _spotItineraries.clear();
     _memoItineraries.clear();
 
-    _spots.add(SpotData(1, "ペンギン城", "images/osakajo.jpg", 1, 1));
-    _spots.add(SpotData(2, "カバン", "images/illustrain02-travel04.png", 2, 1));
-    _spots.add(SpotData(3, "世界", "images/osakajo.jpg", 3, 1));
+    _getItiData();
 
-    _itineraries.add(ItineraryData(1, 1, 1, DateTime.now(), false));
-    _itineraries.add(ItineraryData(2, 1, 1, DateTime.now(), false));
-    _itineraries.add(ItineraryData(3, 2, 1, DateTime.now(), false));
-    _itineraries.add(ItineraryData(4, 2, 1, DateTime.now(), false));
-    _itineraries.add(ItineraryData(5, 3, 1, DateTime.now(), false));
+    _spots.add(SpotData(1, "ペンギン城",2.2, 22.2, "images/osakajo.jpg", 1, 1));
+    _spots.add(SpotData(2, "カバン", 2.2, 22.2,"images/illustrain02-travel04.png", 2, 1));
+    _spots.add(SpotData(3, "世界",22.2, 22, "images/osakajo.jpg", 3, 1));
 
-    _id = 6;
+    // _itineraries.add(ItineraryData(1, 1, 1, DateTime.now(), false));
+    // _itineraries.add(ItineraryData(2, 1, 1, DateTime.now(), false));
+    // _itineraries.add(ItineraryData(3, 2, 1, DateTime.now(), false));
+    // _itineraries.add(ItineraryData(4, 2, 1, DateTime.now(), false));
+    // _itineraries.add(ItineraryData(5, 3, 1, DateTime.now(), false));
 
-    _spotItineraries.add(SpotItineraryData(1, 1, "ペンギン城", "images/osakajo.jpg", null, null, 0));
-    _spotItineraries.add(SpotItineraryData(3, 2, "カバン", "images/illustrain02-travel04.png", DateTime.now(), DateTime.now(), 0));
-    _spotItineraries.add(SpotItineraryData(5, 3, "世界", "images/osakajo.jpg", DateTime.now(), DateTime.now(), 0));
+   // _memoItineraries.add(MemoItineraryData(2, "メモですメモです"));
 
-    _memoItineraries.add(MemoItineraryData(2, "メモですメモです"));
+    //_trafficItineraries.add(TrafficItineraryData(4, 1, 60, 400));
 
-    _trafficItineraries.add(TrafficItineraryData(4, 1, 60, 400));
-
-    _travelDateTime.add(DateTime.now());
-    _travelDateTime.add(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 1));
-    _travelDateTime.add(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 2));
-    _travelDateTime.add(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 3));
-    _travelDateTime.add(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 4));
-    _travelDateTime.add(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 5));
-
+    _travelDateTime = _getDateTimeList(widget.startDateTime, widget.endDateTime);
 
     _tabController = TabController(length: _travelDateTime.length, vsync: this);
     _menuTabController = TabController(length: 3, vsync: this);
+
+    _startDateTime = widget.startDateTime;
+    _endDateTime = widget.endDateTime;
+  }
+
+  void _getItiData() async{
+    //行程データ取得
+    http.Response response = await Network().getData("itinerary/get/" + widget.planId.toString());
+    List<dynamic> list = json.decode(response.body);
+    List<int> ids = [];
+    for(int i=0; i<list.length; i++){
+      DateTime date = DateTime.parse(list[i]["day"]);
+      _itineraries.add(ItineraryData(list[i]["id"], list[i]["itinerary_order"], list[i]["plan_id"], date, false));
+      ids.add(list[i]["id"]);
+      print(list[i]["id"].toString());
+    }
+    
+    final data = {
+      "ids" : ids,
+    };
+
+    //List<String> id = [];
+    http.Response responseSpot = await Network().postData(data, "itinerary/get/spot");
+    print(responseSpot.body);
+    List list2 = json.decode(responseSpot.body);
+    for(int i=0; i<list2.length; i++){
+      _spotItineraries.add(SpotItineraryData(list2[i]["itinerary_id"], list2[i]["spot_id"], list2[i]["spot_name"], list2[i]["latitube"], list2[i]["longitube"], list2[i]["image_path"], null , null, 0));
+      print(_spotItineraries[i].spotName);
+    }
+
+    http.Response responseTraffic = await Network().postData(data, "itinerary/get/traffic");
+    List list3 = json.decode(responseTraffic.body);
+    for(int i=0; i<list3.length; i++){
+      _trafficItineraries.add(TrafficItineraryData(list3[i]["itinerary_id"], list3[i]["itinerary_class"], list3[i]["traffic_time"], list3[i]["traffic_cost"]));
+    }
+
+    http.Response responseMemo = await Network().postData(data, "itinerary/get/note");
+    List list4 = json.decode(responseMemo.body);
+    for(int i=0; i<list4.length; i++){
+      _memoItineraries.add(MemoItineraryData(list4[i]['itinerary_id'], list4[i]['memo']));
+    }
+
+    setState(() {
+
+    });
   }
 
   @override
@@ -134,15 +188,51 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     super.dispose();
   }
 
+  //日付のリストを作る
+  List<DateTime> _getDateTimeList(DateTime startDate, DateTime endDate){
+    List<DateTime> dateList = [];
+    print("aa");
+
+    //1日だけのとき
+    if(startDate == endDate){
+      dateList.add(startDate);
+      return dateList;
+    }
+
+    //2日以上あるとき
+    DateTime date = startDate;
+    DateTime lastDate = DateTime(endDate.year, endDate.month, endDate.day+1);
+    while(date != lastDate){
+      dateList.add(date);
+      date = DateTime(date.year, date.month, date.day+1);
+    }
+
+    return dateList;
+  }
+
   //日付追加の処理
-  _addDateTime(){
+  _addDateTime() async{
+    _endDateTime = DateTime(_endDateTime.year, _endDateTime.month, _endDateTime.day+1);
+
+    String startDate = DateFormat('yy-MM-dd').format(_startDateTime);
+    String endDate = DateFormat('yy-MM-dd').format(_endDateTime);
+
+    final data = {
+      "id" : widget.planId,
+      "start_day" : startDate,
+      "end_day" : endDate,
+    };
+
+    http.Response response = await Network().postData(data, "plan/update/date");
+    print(response.body);
+
     setState(() {
-      _travelDateTime.add(DateTime(lastDateTime.year, lastDateTime.month, lastDateTime.day));
+      _travelDateTime.add(_endDateTime);
       _tabController = _createNewTabController();
     });
 
-    lastDateTime = DateTime(lastDateTime.year, lastDateTime.month, lastDateTime.day + 1);
     _tabController.animateTo(_tabController.length-1);
+
 
   }
 
@@ -152,7 +242,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
   );
 
   //スポットパレットからプランに追加したときの処理
-  _addSpotToPlan(int index){
+  _addSpotToPlan(int index) async{
     if(_dragAndDropData.alreadyFlag){
       print("add_index"+ index.toString());
       //並び替え時
@@ -206,6 +296,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
 
     }else{
       print("追加します！");
+
       //追加
       //index以下のitineraryOrderの値を1ふやす
       for(int i=index+1; i < _itineraries.length; i++){
@@ -216,21 +307,40 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
         }
       }
       int len = _id;
+      String day = DateFormat('yy-MM-dd').format(_travelDateTime[_tabController.index]);
+
+      final data = {
+        "order" : _id,
+        "day" : day,
+        "plan_id" : widget.planId.toString(),
+        "spot_id" : _spots[_dragAndDropData.dataId].spotId.toString(),
+        "type" : 0
+      };
+
+      http.Response res = await Network().postData(data, "itinerary/store");
+      print(res.body.toString());
+
 
       setState(() {
         print(_itineraries.indexWhere((element) => _dataTimeFunc(element.itineraryDateTime) == _dataTimeFunc(_travelDateTime[_tabController.index])).toString());
         if(_itineraries.indexWhere((element) => _dataTimeFunc(element.itineraryDateTime) == _dataTimeFunc(_travelDateTime[_tabController.index])) == -1){
-          _itineraries.insert(index + 1, ItineraryData(len, 1, 1, _travelDateTime[_tabController.index], false));
+          if(_itineraries.length == 0){
+            _itineraries.insert(0, ItineraryData(len, 1, 1, _travelDateTime[_tabController.index], false));
+          }else{
+            _itineraries.insert(index + 1, ItineraryData(len, 1, 1, _travelDateTime[_tabController.index], false));
+          }
         }else{
           _itineraries.insert(index + 1, ItineraryData(len, _itineraries[index].itineraryOrder + 1, 1, _travelDateTime[_tabController.index], false));
         }
         //行程リストに追加
         //_itineraries.insert(index + 1, ItineraryData(len, _itineraries[index].itineraryOrder + 1, 1, _travelDateTime[_tabController.index], false));
         //行程スポットリストに追加
-        _spotItineraries.add(SpotItineraryData(len, _spots[_dragAndDropData.dataId].spotId, _spots[_dragAndDropData.dataId].spotName, _spots[_dragAndDropData.dataId].spotImagePath, null, null, 0));
+        _spotItineraries.add(SpotItineraryData(len, _spots[_dragAndDropData.dataId].spotId, _spots[_dragAndDropData.dataId].spotName,_spots[_dragAndDropData.dataId].latitude, _spots[_dragAndDropData.dataId].longitude, _spots[_dragAndDropData.dataId].spotImagePath, null, null, 0));
       });
 
       _id++;
+
+      _dragAndDropData = null;
     }
   }
 
@@ -263,6 +373,8 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
         _trafficItineraries.add(TrafficItineraryData(len, trafficType, trafficTime, cost));
       });
       _id++;
+
+      _dragAndDropData = null;
     }
   }
 
@@ -295,6 +407,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           _memoItineraries.removeAt(_memoItineraries.indexWhere((element) => element.itineraryId == iniId));
         });
       }
+      _dragAndDropData = null;
     }
   }
   
@@ -457,7 +570,6 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                       _addSpotToPlan(0);
                       break;
                   }
-                  _dragAndDropData = null;
                 });
               },
               onWillAccept: (receivedItem){
@@ -534,7 +646,6 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                        _addTrafficToPlan(_dragAndDropData.dataId, i);
                        break;
                    }
-                   _dragAndDropData = null;
                  });
                },
                  onWillAccept: (receivedItem){
@@ -559,8 +670,8 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                      dragTargetBuilder = Container(
                        margin: EdgeInsets.only(left: 15.0, top: 20.0),
                        child:_buildPlanPart(
-                           _itineraries[i].itineraryID,
-                           _itineraries[i].itineraryOrder
+                         _itineraries[i].itineraryID,
+                         _itineraries[i].itineraryOrder
                        ),
                      );
                    }else{
@@ -676,7 +787,6 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                     _addTrafficToPlan(_dragAndDropData.dataId, testId);
                     break;
                 }
-                _dragAndDropData = null;
                 _underFlag = false;
               });
             },
@@ -820,10 +930,16 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
       childWhenDragging: Container(),
       axis: Axis.vertical,
       data: itinerariesType == 2 ?
-        DragAndDropData(itinerariesType, id, 0, _memoItineraries[index].memo, true):
+          _memoItineraries.length == 0 ?
+            DragAndDropData(itinerariesType, id, 0, "      ", true):
+            DragAndDropData(itinerariesType, id, 0, _memoItineraries[index].memo, true):
           itinerariesType == 1 ?
-          DragAndDropData(itinerariesType, id, _trafficItineraries[index].itineraryId, null, true):
-          DragAndDropData(itinerariesType, id, _spotItineraries[index].itineraryId, null, true),
+              _trafficItineraries.length == 0 ?
+                DragAndDropData(itinerariesType, id, 0, null, true):
+                DragAndDropData(itinerariesType, id, _trafficItineraries[index].itineraryId, null, true):
+              _spotItineraries.length == 0?
+                DragAndDropData(itinerariesType, id, 0, null, true):
+                DragAndDropData(itinerariesType, id, _spotItineraries[index].itineraryId, null, true),
       onDragStarted: (){
         setState(() {
           _dragFlag = true;
@@ -1113,7 +1229,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
       },
       builder: (context, acceptedItem, rejectedItems){
         return Container(
-          padding: EdgeInsets.only(top: 30.0),
+          padding: EdgeInsets.only(top: 10.0),
           color: Colors.black.withOpacity(0.5),
           child: Center(
             child: Column(
