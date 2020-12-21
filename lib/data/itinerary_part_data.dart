@@ -8,12 +8,14 @@ class SpotItineraryData{
   int itineraryId;
   int spotId;
   String spotName;
+  double latitude;
+  double longitude;
   String spotImagePath;
   DateTime spotStartDateTime;
   DateTime spotEndDateTime;
   int parentFlag;
 
-  SpotItineraryData(this.itineraryId, this.spotId, this.spotName, this.spotImagePath, this.spotStartDateTime, this.spotEndDateTime, this.parentFlag);
+  SpotItineraryData(this.itineraryId, this.spotId, this.spotName, this.latitude, this.longitude, this.spotImagePath, this.spotStartDateTime, this.spotEndDateTime, this.parentFlag);
 }
 
 //行程のメモ
