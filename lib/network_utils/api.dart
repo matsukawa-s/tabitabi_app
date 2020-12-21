@@ -7,9 +7,9 @@ class Network{
   final _baseUrl = 'http://10.0.2.2:8000/';
 
 // アンドロイドエミュレーターの場合10.0.2.2:8000を使用
-//  final String _url = 'http://10.0.2.2:8000/api/';
+  final String _url = 'http://10.0.2.2:8000/api/';
 // IOSシミュレータの場合はlocalhostを使用
-  final String _url = 'http://localhost:8000/api/';
+//  final String _url = 'http://localhost:8000/api/';
 
 
   static var token;

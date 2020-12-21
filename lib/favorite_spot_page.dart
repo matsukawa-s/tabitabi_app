@@ -47,50 +47,53 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
           child: CircularProgressIndicator()
         )
         : model.spots.isEmpty ? Center(child: Text("お気に入り登録しているスポットがありません"))
-        : Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              child: SmartSelect.multiple(
-                title: '都道府県から探す',
-                value: _selects,
-                onChange: (state) => setState(
-                    () => {
-                      _selects = state.value,
-                      model.refine(_selects)
-                    }
+        : SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                child: SmartSelect.multiple(
+                  title: '都道府県から探す',
+                  value: _selects,
+                  onChange: (state) => setState(
+                      () => {
+                        _selects = state.value,
+                        model.refine(_selects)
+                      }
+                  ),
+                  choiceItems: model.prefectures,
+                  choiceType: S2ChoiceType.chips,
+                  modalType: S2ModalType.popupDialog,
+                  choiceLayout: S2ChoiceLayout.list,
+                  tileBuilder: (context,state){
+                    return S2Tile.fromState(
+                      state,
+                      isTwoLine: true, //選択しているアイテムを出す
+                    );
+                  },
                 ),
-                choiceItems: model.prefectures,
-                choiceType: S2ChoiceType.chips,
-                modalType: S2ModalType.popupDialog,
-                choiceLayout: S2ChoiceLayout.list,
-                tileBuilder: (context,state){
-                  return S2Tile.fromState(
-                    state,
-                    isTwoLine: true, //選択しているアイテムを出す
-                  );
+              ),
+              Divider(),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: 5),
+                itemCount: model.showSpots.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10
+                ),
+                itemBuilder: (context,index){
+                  if(widget.mode){
+                    return _buildSelectableItem(model.showSpots[index],model);
+                  }else{
+                    return _buildShowDetailsSpotItem(model.showSpots[index],model);
+                  }
                 },
               ),
-            ),
-            Divider(),
-            GridView.builder(
-              shrinkWrap: true,
-              padding: EdgeInsets.symmetric(horizontal: 5),
-              itemCount: model.showSpots.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10
-              ),
-              itemBuilder: (context,index){
-                if(widget.mode){
-                  return _buildSelectableItem(model.showSpots[index],model);
-                }else{
-                  return _buildShowDetailsSpotItem(model.showSpots[index],model);
-                }
-              },
-            ),
-          ],
+            ],
+          ),
         );
   }
 
