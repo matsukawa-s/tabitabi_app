@@ -35,6 +35,7 @@ class Place {
   final nowOpen; //営業中フラグ(null:apiのレスポンスに存在しない)
   var isFavorite; //お気に入り登録フラグ
   final prefectureId; //都道府県コード
+  final List types; //場所タイプ
 
   Place({
     this.spotId,
@@ -50,7 +51,8 @@ class Place {
     this.weekdayText,
     this.nowOpen,
     this.isFavorite,
-    this.prefectureId
+    this.prefectureId,
+    this.types
   });
 
   Map<String,dynamic> toJson() =>
@@ -62,7 +64,8 @@ class Place {
         'lat' : lat,
         'lng' : lng,
         'isFavorite' : isFavorite,
-        'prefecture_id' : prefectureId
+        'prefecture_id' : prefectureId,
+        'types' : types
       };
 
 }
