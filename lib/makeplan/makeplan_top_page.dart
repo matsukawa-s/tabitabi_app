@@ -1,9 +1,13 @@
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:tabitabi_app/network_utils/api.dart';
 import 'makeplan_edit_page.dart';
+import 'package:tabitabi_app/data/itinerary_data.dart';
+import 'package:tabitabi_app/data/itinerary_part_data.dart';
+import 'package:tabitabi_app/components/makeplan_edit_traffic_part.dart';
+import 'package:tabitabi_app/components/makeplan_edit_plan_part.dart';
+import 'package:tabitabi_app/components/makeplan_edit_memo_part.dart';
 
 class MakePlanTop extends StatefulWidget {
 
@@ -18,7 +22,7 @@ class MakePlanTop extends StatefulWidget {
   _MakePlanTopState createState() => _MakePlanTopState();
 }
 
-class _MakePlanTopState extends State<MakePlanTop> {
+class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin{
 
   String _planName = "";
   String _planDetail = "";
@@ -26,10 +30,24 @@ class _MakePlanTopState extends State<MakePlanTop> {
   DateTime _endDateTime = DateTime.now();
   List<DateTime> _planDates = [];
 
+  TabController _controller;
+
+  //行程のリスト
+  List<ItineraryData> _itineraries = [];
+  //行程スポットのリスト
+  List<SpotItineraryData> _spotItineraries = [];
+  //行程メモのリスト
+  List<MemoItineraryData> _memoItineraries = [];
+  //行程交通機関のリスト
+  List<TrafficItineraryData> _trafficItineraries = [];
+
   @override
   void initState() {
     super.initState();
     _getPlan();
+    _getItiData();
+
+    _controller = TabController(length: 1, vsync: this);
   }
 
   Future<int> _getPlan() async{
@@ -49,8 +67,63 @@ class _MakePlanTopState extends State<MakePlanTop> {
     });
 
     print(_planDates.length);
+
+    setState(() {
+      _controller = _createNewTabController();
+    });
     return _planDates.length;
 
+  }
+
+  TabController _createNewTabController() => TabController(
+    vsync: this,
+    length: _planDates.length,
+  );
+
+  void _getItiData() async{
+    _itineraries.clear();
+    _spotItineraries.clear();
+    _trafficItineraries.clear();
+    _memoItineraries.clear();
+    //行程データ取得
+    http.Response response = await Network().getData("itinerary/get/" + widget.planId.toString());
+    List<dynamic> list = json.decode(response.body);
+    List<int> ids = [];
+    for(int i=0; i<list.length; i++){
+      DateTime date = DateTime.parse(list[i]["day"]);
+      _itineraries.add(ItineraryData(list[i]["id"], list[i]["itinerary_order"], list[i]["plan_id"], date, false));
+      ids.add(list[i]["id"]);
+      print(list[i]["id"].toString());
+    }
+
+    final data = {
+      "ids" : ids,
+    };
+
+    //List<String> id = [];
+    http.Response responseSpot = await Network().postData(data, "itinerary/get/spot");
+    print(responseSpot.body);
+    List list2 = json.decode(responseSpot.body);
+    for(int i=0; i<list2.length; i++){
+      _spotItineraries.add(SpotItineraryData(list2[i]["itinerary_id"], list2[i]["spot_id"], list2[i]["spot_name"], list2[i]["latitube"], list2[i]["longitube"], list2[i]["image_url"], null , null, 0));
+      // print(_spotItineraries[i].spotName);
+    }
+
+    http.Response responseTraffic = await Network().postData(data, "itinerary/get/traffic");
+    List list3 = json.decode(responseTraffic.body);
+    for(int i=0; i<list3.length; i++){
+      _trafficItineraries.add(TrafficItineraryData(list3[i]["itinerary_id"], list3[i]["traffic_class"], list3[i]["travel_time"], list3[i]["traffic_cost"]));
+    }
+
+    http.Response responseMemo = await Network().postData(data, "itinerary/get/note");
+    List list4 = json.decode(responseMemo.body);
+    for(int i=0; i<list4.length; i++){
+      _memoItineraries.add(MemoItineraryData(list4[i]['itinerary_id'], list4[i]['memo']));
+    }
+
+    setState(() {
+      _itineraries.sort((a,b) => a.itineraryOrder.compareTo(b.itineraryOrder));
+    });
   }
 
   //日付のリストを作る
@@ -159,179 +232,77 @@ class _MakePlanTopState extends State<MakePlanTop> {
                   children: [
                     //スケジュール
                     Card(
-                      margin: EdgeInsets.only(left: 24.0, top: 20.0, right: 24.0),
+                      margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       child: Container(
-                        constraints: BoxConstraints.expand(height: 400),
+                        constraints: BoxConstraints.expand(height: 500),
                         child: Stack(
                           children: [
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Expanded(
-                                  child: DefaultTabController(
-                                    length: _planDates.length,
-                                    child: Builder(
-                                      builder: (BuildContext context){
-                                        final TabController controller = DefaultTabController.of(context);
-                                        return  Stack(
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        margin: EdgeInsets.only(top: 10.0),
+                                        height: 400,
+                                        width: 500,
+                                        child: TabBarView(
+                                          controller: _controller,
                                           children: [
-                                            Container(
-                                              margin: EdgeInsets.only(top: 10.0),
-                                              height: 400,
-                                              width: 500,
-                                              child: TabBarView(
-                                                children: [
-                                                  for(int i=0; i<_planDates.length; i++)
-                                                    _buildSchedule("1", _planDates[i]),
-                                                ],
-                                              ),
-                                            ),
-                                            Positioned(
-                                                bottom: 0.0,
-                                                left: 0.0,
-                                                right: 0.0,
-                                                child: Align(
-                                                  alignment: Alignment.center,
-                                                  child: TabPageSelector(),
-                                                )
-                                            ),
-                                            Positioned(
-                                              top: 0.0,
-                                              bottom: 0.0,
-                                              left: -30.0,
-                                              child: IconButton(
-                                                icon: Icon(Icons.chevron_left),
-                                                iconSize: 80.0,
-                                                color: Colors.orange,
-                                                onPressed: (){
-                                                  if(!(controller.index == 0)){
-                                                    controller.animateTo(controller.index - 1);
-                                                  }
-                                                },
-                                              ),
-                                            ),
-                                            Positioned(
-                                              top: 0.0,
-                                              bottom: 0.0,
-                                              right: -30,
-                                              child: IconButton(
-                                                icon: Icon(Icons.chevron_right),
-                                                iconSize: 80.0,
-                                                color: Colors.orange,
-                                                onPressed: (){
-                                                  if(!(controller.index == _planDates.length)){
-                                                    controller.animateTo(controller.index + 1);
-                                                  }
-                                                },
-                                              ),
-                                            ),
+                                            for(int i=0; i<_planDates.length; i++)
+                                              SingleChildScrollView(
+                                                child: _buildSchedule("1", _planDates[i]),
+                                              )
                                           ],
-                                        );
-                                      }
-                                    ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                          bottom: 0.0,
+                                          left: 0.0,
+                                          right: 0.0,
+                                          child: Align(
+                                            alignment: Alignment.center,
+                                            child: TabPageSelector(
+                                              controller: _controller,
+                                            ),
+                                          )
+                                      ),
+                                      Positioned(
+                                        top: 0.0,
+                                        bottom: 0.0,
+                                        left: -30.0,
+                                        child: IconButton(
+                                          icon: Icon(Icons.chevron_left),
+                                          iconSize: 80.0,
+                                          color: Colors.orange,
+                                          onPressed: (){
+                                            if(!(_controller.index == 0)){
+                                              _controller.animateTo(_controller.index - 1);
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 0.0,
+                                        bottom: 0.0,
+                                        right: -30,
+                                        child: IconButton(
+                                          icon: Icon(Icons.chevron_right),
+                                          iconSize: 80.0,
+                                          color: Colors.orange,
+                                          onPressed: (){
+                                            if(!(_controller.index == _planDates.length)){
+                                              _controller.animateTo(_controller.index + 1);
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  // child: FutureBuilder(
-                                  //   future: _getPlan(),
-                                  //   builder: (BuildContext context, AsyncSnapshot<int> snapshot){
-                                  //     print(snapshot.hasError);
-                                  //     print(snapshot.error.toString());
-                                  //
-                                  //     if (snapshot.connectionState != ConnectionState.done) {
-                                  //       return Center(
-                                  //         child: CircularProgressIndicator(),
-                                  //       );
-                                  //     }
-                                  //
-                                  //     if (snapshot.hasError) {
-                                  //       return Text(snapshot.error.toString());
-                                  //     }
-                                  //
-                                  //     if(snapshot.hasData){
-                                  //       int length = snapshot.data;
-                                  //       if(_planDates.length == 0){
-                                  //         return Container();
-                                  //       }
-                                  //
-                                  //       return DefaultTabController(
-                                  //         length: _planDates.length,
-                                  //         child: Builder(
-                                  //           builder: (BuildContext context) => Stack(
-                                  //             children: [
-                                  //               Positioned(
-                                  //                 top: 0.0,
-                                  //                 left: 0.0,
-                                  //                 height: 50.0,
-                                  //                 width: 320,
-                                  //                 child: Center(
-                                  //                   child: _buildTitle("10/23"),
-                                  //                 ),
-                                  //               ),
-                                  //               Container(
-                                  //                 margin: EdgeInsets.only(top: 50.0),
-                                  //                 height: 400,
-                                  //                 width: 500,
-                                  //                 child: TabBarView(
-                                  //                   children: [
-                                  //                     for(int i=0; i<_planDates.length; i++)
-                                  //                       _buildSchedule("1"),
-                                  //                   ],
-                                  //                 ),
-                                  //               ),
-                                  //               Positioned(
-                                  //                   bottom: 0.0,
-                                  //                   left: 0.0,
-                                  //                   right: 0.0,
-                                  //                   child: Align(
-                                  //                     alignment: Alignment.center,
-                                  //                     child: TabPageSelector(),
-                                  //                   )
-                                  //               ),
-                                  //               Positioned(
-                                  //                 top: 0.0,
-                                  //                 bottom: 0.0,
-                                  //                 left: -30.0,
-                                  //                 child: IconButton(
-                                  //                   icon: Icon(Icons.chevron_left),
-                                  //                   iconSize: 80.0,
-                                  //                   color: Colors.orange,
-                                  //                   onPressed: (){
-                                  //                     final TabController controller = DefaultTabController.of(context);
-                                  //                     if(!(controller.index == 0)){
-                                  //                       controller.animateTo(controller.index - 1);
-                                  //                     }
-                                  //                   },
-                                  //                 ),
-                                  //               ),
-                                  //               Positioned(
-                                  //                 top: 0.0,
-                                  //                 bottom: 0.0,
-                                  //                 right: -30,
-                                  //                 child: IconButton(
-                                  //                   icon: Icon(Icons.chevron_right),
-                                  //                   iconSize: 80.0,
-                                  //                   color: Colors.orange,
-                                  //                   onPressed: (){
-                                  //                     final TabController controller = DefaultTabController.of(context);
-                                  //                     if(!(controller.index == _planDates.length)){
-                                  //                       controller.animateTo(controller.index + 1);
-                                  //                     }
-                                  //                   },
-                                  //                 ),
-                                  //               ),
-                                  //             ],
-                                  //           ),
-                                  //         ),
-                                  //       );
-                                  //     }else{
-                                  //       return Center(
-                                  //         child: Container(child: Text("sa"),),
-                                  //       );
-                                  //     }
-                                  //   },
-                                  // ),
                                 ),
                                 Container(
                                   alignment: Alignment.bottomRight,
@@ -348,6 +319,7 @@ class _MakePlanTopState extends State<MakePlanTop> {
                                       ).then((value){
                                         setState(() {
                                           _getPlan();
+                                          _getItiData();
                                         });
                                       });
                                     },
@@ -357,11 +329,11 @@ class _MakePlanTopState extends State<MakePlanTop> {
                             ),
                           ],
                         ),
-                      )
+                      ),
                     ),
                     //メンバー
                     Card(
-                      margin: EdgeInsets.only(left: 24.0, top: 20.0, right: 24.0),
+                      margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20.0),
                       ),
@@ -405,7 +377,7 @@ class _MakePlanTopState extends State<MakePlanTop> {
                     ),
                     //アルバム
                     Card(
-                      margin: EdgeInsets.only(left: 24.0, top: 20.0, right: 24.0, bottom: 30.0),
+                      margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0, bottom: 30.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20.0),
                       ),
@@ -456,15 +428,96 @@ class _MakePlanTopState extends State<MakePlanTop> {
   Widget _buildSchedule(String test, DateTime date){
     return Container(
       margin: EdgeInsets.only(left: 16.0, top: 5.0, right: 16.0),
-      color: Colors.greenAccent,
+      width: MediaQuery.of(context).size.width,
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             child: Text(date.month.toString() + "/" + date.day.toString(), style: TextStyle(fontSize: 18.0),),
-          )
+          ),
+          for(int i=0; i<_itineraries.length; i++)
+            if(_itineraries[i].itineraryDateTime == date)
+            Container(
+              margin: EdgeInsets.only(top: 14.0, left: 10.0),
+              child: _buildPlanPart(_itineraries[i].itineraryID, _itineraries[i].itineraryOrder),
+            ),
+          if(_itineraries.length == 0 || _itineraries.indexWhere((element) => element.itineraryDateTime == date) == -1)
+            Container(
+              margin: EdgeInsets.only(left: 20.0, top: 20.0, right: 20.0, bottom: 20.0),
+              color: Colors.black.withOpacity(0.2),
+              width: MediaQuery.of(context).size.width,
+              height: 350,
+              child: Center(
+                child: Text("まだ予定はありません！"),
+              ),
+            )
         ],
       ),
     );
+  }
+
+  //行程のパーツを返すWidget
+  Widget _buildPlanPart(int id, int order){
+    Widget part = Container();
+
+    int itinerariesType = -1;  //0:スポット　1:メモ　2:交通
+    int index = -1;
+
+    //スポット・メモ・交通から、行程IDと一致するものを探す
+    for(int i=0; i<_spotItineraries.length; i++){
+      if(_spotItineraries[i].itineraryId == id){
+        itinerariesType = 0;
+        index = i;
+        break;
+      }
+    }
+    if(itinerariesType == -1){
+      for(int i=0; i<_trafficItineraries.length; i++){
+        if(_trafficItineraries[i].itineraryId == id){
+          itinerariesType = 1;
+          index = i;
+          break;
+        }
+      }
+    }
+    if(itinerariesType == -1){
+      for(int i=0; i<_memoItineraries.length; i++){
+        if(_memoItineraries[i].itineraryId == id){
+          itinerariesType = 2;
+          index = i;
+          break;
+        }
+      }
+    }
+
+    switch (itinerariesType){
+      case 0 :
+        part = PlanPart(
+          number: order,
+          spotName: _spotItineraries[index].spotName,
+          spotPath: _spotItineraries[index].spotImagePath,
+          spotStartDateTime: _spotItineraries[index].spotStartDateTime,
+          spotEndDateTime: _spotItineraries[index].spotEndDateTime,
+          spotParentFlag: _spotItineraries[index].parentFlag,
+          confirmFlag: true,
+          width: MediaQuery.of(context).size.width - 60,
+        );
+        break;
+      case 1 :
+        part = TrafficPart(
+          trafficType: _trafficItineraries[index].trafficClass,
+          minutes: _trafficItineraries[index].travelTime,
+          confirmFlag: true,
+        );
+        break;
+      case 2 :
+        part = MemoPart(
+          memoString: _memoItineraries[index].memo,
+          confirmFlag: true,
+        );
+    }
+    return part;
   }
 }
 

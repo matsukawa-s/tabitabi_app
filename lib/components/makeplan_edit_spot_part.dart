@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 //スポット
 class SpotPart extends StatefulWidget {
@@ -16,6 +17,7 @@ class SpotPart extends StatefulWidget {
 }
 
 class _SpotPartState extends State<SpotPart> {
+  final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -41,14 +43,16 @@ class _SpotPartState extends State<SpotPart> {
             children: [
               Container(
                 constraints: BoxConstraints.expand(height: 60.0),
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage(widget.spotPath),
-                      fit: BoxFit.cover
-                  ),
+                child: ClipRRect(
                   borderRadius: BorderRadius.only(
                     topLeft:  const  Radius.circular(10.0),
                     topRight: const  Radius.circular(10.0),
+                  ),
+                  child: widget.spotPath == null ? Container() :Image.network(
+                    'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
+                        '&photoreference=${widget.spotPath}'
+                        '&key=${_kGoogleApiKey}',
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
