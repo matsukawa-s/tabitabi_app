@@ -6,7 +6,7 @@ class SpotData{
   double latitude;
   double longitude;
   String spotImagePath;
-  int priceId;
+  String priceId;
   int spotCategory;
 
   SpotData(this.spotId, this.spotName, this.latitude, this.longitude, this.spotImagePath, this.priceId, this.spotCategory);
