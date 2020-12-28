@@ -2,9 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:tabitabi_app/network_utils/api.dart';
+
+final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
 class TopPage extends StatelessWidget {
   final String title;
@@ -41,12 +44,18 @@ class TopPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text("本日のプラン"),
-                  Divider(),
-                  Container(
-                    margin: EdgeInsets.only(bottom: 8.0),
-                    height: 150,
-                    color: Colors.black12,
+                  //今日のプランを表示する
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("今日のプラン"),
+                      Divider(),
+                      Container(
+                        margin: EdgeInsets.only(bottom: 8.0),
+                        height: 150,
+                        color: Colors.black12,
+                      ),
+                    ],
                   ),
                   //人気のプランを表示する
                   popularPlans.isEmpty ? Container()
@@ -74,46 +83,74 @@ class TopPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                  Text("人気のスポット"),
-                  Divider(),
-                  SizedBox(
-                    height: 100,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
+                  popularSpots.isEmpty ? Container()
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        //仮
-                        for(int i = 0;i < 10;i++)
-                          Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Container(
-                              color: Colors.black12,
-                              width: 100,
-                              child: Text(i.toString()),
-                            ),
-                          )
+                        Text("人気のスポット"),
+                        Divider(),
+                        SizedBox(
+                          height: 140,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: popularSpots.length,
+                            itemBuilder: (BuildContext context,int index){
+                              return Container(
+                                padding: EdgeInsets.all(4.0),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      height: 110,
+                                      width: 110,
+//                                      borderRadius: BorderRadius.circular(8.0),
+                                      child: Image.network(
+                                        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
+                                            '&photoreference=${popularSpots[index]["image_url"]}'
+                                            '&key=${_kGoogleApiKey}',
+                                        fit: BoxFit.fill,
+                                      ),
+                                    ),
+                                    Container(
+                                      width: 110,
+                                      child: Text(
+                                        popularSpots[index]["spot_name"],
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    )
+                                  ],
+                                )
+                              );
+                            },
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  Text("最近見たプラン"),
-                  Divider(),
-                  SizedBox(
-                    height: 110,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        //仮
-                        for(int i = 0;i < 5;i++)
-                          Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Container(
-                              color: Colors.black12,
-                              width: 150,
-                              child: Text(i.toString()),
-                            ),
-                          )
-                      ],
-                    ),
-                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("最近見たプラン"),
+                      Divider(),
+                      SizedBox(
+                        height: 110,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            //仮
+                            for(int i = 0;i < 5;i++)
+                              Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Container(
+                                  color: Colors.black12,
+                                  width: 150,
+                                  child: Text(i.toString()),
+                                ),
+                              )
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
                 ],
               ),
             ),

@@ -125,6 +125,7 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
       children: [
         Container(
           height: 100,
+          width: MediaQuery.of(context).size.width / 3,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8.0),
             child: Image.network(
