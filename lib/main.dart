@@ -225,7 +225,8 @@ class MyHomePage extends StatelessWidget {
     int pageIndex = Provider.of<NavigationBarProvider>(context).selectedIndex;
 
     if(pageIndex == 0){                 // TopPageAppBar
-      return topPageAppBar();
+//      return topPageAppBar();
+        return null;
     }else if(pageIndex == 1){           // SearchPageAppBar
       return searchPageAppBar(context);
     }else if(pageIndex == 2){           // MapPageAppBar

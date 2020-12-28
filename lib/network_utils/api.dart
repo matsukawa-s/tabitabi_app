@@ -11,6 +11,7 @@ class Network{
 // IOSシミュレータの場合はlocalhostを使用
 //  final String _url = 'http://localhost:8000/api/';
 
+
   static var token;
 
   Future<void> _getToken() async {

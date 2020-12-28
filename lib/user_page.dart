@@ -29,7 +29,10 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
       future: _getUser(),
       builder: (context, snapshot) {
         if(snapshot.hasData){
-          final userProfile = snapshot.data;
+          final userProfile = snapshot.data["user"];
+          final createdPlans = snapshot.data["my_plans"];
+          final participatingPlans = snapshot.data["participating_plans"];
+
           return Container(
             padding: EdgeInsets.all(8.0),
             child: Column(
@@ -97,10 +100,32 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                       controller: _tabController,
                       children: [
                         Container(
-                          child: Text("作成したプラン"),
+                          child:  createdPlans.isEmpty
+                            ? Center(
+                                child: Text("作成したプランがありません"),
+                              )
+                            : ListView.builder(
+                                itemCount: createdPlans.length,
+                                itemBuilder: (BuildContext context,int index){
+                                  return ListTile(
+                                    title: Text(createdPlans[index]["title"]),
+                                  );
+                                }
+                              ),
                         ),
                         Container(
-                          child: Text("参加しているプラン"),
+                          child: participatingPlans.isEmpty
+                            ? Center(
+                                child: Text("参加しているプランがありません"),
+                              )
+                            : ListView.builder(
+                                itemCount: participatingPlans.length,
+                                itemBuilder: (BuildContext context,int index){
+                                  return ListTile(
+                                    title: Text(participatingPlans[index]["title"]),
+                                  );
+                                }
+                              )
                         )
                       ],
                     )
@@ -118,7 +143,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
   }
 
   Future<dynamic> _getUser() async{
-    var res = await Network().getData('get_user');
+    var res = await Network().getData('user/get_user');
     var body = json.decode(res.body);
 
     return body;

@@ -27,70 +27,96 @@ class FavoriteSpotPage extends StatefulWidget {
 }
 
 class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
-  List<int> _selects = []; // 都道府県の絞り込み
+  List<int> _selectsPrefectures = []; // 都道府県の絞り込み
+  List<int> _selectsTypes = []; // 場所タイプの絞り込み
   List<int> _selectedSpotItems = []; // 選択しているスポット(spotId)
 
   @override
   void initState() {
     super.initState();
-    print("favorite spot page initState");
     _selectedSpotItems.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FavoriteSpotViewModel>(context,listen: false).getFavoriteSpots();
+      Provider.of<FavoriteSpotViewModel>(context,listen: false).getSpotTypes();
     });
   }
 
   @override
   Widget build(BuildContext context) {
    final model = Provider.of<FavoriteSpotViewModel>(context);
-        return model.spots == null ? Center(
+        return model.spots == null || model.types == null ? Center(
           child: CircularProgressIndicator()
         )
         : model.spots.isEmpty ? Center(child: Text("お気に入り登録しているスポットがありません"))
-        : Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              child: SmartSelect.multiple(
-                title: '都道府県から探す',
-                value: _selects,
-                onChange: (state) => setState(
-                    () => {
-                      _selects = state.value,
-                      model.refine(_selects)
-                    }
+        : SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                child: SmartSelect.multiple(
+                  title: '都道府県で絞り込む',
+                  value: _selectsPrefectures,
+                  onChange: (state) => setState(
+                      () => {
+                        _selectsPrefectures = state.value,
+                        model.narrowDownByPrefectureAndTypes(_selectsPrefectures,_selectsTypes)
+                      }
+                  ),
+                  choiceItems: model.prefectures,
+                  choiceType: S2ChoiceType.chips,
+                  modalType: S2ModalType.popupDialog,
+                  choiceLayout: S2ChoiceLayout.list,
+                  tileBuilder: (context,state){
+                    return S2Tile.fromState(
+                      state,
+                      isTwoLine: false, //選択しているアイテムを出す
+                    );
+                  },
                 ),
-                choiceItems: model.prefectures,
-                choiceType: S2ChoiceType.chips,
-                modalType: S2ModalType.popupDialog,
-                choiceLayout: S2ChoiceLayout.list,
-                tileBuilder: (context,state){
-                  return S2Tile.fromState(
-                    state,
-                    isTwoLine: true, //選択しているアイテムを出す
-                  );
+              ),
+              Container(
+                child: SmartSelect.multiple(
+                  title: 'タイプで絞り込む',
+                  value: _selectsPrefectures,
+                  onChange: (state) => setState(
+                      () => {
+                        _selectsTypes = state.value,
+                        model.narrowDownByPrefectureAndTypes(_selectsPrefectures,_selectsTypes)
+                      }
+                  ),
+                  choiceItems: model.types,
+                  choiceType: S2ChoiceType.checkboxes,
+                  modalType: S2ModalType.popupDialog,
+                  choiceLayout: S2ChoiceLayout.list,
+                  tileBuilder: (context,state){
+                    return S2Tile.fromState(
+                      state,
+                      isTwoLine: false, //選択しているアイテムを出す
+                    );
+                  },
+                ),
+              ),
+              Divider(),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: 5),
+                itemCount: model.showSpots.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10
+                ),
+                itemBuilder: (context,index){
+                  if(widget.mode){
+                    return _buildSelectableItem(model.showSpots[index],model);
+                  }else{
+                    return _buildShowDetailsSpotItem(model.showSpots[index],model);
+                  }
                 },
               ),
-            ),
-            Divider(),
-            GridView.builder(
-              shrinkWrap: true,
-              padding: EdgeInsets.symmetric(horizontal: 5),
-              itemCount: model.showSpots.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10
-              ),
-              itemBuilder: (context,index){
-                if(widget.mode){
-                  return _buildSelectableItem(model.showSpots[index],model);
-                }else{
-                  return _buildShowDetailsSpotItem(model.showSpots[index],model);
-                }
-              },
-            ),
-          ],
+            ],
+          ),
         );
   }
 
@@ -99,6 +125,7 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
       children: [
         Container(
           height: 100,
+          width: MediaQuery.of(context).size.width / 3,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8.0),
             child: Image.network(

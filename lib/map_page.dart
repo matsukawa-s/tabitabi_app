@@ -248,7 +248,10 @@ class _MapPageState extends State<MapPage> {
         ? placesDetailsResponse.result.openingHours.weekdayText : null,
       prefectureId: prefectureId,
 //      isFavorite: null
+      types: placesDetailsResponse.result.types
     );
+
+    print(place.types);
 
     //スポットがお気に入り登録されているかどうか取得する
     http.Response res = await Network().getData("getOneFavorite/${placesDetailsResponse.result.placeId}");
