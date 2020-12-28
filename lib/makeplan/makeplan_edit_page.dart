@@ -6,18 +6,18 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:ui';
 import 'package:intl/intl.dart';
+import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 
 import 'package:tabitabi_app/data/itinerary_part_data.dart';
-
 import 'package:tabitabi_app/components/makeplan_edit_spot_part.dart';
 import 'package:tabitabi_app/components/makeplan_edit_plan_part.dart';
 import 'package:tabitabi_app/components/makeplan_edit_memo_part.dart';
 import 'package:tabitabi_app/data/spot_data.dart';
 import 'package:tabitabi_app/data/itinerary_data.dart';
-import 'package:tabitabi_app/data/itinerary_part_data.dart';
 import 'package:tabitabi_app/components/makeplan_edit_traffic_part.dart';
 import 'package:tabitabi_app/makeplan/makeplan_add_spot_page.dart';
+import 'package:tabitabi_app/model/spot_model.dart';
 
 //ドラッグ&ドロップ時にデータ
 class DragAndDropData{
@@ -54,7 +54,7 @@ class MakePlanEdit extends StatefulWidget {
   _MakePlanEditState createState() => _MakePlanEditState();
 }
 
-class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMixin  {
+class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMixin {
 
   GoogleMapController mapController;
   TabController _tabController;
@@ -87,7 +87,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
   ];
 
   //spot入れてるこの方法よくない
-  DragAndDropData _dragAndDropData = null;
+  DragAndDropData _dragAndDropData;
 
   //Dragしてるかどうかのフラグ
   bool _dragFlag = false;
@@ -113,18 +113,9 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     _itineraries.clear();
     _spotItineraries.clear();
     _memoItineraries.clear();
+    _getSpot();
 
     _getItiData();
-
-    _spots.add(SpotData(1, "ペンギン城",2.2, 22.2, "images/osakajo.jpg", 1, 1));
-    _spots.add(SpotData(2, "カバン", 2.2, 22.2,"images/illustrain02-travel04.png", 2, 1));
-    _spots.add(SpotData(3, "世界",22.2, 22, "images/osakajo.jpg", 3, 1));
-
-    // _itineraries.add(ItineraryData(1, 1, 1, DateTime.now(), false));
-    // _itineraries.add(ItineraryData(2, 1, 1, DateTime.now(), false));
-    // _itineraries.add(ItineraryData(3, 2, 1, DateTime.now(), false));
-    // _itineraries.add(ItineraryData(4, 2, 1, DateTime.now(), false));
-    // _itineraries.add(ItineraryData(5, 3, 1, DateTime.now(), false));
 
    // _memoItineraries.add(MemoItineraryData(2, "メモですメモです"));
 
@@ -160,14 +151,14 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     print(responseSpot.body);
     List list2 = json.decode(responseSpot.body);
     for(int i=0; i<list2.length; i++){
-      _spotItineraries.add(SpotItineraryData(list2[i]["itinerary_id"], list2[i]["spot_id"], list2[i]["spot_name"], list2[i]["latitube"], list2[i]["longitube"], list2[i]["image_path"], null , null, 0));
-      print(_spotItineraries[i].spotName);
+      _spotItineraries.add(SpotItineraryData(list2[i]["itinerary_id"], list2[i]["spot_id"], list2[i]["spot_name"], list2[i]["latitube"], list2[i]["longitube"], list2[i]["image_url"], null , null, 0));
+     // print(_spotItineraries[i].spotName);
     }
 
     http.Response responseTraffic = await Network().postData(data, "itinerary/get/traffic");
     List list3 = json.decode(responseTraffic.body);
     for(int i=0; i<list3.length; i++){
-      _trafficItineraries.add(TrafficItineraryData(list3[i]["itinerary_id"], list3[i]["itinerary_class"], list3[i]["traffic_time"], list3[i]["traffic_cost"]));
+      _trafficItineraries.add(TrafficItineraryData(list3[i]["itinerary_id"], list3[i]["traffic_class"], list3[i]["travel_time"], list3[i]["traffic_cost"]));
     }
 
     http.Response responseMemo = await Network().postData(data, "itinerary/get/note");
@@ -177,9 +168,25 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     }
 
     setState(() {
+      _itineraries.sort((a,b) => a.itineraryOrder.compareTo(b.itineraryOrder));
+    });
+  }
+
+  //スポットデータ取得
+  void _getSpot() async{
+    http.Response response = await Network().getData("planspot/get/" + widget.planId.toString());
+    List<dynamic> list = json.decode(response.body);
+
+    for(int i=0; i<list.length; i++){
+      _spots.add(
+          SpotData(list[i]["spot_id"], list[i]["spot_name"], list[i]["latitude"], list[i]["longitude"], list[i]["image_url"], list[i]["place_id"], 1)
+      );
+    }
+    setState(() {
 
     });
   }
+
 
   @override
   void dispose() {
@@ -287,6 +294,10 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           }
         }
       }
+
+      http.Response res = await Network().getData("itinerary/rearrange/" + _dragAndDropData.dataId.toString() + "/" + goOrder.toString() + "/" + _dragAndDropData.dataType.toString());
+
+      print(res.body);
       setState(() {
         //行程リストに追加
         _itineraries[iniIndex].itineraryOrder = goOrder;
@@ -307,20 +318,9 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
         }
       }
       int len = _id;
-      String day = DateFormat('yy-MM-dd').format(_travelDateTime[_tabController.index]);
+      String day = DateFormat('yyyy-MM-dd').format(_travelDateTime[_tabController.index]);
 
-      final data = {
-        "order" : _id,
-        "day" : day,
-        "plan_id" : widget.planId.toString(),
-        "spot_id" : _spots[_dragAndDropData.dataId].spotId.toString(),
-        "type" : 0
-      };
-
-      http.Response res = await Network().postData(data, "itinerary/store");
-      print(res.body.toString());
-
-
+      int order = 0;
       setState(() {
         print(_itineraries.indexWhere((element) => _dataTimeFunc(element.itineraryDateTime) == _dataTimeFunc(_travelDateTime[_tabController.index])).toString());
         if(_itineraries.indexWhere((element) => _dataTimeFunc(element.itineraryDateTime) == _dataTimeFunc(_travelDateTime[_tabController.index])) == -1){
@@ -329,14 +329,30 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           }else{
             _itineraries.insert(index + 1, ItineraryData(len, 1, 1, _travelDateTime[_tabController.index], false));
           }
+          order = 1;
         }else{
           _itineraries.insert(index + 1, ItineraryData(len, _itineraries[index].itineraryOrder + 1, 1, _travelDateTime[_tabController.index], false));
+          order = _itineraries[index].itineraryOrder+1;
         }
         //行程リストに追加
         //_itineraries.insert(index + 1, ItineraryData(len, _itineraries[index].itineraryOrder + 1, 1, _travelDateTime[_tabController.index], false));
         //行程スポットリストに追加
         _spotItineraries.add(SpotItineraryData(len, _spots[_dragAndDropData.dataId].spotId, _spots[_dragAndDropData.dataId].spotName,_spots[_dragAndDropData.dataId].latitude, _spots[_dragAndDropData.dataId].longitude, _spots[_dragAndDropData.dataId].spotImagePath, null, null, 0));
+
       });
+
+      print("test : " + day + " , " + order.toString());
+      final data = {
+        "order" : order,
+        "day" : day,
+        "plan_id" : widget.planId,
+        "spot_id" : _spots[_dragAndDropData.dataId].spotId,
+        "type" : 0
+      };
+
+      http.Response res = await Network().postData(data, "itinerary/store");
+      //print(jsonEncode(data));
+      //print("aa" + res.body.toString());
 
       _id++;
 
@@ -345,7 +361,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
   }
 
   //交通パレットからプランに追加したときの処理
-  _addTrafficToPlan(int trafficType, int index){
+  _addTrafficToPlan(int trafficType, int index) async{
     //時間の計算
     int trafficTime = 40;
     int cost = 400;
@@ -360,6 +376,8 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
         _itineraries[iniIndex].itineraryOrder = goOrder;
         _itineraries.sort((a,b) => a.itineraryOrder.compareTo(b.itineraryOrder));
       });
+
+      http.Response res = await Network().getData("itinerary/rearrange/" + _dragAndDropData.dataId.toString() + "/" + goOrder.toString() + "/" + _dragAndDropData.dataType.toString());
     }else{
       //追加時
       int len = _id;
@@ -374,12 +392,28 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
       });
       _id++;
 
+      String day = DateFormat('yyyy-MM-dd').format(_travelDateTime[_tabController.index]);
+
+      print("test : " + day + " , " + _itineraries[index].itineraryOrder.toString());
+      final data = {
+        "order" : _itineraries[index].itineraryOrder,
+        "day" : day,
+        "plan_id" : widget.planId,
+        "type" : 1,
+        "traffic_class" : _dragAndDropData.dataId,
+        "travel_time" : trafficTime,
+        "traffic_cost" : 0,
+      };
+
+      http.Response res = await Network().postData(data, "itinerary/store");
+      print(res.body);
+
       _dragAndDropData = null;
     }
   }
 
   //削除
-  _deletePartPlan(int iniId){
+  _deletePartPlan(int iniId) async{
     if(_dragAndDropData.alreadyFlag){
       if(_dragAndDropData.dataType == 0){
         //スポットのとき
@@ -407,6 +441,10 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           _memoItineraries.removeAt(_memoItineraries.indexWhere((element) => element.itineraryId == iniId));
         });
       }
+
+      http.Response res = await Network().getData("itinerary/delete/" + iniId.toString() + "/" + _dragAndDropData.dataType.toString());
+      print(res.body);
+
       _dragAndDropData = null;
     }
   }
@@ -602,6 +640,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                             spotEndDateTime: null,
                             spotParentFlag: 0,
                             confirmFlag: false,
+                            width: MediaQuery.of(context).size.width,
                           ),
                         ),
                         Container(
@@ -702,6 +741,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                                    spotEndDateTime: null,
                                    spotParentFlag: 0,
                                    confirmFlag: false,
+                                   width: MediaQuery.of(context).size.width,
                                  ),
                                ),
                              //並び替え時
@@ -716,6 +756,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                                    spotEndDateTime: _spotItineraries[itiId].spotEndDateTime,
                                    spotParentFlag: 0,
                                    confirmFlag: false,
+                                   width: MediaQuery.of(context).size.width,
                                  ),
                                ),
                            ],
@@ -821,6 +862,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                             spotEndDateTime: null,
                             spotParentFlag: 0,
                             confirmFlag: false,
+                            width: MediaQuery.of(context).size.width,
                           ),
                         ),
                         Container(
@@ -863,13 +905,11 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
 
   //行程のパーツを返すWidget
   Widget _buildPlanPart(int id, int order){
-    Widget planPart;
-    Widget part;
+    Widget planPart = Container();
+    Widget part = Container();
 
     int itinerariesType = -1;  //0:スポット　1:メモ　2:交通
     int index = -1;
-
-    int spotId = 0;
 
     //スポット・メモ・交通から、行程IDと一致するものを探す
     for(int i=0; i<_spotItineraries.length; i++){
@@ -908,6 +948,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           spotEndDateTime: _spotItineraries[index].spotEndDateTime,
           spotParentFlag: _spotItineraries[index].parentFlag,
           confirmFlag: true,
+          width: MediaQuery.of(context).size.width,
         );
        break;
       case 1 :
@@ -1088,7 +1129,25 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                     builder: (context) => AddSpotPage(),
                   )
               );
-              print(result);
+              print("a" + result[0].spotName);
+              if(result != null){
+                List<Map<String, int>> data = [];
+                for(int i=0; i<result.length; i++){
+                  if(_spots.indexWhere((element) => element.spotId == result[i].spotId) == -1){
+                    print(i.toString() + ":" + result[i].spotName);
+                    Map<String,int> planSpot = {
+                      "plan_id" : widget.planId,
+                      "spot_id" : result[i].spotId,
+                    };
+                    data.add(planSpot);
+                    _spots.add(SpotData(result[i].spotId, result[i].spotName, 0, 0, result[i].imageUrl, result[i].placeId, 0));
+                  }
+                }
+
+                http.Response res = await Network().postData(data, "planspot/store");
+                print("a" + res.body.toString());
+
+              }
             },
           ),
         ),

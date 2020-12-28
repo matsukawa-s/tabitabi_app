@@ -30,23 +30,27 @@ class _TrafficPartState extends State<TrafficPart> {
     super.initState();
 
     //trafficTypeによってアイコン
-    switch(widget.trafficType){
-      case 1:
-        _icon = Icons.directions_walk;
-        break;
-      case 2:
-        _icon = Icons.directions_car;
-        break;
-      case 3:
-        _icon = Icons.train;
-        break;
-      case 4:
-        _icon = Icons.airplanemode_active;
-        break;
+    if(widget.trafficType != null){
+      switch(widget.trafficType){
+        case 1:
+          _icon = Icons.directions_walk;
+          break;
+        case 2:
+          _icon = Icons.directions_car;
+          break;
+        case 3:
+          _icon = Icons.train;
+          break;
+        case 4:
+          _icon = Icons.airplanemode_active;
+          break;
+      }
     }
 
     //minutesが60分以上のとき
-    if(widget.minutes >= 60){
+    if(widget.minutes == null){
+      _minutes = 0;
+    }else if(widget.minutes >= 60){
       _hour = widget.minutes ~/ 60;
       _minutes = widget.minutes % 60;
     }else{
