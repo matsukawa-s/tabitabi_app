@@ -28,7 +28,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   String _planDetail = "";
   DateTime _startDateTime = DateTime.now();
   DateTime _endDateTime = DateTime.now();
-  List<DateTime> _planDates = [];
+  List<DateTime> _planDates = [DateTime.now()];
 
   TabController _controller;
 

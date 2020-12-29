@@ -4,11 +4,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:bubble/bubble.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
-
+import 'package:tabitabi_app/components/map_marker.dart';
 import 'package:tabitabi_app/data/itinerary_part_data.dart';
 import 'package:tabitabi_app/components/makeplan_edit_spot_part.dart';
 import 'package:tabitabi_app/components/makeplan_edit_plan_part.dart';
@@ -97,6 +98,8 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
   //旅行の日程　とりあえず仮
   List<DateTime> _travelDateTime = [];
 
+  //マーカー
+  Set<Marker> _markers = Set();
 
   void _onMapCreated(GoogleMapController controller) {
     setState(() {
@@ -104,26 +107,22 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     });
   }
 
-
   @override
   void initState(){
-
     super.initState();
     _spots.clear();
     _itineraries.clear();
     _spotItineraries.clear();
     _memoItineraries.clear();
     _getSpot();
-
     _getItiData();
 
    // _memoItineraries.add(MemoItineraryData(2, "メモですメモです"));
 
-    //_trafficItineraries.add(TrafficItineraryData(4, 1, 60, 400));
-
     _travelDateTime = _getDateTimeList(widget.startDateTime, widget.endDateTime);
 
     _tabController = TabController(length: _travelDateTime.length, vsync: this);
+    _tabController.addListener(_handleDateTabSelection);
     _menuTabController = TabController(length: 3, vsync: this);
 
     _startDateTime = widget.startDateTime;
@@ -150,9 +149,25 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     http.Response responseSpot = await Network().postData(data, "itinerary/get/spot");
     print(responseSpot.body);
     List list2 = json.decode(responseSpot.body);
+    int flag = 0;
     for(int i=0; i<list2.length; i++){
       _spotItineraries.add(SpotItineraryData(list2[i]["itinerary_id"], list2[i]["spot_id"], list2[i]["spot_name"], list2[i]["latitube"], list2[i]["longitube"], list2[i]["image_url"], null , null, 0));
      // print(_spotItineraries[i].spotName);
+
+      //最初の日付だけマーカをつける
+      if(_itineraries[_itineraries.indexWhere((element) => element.itineraryID == list2[i]["itinerary_id"])].itineraryDateTime == _travelDateTime[0]){
+        final Uint8List markerIcon = await getBytesFromCanvas(80, 80, _itineraries[i].itineraryOrder);
+        Marker locationMarker = Marker(
+          markerId: MarkerId(list2[i]["itinerary_id"].toString()),
+          position: LatLng(list2[i]["latitube"],list2[i]["longitube"]),
+          icon: BitmapDescriptor.fromBytes(markerIcon)
+        );
+        _markers.add(locationMarker);
+        if(flag == 0){
+          mapController.animateCamera(CameraUpdate.newLatLng(LatLng(list2[i]["latitube"],list2[i]["longitube"])));
+          flag = 1;
+        }
+      }
     }
 
     http.Response responseTraffic = await Network().postData(data, "itinerary/get/traffic");
@@ -179,14 +194,13 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
 
     for(int i=0; i<list.length; i++){
       _spots.add(
-          SpotData(list[i]["spot_id"], list[i]["spot_name"], list[i]["latitude"], list[i]["longitude"], list[i]["image_url"], list[i]["place_id"], 1)
+          SpotData(list[i]["spot_id"], list[i]["spot_name"], list[i]["latitube"], list[i]["longitube"], list[i]["image_url"], list[i]["place_id"], 1)
       );
     }
     setState(() {
 
     });
   }
-
 
   @override
   void dispose() {
@@ -236,10 +250,9 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     setState(() {
       _travelDateTime.add(_endDateTime);
       _tabController = _createNewTabController();
+      _tabController.addListener(_handleDateTabSelection);
     });
-
     _tabController.animateTo(_tabController.length-1);
-
 
   }
 
@@ -297,6 +310,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
 
       http.Response res = await Network().getData("itinerary/rearrange/" + _dragAndDropData.dataId.toString() + "/" + goOrder.toString() + "/" + _dragAndDropData.dataType.toString());
 
+      _handleDateTabSelection();
       print(res.body);
       setState(() {
         //行程リストに追加
@@ -337,10 +351,26 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
         //行程リストに追加
         //_itineraries.insert(index + 1, ItineraryData(len, _itineraries[index].itineraryOrder + 1, 1, _travelDateTime[_tabController.index], false));
         //行程スポットリストに追加
-        _spotItineraries.add(SpotItineraryData(len, _spots[_dragAndDropData.dataId].spotId, _spots[_dragAndDropData.dataId].spotName,_spots[_dragAndDropData.dataId].latitude, _spots[_dragAndDropData.dataId].longitude, _spots[_dragAndDropData.dataId].spotImagePath, null, null, 0));
+        _spotItineraries.add(SpotItineraryData(len, _spots[_dragAndDropData.dataId].spotId, _spots[_dragAndDropData.dataId].spotName, _spots[_dragAndDropData.dataId].latitude, _spots[_dragAndDropData.dataId].longitude, _spots[_dragAndDropData.dataId].spotImagePath, null, null, 0));
 
       });
 
+      int spotIndex = _spotItineraries.indexWhere((element) => element.itineraryId == len);
+
+      //マーカーを追加
+      final Uint8List markerIcon = await getBytesFromCanvas(80, 80, order);
+
+      Marker locationMarker = Marker(
+          markerId: MarkerId(_itineraries[len].itineraryID.toString()),
+          position: LatLng(_spotItineraries[spotIndex].latitude,_spotItineraries[spotIndex].longitude),
+          icon: BitmapDescriptor.fromBytes(markerIcon)
+      );
+      _markers.add(locationMarker);
+      mapController.animateCamera(CameraUpdate.newLatLng(LatLng(_spotItineraries[spotIndex].latitude,_spotItineraries[spotIndex].longitude)));
+
+      setState(() {
+
+      });
       print("test : " + day + " , " + order.toString());
       final data = {
         "order" : order,
@@ -426,6 +456,10 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
             _itineraries[i].itineraryOrder = _itineraries[i].itineraryOrder - 1;
           }
         }
+        _handleDateTabSelection();
+        setState(() {
+
+        });
 
       }else if(_dragAndDropData.dataType == 1){
         //交通のとき
@@ -453,6 +487,33 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     return DateTime(date.year, date.month, date.day);
   }
 
+  //日付変える度にマーカを変える
+  void _handleDateTabSelection() async{
+    _markers.clear();
+    int flag = 0;
+    for(int i=0; i<_itineraries.length; i++){
+      if(_itineraries[i].itineraryDateTime == _travelDateTime[_tabController.index]){
+        int spotIndex = _spotItineraries.indexWhere((element) => element.itineraryId == _itineraries[i].itineraryID);
+        //マーカーを追加
+        final Uint8List markerIcon = await getBytesFromCanvas(80, 80,  _itineraries[i].itineraryOrder);
+
+        Marker locationMarker = Marker(
+          markerId: MarkerId(_itineraries[i].itineraryID.toString()),
+          position: LatLng(_spotItineraries[spotIndex].latitude,_spotItineraries[spotIndex].longitude),
+          icon: BitmapDescriptor.fromBytes(markerIcon)
+        );
+        _markers.add(locationMarker);
+        if(flag == 0){
+          mapController.animateCamera(CameraUpdate.newLatLng(LatLng(_spotItineraries[spotIndex].latitude,_spotItineraries[spotIndex].longitude)));
+          flag = 1;
+        }
+      }
+    }
+    setState(() {
+
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -467,11 +528,12 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                   onTap: (latLang){
                     print(latLang.longitude.toString() + "," +latLang.latitude.toString());
                   },
+                  markers: _markers,
                   mapType: MapType.terrain,
                   onMapCreated: _onMapCreated,
                   initialCameraPosition: CameraPosition(
                     target: LatLng(35.6580339,139.7016358),
-                    zoom: 17.0,
+                    zoom: 11.0,
                   ),
                   scrollGesturesEnabled: true,
                 ),
@@ -940,16 +1002,21 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
 
     switch (itinerariesType){
       case 0 :
-       part = PlanPart(
-          number: order,
-          spotName: _spotItineraries[index].spotName,
-          spotPath: _spotItineraries[index].spotImagePath,
-          spotStartDateTime: _spotItineraries[index].spotStartDateTime,
-          spotEndDateTime: _spotItineraries[index].spotEndDateTime,
-          spotParentFlag: _spotItineraries[index].parentFlag,
-          confirmFlag: true,
-          width: MediaQuery.of(context).size.width,
-        );
+       part = GestureDetector(
+         onTap: (){
+           mapController.animateCamera(CameraUpdate.newLatLng(LatLng(_spotItineraries[index].latitude,_spotItineraries[index].longitude)));
+         },
+         child: PlanPart(
+            number: order,
+            spotName: _spotItineraries[index].spotName,
+            spotPath: _spotItineraries[index].spotImagePath,
+            spotStartDateTime: _spotItineraries[index].spotStartDateTime,
+            spotEndDateTime: _spotItineraries[index].spotEndDateTime,
+            spotParentFlag: _spotItineraries[index].parentFlag,
+            confirmFlag: true,
+            width: MediaQuery.of(context).size.width,
+          ),
+       );
        break;
       case 1 :
         part = TrafficPart(
