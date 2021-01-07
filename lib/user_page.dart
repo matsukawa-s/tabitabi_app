@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tabitabi_app/main.dart';
+import 'package:tabitabi_app/makeplan/makeplan_top_page.dart';
 import 'package:tabitabi_app/user_profile_edit_page.dart';
 
 import 'network_utils/api.dart';
@@ -109,6 +110,16 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                                 itemBuilder: (BuildContext context,int index){
                                   return ListTile(
                                     title: Text(createdPlans[index]["title"]),
+                                    onTap: () => {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) {
+                                            return MakePlanTop(planId: createdPlans[index]["id"]);
+                                          },
+                                        ),
+                                      )
+                                    },
                                   );
                                 }
                               ),

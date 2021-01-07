@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:tabitabi_app/makeplan/invite_plan_page.dart';
 import 'dart:convert';
 import 'package:tabitabi_app/network_utils/api.dart';
 import 'makeplan_edit_page.dart';
@@ -8,6 +9,8 @@ import 'package:tabitabi_app/data/itinerary_part_data.dart';
 import 'package:tabitabi_app/components/makeplan_edit_traffic_part.dart';
 import 'package:tabitabi_app/components/makeplan_edit_plan_part.dart';
 import 'package:tabitabi_app/components/makeplan_edit_memo_part.dart';
+
+enum WhyFarther { JoinPlan, DeletePlan }
 
 class MakePlanTop extends StatefulWidget {
 
@@ -23,6 +26,7 @@ class MakePlanTop extends StatefulWidget {
 }
 
 class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin{
+  var plans;
 
   String _planName = "";
   String _planDetail = "";
@@ -53,7 +57,8 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   Future<int> _getPlan() async{
     http.Response response = await Network().getData("plan/get/" + widget.planId.toString());
     List list = json.decode(response.body);
-    print(list[0].toString());
+    plans = list[0];
+    print(list);
 
     setState(() {
       _planName = list[0]["title"];
@@ -185,10 +190,41 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                   icon: Icon(Icons.share, color: Colors.white,),
                   onPressed: (){},
                 ),
-                IconButton(
-                  icon: Icon(Icons.more_vert, color: Colors.white,),
-                  onPressed: (){},
-                ),
+//                IconButton(
+//                  icon: Icon(Icons.more_vert, color: Colors.white,),
+//                  onPressed: (){},
+//                ),
+                PopupMenuButton(
+                    icon: Icon(Icons.more_vert, color: Colors.white,),
+                    onSelected: (WhyFarther result) {
+                      switch(result){
+                        case WhyFarther.JoinPlan:
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return InvitePlanPage(plans);
+                              },
+                            ),
+                          );
+                          break;
+                        case WhyFarther.DeletePlan:
+
+                          break;
+
+                      }
+                    },
+                    itemBuilder: (BuildContext context) => <PopupMenuEntry<WhyFarther>>[
+                      const PopupMenuItem<WhyFarther>(
+                        value: WhyFarther.JoinPlan,
+                        child: Text('プラン招待コード'),
+                      ),
+                      const PopupMenuItem<WhyFarther>(
+                        value: WhyFarther.DeletePlan,
+                        child: Text('プランを削除する'),
+                      ),
+                    ]
+                )
               ],
               flexibleSpace: Container(
                 constraints: BoxConstraints.expand(height: 250.0),

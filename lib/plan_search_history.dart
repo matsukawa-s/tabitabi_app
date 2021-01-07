@@ -87,7 +87,7 @@ class PlanSearchHistoryPage extends StatelessWidget {
         future: getHistory(),
         builder: (BuildContext context, AsyncSnapshot snapshot){
           if(snapshot.hasData){
-            final List<String>history = snapshot.data;
+            final List<String> history = snapshot.data;
             return (history.length == null) ? Container() : ListView.builder(
                 itemCount: history.length,
                 itemBuilder:(BuildContext context, int index){

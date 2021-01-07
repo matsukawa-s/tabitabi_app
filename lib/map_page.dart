@@ -47,6 +47,7 @@ class _MapPageState extends State<MapPage> {
   Place place; //プレイス情報クラス変数
   List<PlacesSearchResult> places = []; //現在地周辺スポット
   TextEditingController _searchKeywordController; //検索キーワード用コントローラー
+  var planContainingSpots = []; //対象スポットが入っているプラン
 
   var lat; // 緯度
   var lng; // 経度
@@ -251,8 +252,6 @@ class _MapPageState extends State<MapPage> {
       types: placesDetailsResponse.result.types
     );
 
-    print(place.types);
-
     //スポットがお気に入り登録されているかどうか取得する
     http.Response res = await Network().getData("getOneFavorite/${placesDetailsResponse.result.placeId}");
 
@@ -260,7 +259,8 @@ class _MapPageState extends State<MapPage> {
 
     place.isFavorite = body["isFavorite"];
     place.spotId = body["spot_id"];
-    print("spotId : ${place.spotId}");
+
+    planContainingSpots = body["plan_containing_spots"];
 
     //検索履歴を保存する
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -524,15 +524,6 @@ class _MapPageState extends State<MapPage> {
                                             children: [
                                               Text(place.weekdayText[i])
                                             ],
-//                                          children: [
-//                                            Text(dayOfWeek[i] + "曜日"),
-//                                            Text(
-//                                                "${place.openingHours[i].open.time.toString().substring(0,2)}:"
-//                                                    "${place.openingHours[i].open.time.toString().substring(2,4)} ~ "
-//                                                "${place.openingHours[i].close.time.toString().substring(0,2)}:"
-//                                                    "${place.openingHours[i].close.time.toString().substring(2,4)}"
-//                                            )
-//                                          ],
                                         ),
                                       )
                                 ],
@@ -541,26 +532,32 @@ class _MapPageState extends State<MapPage> {
                           ),
                         ),
                       ),
-                    ListTile(
-                      title: Text("このスポットが入っているプラン"),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16.0,right: 16.0),
-                      child: SizedBox(
-                        height: 80,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            for(int i = 0;i < 4;i++)
-                              Container(
-                                width: 160,
-                                color: Colors.yellow,
-                                margin: EdgeInsets.only(right: 10),
+                    if(planContainingSpots.isNotEmpty)
+                      Column(
+                        children: [
+                          ListTile(
+                            title: Text("このスポットが入っているプラン"),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 16.0,right: 16.0),
+                            child: SizedBox(
+                              height: 80,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: planContainingSpots.length,
+                                itemBuilder: (BuildContext context,int index){
+                                  return Container(
+                                    margin: EdgeInsets.only(right: 4.0),
+                                    width: 100,
+                                    color: Colors.black12,
+                                    child: Text(planContainingSpots[index]["title"]),
+                                  );
+                                },
                               ),
-                          ],
-                        ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
                     ListTile(
                       title: Text("レビュー"),
                     ),
