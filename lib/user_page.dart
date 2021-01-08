@@ -26,6 +26,13 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
+    final double paddingAroundPage = 8.0; // ページ周りのPaddingサイズ
+    final double spaceBetweenWidget = 6.0; // プランの間のスペースサイズ
+
+    final Size size = MediaQuery.of(context).size; //デバイスのサイズ
+    final double height = (size.width - paddingAroundPage*2 - spaceBetweenWidget) / 2 * 2/3;
+    final double width = (size.width - paddingAroundPage*2 - spaceBetweenWidget) / 2;
+
     return FutureBuilder(
       future: _getUser(),
       builder: (context, snapshot) {
@@ -105,24 +112,21 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
                             ? Center(
                                 child: Text("作成したプランがありません"),
                               )
-                            : ListView.builder(
-                                itemCount: createdPlans.length,
-                                itemBuilder: (BuildContext context,int index){
-                                  return ListTile(
-                                    title: Text(createdPlans[index]["title"]),
-                                    onTap: () => {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) {
-                                            return MakePlanTop(planId: createdPlans[index]["id"]);
-                                          },
-                                        ),
-                                      )
-                                    },
-                                  );
-                                }
-                              ),
+                              : Container(
+                                margin: EdgeInsets.only(top:8.0),
+                                child: GridView.builder(
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: spaceBetweenWidget,
+                                    crossAxisSpacing: spaceBetweenWidget,
+                                    childAspectRatio: width / height,
+                                  ),
+                                  itemCount: createdPlans.length,
+                                  itemBuilder: (BuildContext context, int index){
+                                    return _buildPlanItem(width, height, createdPlans[index]);
+                                  }
+                                ),
+                              )
                         ),
                         Container(
                           child: participatingPlans.isEmpty
@@ -160,6 +164,7 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
     return body;
   }
 
+//  ユーザーのアイコン
   Widget _buildIconImageInUserTop(String iconPath){
     final double iconSize = 40.0;
     if(iconPath == null){
@@ -174,6 +179,56 @@ class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin
         backgroundImage: NetworkImage(Network().imagesDirectory("user_icons") + iconPath),
       );
     }
+  }
+
+//  １つのプランアイテム
+  Widget _buildPlanItem(double width, double height, Map<String,dynamic> plan){
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return MakePlanTop(planId: plan["id"]);
+            },
+          ),
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10.0),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10.0),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey,
+                offset: Offset(0.0, 2.0), //(x,y)
+                blurRadius: 6.0,
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Image.asset(
+                "images/osakajo.jpg",
+                width: width,
+                height: height * 4/5,
+                fit: BoxFit.fill,
+              ),
+              Container(
+                height: height * 1/5,
+                child: Text(
+                  plan["title"],
+                  style: TextStyle(fontSize: 20.0),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
 }
