@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class TrafficPart extends StatefulWidget {
   final int trafficType;
   //分か秒を入れて計算で〜時間〜分とかするようにしたいね
-  final int minutes;
+  final String minutes;
   final bool confirmFlag;
 
   TrafficPart({
@@ -47,15 +47,15 @@ class _TrafficPartState extends State<TrafficPart> {
       }
     }
 
-    //minutesが60分以上のとき
-    if(widget.minutes == null){
-      _minutes = 0;
-    }else if(widget.minutes >= 60){
-      _hour = widget.minutes ~/ 60;
-      _minutes = widget.minutes % 60;
-    }else{
-      _minutes = widget.minutes;
-    }
+    // //minutesが60分以上のとき
+    // if(widget.minutes == null){
+    //   _minutes = 0;
+    // }else if(widget.minutes >= 60){
+    //   _hour = widget.minutes ~/ 60;
+    //   _minutes = widget.minutes % 60;
+    // }else{
+    //   _minutes = widget.minutes;
+    // }
   }
 
   @override
@@ -83,19 +83,28 @@ class _TrafficPartState extends State<TrafficPart> {
           Padding(
             padding: EdgeInsets.only(left: 10.0),
             child: Text(
-              _hour == 0 ?
-                _minutes != 0 ?
-                _minutes.toString() + "分" : "" :
-                _minutes == 0 ?
-                _hour.toString() + "時間" :
-                _hour.toString() + "時間" + _minutes.toString() + "分",
-              style: TextStyle(
-                  color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),
-                  fontSize: 14.0,
-                  decoration: TextDecoration.none,
-                  fontWeight: FontWeight.normal
-              ),
+              widget.minutes,
+                style: TextStyle(
+                    color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),
+                    fontSize: 14.0,
+                    decoration: TextDecoration.none,
+                    fontWeight: FontWeight.normal
+                ),
             ),
+            // child: Text(
+            //   _hour == 0 ?
+            //     _minutes != 0 ?
+            //     _minutes.toString() + "分" : "" :
+            //     _minutes == 0 ?
+            //     _hour.toString() + "時間" :
+            //     _hour.toString() + "時間" + _minutes.toString() + "分",
+            //   style: TextStyle(
+            //       color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),
+            //       fontSize: 14.0,
+            //       decoration: TextDecoration.none,
+            //       fontWeight: FontWeight.normal
+            //   ),
+            // ),
           )
         ],
       ),
