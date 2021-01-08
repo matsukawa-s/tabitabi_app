@@ -91,7 +91,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     List<int> ids = [];
     for(int i=0; i<list.length; i++){
       DateTime date = DateTime.parse(list[i]["day"]);
-      _itineraries.add(ItineraryData(list[i]["id"], list[i]["itinerary_order"], list[i]["plan_id"], date, false));
+      _itineraries.add(ItineraryData(list[i]["id"], list[i]["itinerary_order"], list[i]["spot_order"], list[i]["plan_id"], date, false));
       ids.add(list[i]["id"]);
       print(list[i]["id"].toString());
     }
@@ -440,7 +440,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
             if(_itineraries[i].itineraryDateTime == date)
             Container(
               margin: EdgeInsets.only(top: 14.0, left: 10.0),
-              child: _buildPlanPart(_itineraries[i].itineraryID, _itineraries[i].itineraryOrder),
+              child: _buildPlanPart(_itineraries[i].itineraryID, _itineraries[i].spotOrder),
             ),
           if(_itineraries.length == 0 || _itineraries.indexWhere((element) => element.itineraryDateTime == date) == -1)
             Container(
