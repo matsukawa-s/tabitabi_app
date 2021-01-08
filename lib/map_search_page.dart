@@ -15,7 +15,7 @@ class MapSearchPage extends StatefulWidget {
 class _MapSearchPageState extends State<MapSearchPage> {
   TextEditingController _searchKeywordController = TextEditingController();
   final kGoogleApiKey = DotEnv().env['Google_API_KEY'];
-  List items = [];
+  List<PlacesSearchResult> items = [];
   var focusNode = new FocusNode(); //検索バーのフォーカス制御用
   MapViewModel mapModel;
   var history = {};
@@ -125,6 +125,7 @@ class _MapSearchPageState extends State<MapSearchPage> {
             itemBuilder: (BuildContext context,int index){
               return ListTile(
                 title: Text(items[index].name),
+                subtitle: Text(items[index].formattedAddress),
                 onTap: () => onTapPlace(items[index].placeId),
               );
             }

@@ -4,13 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tabitabi_app/main.dart';
+import 'package:tabitabi_app/user_profile_edit_page.dart';
 
 import 'network_utils/api.dart';
 
-class UserPage extends StatelessWidget {
-  //ユーザー情報をローカルストレージから取得する
-  _getUser() async{
-    SharedPreferences pref = await SharedPreferences.getInstance();
+class UserPage extends StatefulWidget {
+  @override
+  _UserPageState createState() => _UserPageState();
+}
+
+class _UserPageState extends State<UserPage> with SingleTickerProviderStateMixin{
+  TabController _tabController;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _tabController =  TabController(length: 2, vsync: this);
   }
 
   @override
@@ -18,59 +28,141 @@ class UserPage extends StatelessWidget {
     return FutureBuilder(
       future: _getUser(),
       builder: (context, snapshot) {
-        return Container(
-          padding: EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.black12,
-                      radius: 50.0,
-//              backgroundImage: NetworkImage("https://pbs.twimg.com/profile_images/885510796691689473/rR9aWvBQ_400x400.jpg"),
-                    ),
-                    Text("ユーザ名"),
-                  ],
+        if(snapshot.hasData){
+          final userProfile = snapshot.data["user"];
+          final createdPlans = snapshot.data["my_plans"];
+          final participatingPlans = snapshot.data["participating_plans"];
+
+          return Container(
+            padding: EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        child: Column(
+                          children: <Widget>[
+                            _buildIconImageInUserTop(userProfile["icon_path"]),
+                            Text(
+                              userProfile["name"],
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.w600
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        margin: EdgeInsets.only(left: 12.0),
+                        decoration: BoxDecoration(
+                          color: Colors.black12,
+//                        border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: (){
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => UserProfileEditPage(userProfile: userProfile),
+                                )
+                              );
+                            },
+                        ),
+                      )
+                    ],
+                  ),
                 ),
-              ),
-              Container(
-                  margin: EdgeInsets.all(16.0),
-                  child: Text("作成したプラン",textAlign: TextAlign.left,)
-              ),
-              Container(
-                  margin: EdgeInsets.all(16.0),
-                  child: Text("参加しているプラン")
-              ),
-              FlatButton(
-                  onPressed: () => logout(context),
-                  color: Colors.orange,
-                  child: Text("ログアウト")
-              )
-            ],
-          ),
-        );
+                Divider(),
+                Container(
+                  margin: EdgeInsets.only(top: 4.0),
+                  child: TabBar(
+                      controller: _tabController,
+                      tabs: [
+                        Padding(
+                          padding: EdgeInsets.only(bottom: 5.0),
+                          child: Text("作成したプラン"),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(bottom: 5.0),
+                          child: Text("参加しているプラン"),
+                        ),
+                      ]
+                  ),
+                ),
+                Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        Container(
+                          child:  createdPlans.isEmpty
+                            ? Center(
+                                child: Text("作成したプランがありません"),
+                              )
+                            : ListView.builder(
+                                itemCount: createdPlans.length,
+                                itemBuilder: (BuildContext context,int index){
+                                  return ListTile(
+                                    title: Text(createdPlans[index]["title"]),
+                                  );
+                                }
+                              ),
+                        ),
+                        Container(
+                          child: participatingPlans.isEmpty
+                            ? Center(
+                                child: Text("参加しているプランがありません"),
+                              )
+                            : ListView.builder(
+                                itemCount: participatingPlans.length,
+                                itemBuilder: (BuildContext context,int index){
+                                  return ListTile(
+                                    title: Text(participatingPlans[index]["title"]),
+                                  );
+                                }
+                              )
+                        )
+                      ],
+                    )
+                )
+              ],
+            ),
+          );
+        }else{
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        }
       }
     );
   }
 
-  void logout(BuildContext context) async {
-    var res = await Network().getData('auth/logout');
+  Future<dynamic> _getUser() async{
+    var res = await Network().getData('user/get_user');
     var body = json.decode(res.body);
-    if (body['success']) {
-      SharedPreferences localStorage = await SharedPreferences.getInstance();
-      localStorage.remove('user');
-      localStorage.remove('token');
-      Navigator.pushReplacement(
-          context,
-          PageTransition(
-              type: PageTransitionType.fade,
-              child: CheckAuth(),
-              inheritTheme: true,
-              ctx: context
-          ),
+
+    return body;
+  }
+
+  Widget _buildIconImageInUserTop(String iconPath){
+    final double iconSize = 40.0;
+    if(iconPath == null){
+      return CircleAvatar(
+        backgroundColor: Colors.black12,
+        radius: iconSize,
+      );
+    }else{
+      return CircleAvatar(
+        backgroundColor: Colors.black12,
+        radius: iconSize,
+        backgroundImage: NetworkImage(Network().imagesDirectory("user_icons") + iconPath),
       );
     }
   }
+
 }

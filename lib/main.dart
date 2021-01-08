@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:page_transition/page_transition.dart';
@@ -11,12 +13,16 @@ import 'model/spot_model.dart';
 import 'navigationbar_provider.dart';
 import 'package:tabitabi_app/plan_search_detail_page.dart';
 import 'package:tabitabi_app/top_page.dart';
+import 'network_utils/api.dart';
 import 'plan_search_history.dart';
 import 'package:http/http.dart';
 import 'result_provider.dart';
 import 'navigationbar_provider.dart';
 import 'plan_search_model.dart';
 import 'makeplan/makeplan_initial_page.dart';
+
+//右上ポップアップメニュー
+enum WhyFarther { Logout }
 
 Future main() async{
   await DotEnv().load('.env');
@@ -219,7 +225,8 @@ class MyHomePage extends StatelessWidget {
     int pageIndex = Provider.of<NavigationBarProvider>(context).selectedIndex;
 
     if(pageIndex == 0){                 // TopPageAppBar
-      return topPageAppBar();
+//      return topPageAppBar();
+        return null;
     }else if(pageIndex == 1){           // SearchPageAppBar
       return searchPageAppBar(context);
     }else if(pageIndex == 2){           // MapPageAppBar
@@ -227,7 +234,7 @@ class MyHomePage extends StatelessWidget {
     }else if(pageIndex == 3){           // FavoritePageAppBar
       return favoritePageAppBar(context);
     }else if(pageIndex == 4){           // UserPageAppBar
-      return userPageAppbar();
+      return userPageAppbar(context);
     }
   }
   // TopPageAppBar
@@ -366,7 +373,7 @@ class MyHomePage extends StatelessWidget {
     );
   }
 
-  AppBar userPageAppbar(){
+  AppBar userPageAppbar(BuildContext context){
     return AppBar(
       backgroundColor: Colors.white,
       leading: Builder(
@@ -377,7 +384,44 @@ class MyHomePage extends StatelessWidget {
         ),
       ),
       title: Text("マイページ"),
+      centerTitle: true,
+      actions: [
+        PopupMenuButton(
+            onSelected: (WhyFarther result) {
+              switch(result){
+                case WhyFarther.Logout:
+                  logout(context);
+                  break;
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<WhyFarther>>[
+              const PopupMenuItem<WhyFarther>(
+                value: WhyFarther.Logout,
+                child: Text('ログアウト'),
+              ),
+            ]
+        )
+      ],
     );
+  }
+
+  void logout(BuildContext context) async {
+    var res = await Network().getData('auth/logout');
+    var body = json.decode(res.body);
+    if (body['success']) {
+      SharedPreferences localStorage = await SharedPreferences.getInstance();
+      localStorage.remove('user');
+      localStorage.remove('token');
+      Navigator.pushReplacement(
+        context,
+        PageTransition(
+            type: PageTransitionType.fade,
+            child: CheckAuth(),
+            inheritTheme: true,
+            ctx: context
+        ),
+      );
+    }
   }
 
 }

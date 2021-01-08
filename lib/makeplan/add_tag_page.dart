@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:tabitabi_app/components/add_tag_part.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:tabitabi_app/network_utils/api.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:tabitabi_app/data/tag_data.dart';
@@ -15,7 +18,7 @@ class _AddTagPageState extends State<AddTagPage> {
   //追加済タグ
   List<TagData> _addTag = [];
   //オススメタグ
-  List<TagData> _recommendTag = [TagData(1,"卒業旅行"), TagData(2,"女子旅")];
+  List<TagData> _recommendTag = [];
 
   String text;
   TextEditingController _textEditingController;
@@ -26,12 +29,24 @@ class _AddTagPageState extends State<AddTagPage> {
 
     _addTag = context.read<TagDataProvider>().tagData;
     _textEditingController = TextEditingController();
+    _getTag();
+  }
+
+  void _getTag() async{
+    http.Response res = await Network().getData("tag/get");
+    var list = jsonDecode(res.body);
+
+    setState(() {
+      for(int i=0; i<list.length; i++){
+        _recommendTag.add(TagData(list[i]["id"], list[i]["tag_name"]));
+      }
+    });
   }
 
   //タグ追加
-  void _onTapAddButton(){
+  void _onTapAddButton() async{
     //入力が何もないときは何もしない
-    if(text == null || text == ""){
+    if(text == null || text == "" || text.length < 2){
       return null;
     }
     //既に同じ名前のタグが入っていないか調べる
@@ -40,13 +55,19 @@ class _AddTagPageState extends State<AddTagPage> {
       return null;
     }
 
-    //入力したテキストとDBを照合して既にあるタグかどうか調べる
+    //タグをDBに追加
+    final tagData = {
+      "tag_name" : text,
+    };
 
-    print(text);
+    http.Response res2 = await Network().postData(tagData, "tag/store");
+    print("res2" + res2.body);
+
+    var list = jsonDecode(res2.body);
 
     //プロバイダーに追加
     setState(() {
-      context.read<TagDataProvider>().addTagData(TagData(_addTag.length, text));
+      context.read<TagDataProvider>().addTagData(TagData(list["id"], text));
       _addTag = context.read<TagDataProvider>().tagData;
       _textEditingController.text = "";
     });

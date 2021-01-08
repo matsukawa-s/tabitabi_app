@@ -248,7 +248,10 @@ class _MapPageState extends State<MapPage> {
         ? placesDetailsResponse.result.openingHours.weekdayText : null,
       prefectureId: prefectureId,
 //      isFavorite: null
+      types: placesDetailsResponse.result.types
     );
+
+    print(place.types);
 
     //スポットがお気に入り登録されているかどうか取得する
     http.Response res = await Network().getData("getOneFavorite/${placesDetailsResponse.result.placeId}");
@@ -566,6 +569,7 @@ class _MapPageState extends State<MapPage> {
                         padding: EdgeInsets.only(left: 16.0,right: 16.0),
                         child: ListView.builder(
                           shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
                           scrollDirection: Axis.vertical,
                           itemCount: place.reviews.length,
                           itemBuilder: (BuildContext context, int index){

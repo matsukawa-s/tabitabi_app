@@ -1,15 +1,156 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:tabitabi_app/network_utils/api.dart';
 import 'makeplan_edit_page.dart';
+import 'package:tabitabi_app/data/itinerary_data.dart';
+import 'package:tabitabi_app/data/itinerary_part_data.dart';
+import 'package:tabitabi_app/components/makeplan_edit_traffic_part.dart';
+import 'package:tabitabi_app/components/makeplan_edit_plan_part.dart';
+import 'package:tabitabi_app/components/makeplan_edit_memo_part.dart';
 
 class MakePlanTop extends StatefulWidget {
+
+  final int planId;
+
+  MakePlanTop({
+    Key key,
+    this.planId,
+  }):super(key: key);
+
   @override
   _MakePlanTopState createState() => _MakePlanTopState();
 }
 
-class _MakePlanTopState extends State<MakePlanTop> {
+class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin{
 
-  String _planName = "旅行名旅行名旅行名旅行名";
-  String _planDetail = "旅行の説明です。旅行の説明です。旅行の説明です。旅行の説明です。旅行の説明です。旅行の説明です。";
+  String _planName = "";
+  String _planDetail = "";
+  DateTime _startDateTime = DateTime.now();
+  DateTime _endDateTime = DateTime.now();
+  List<DateTime> _planDates = [DateTime.now()];
+
+  TabController _controller;
+
+  //行程のリスト
+  List<ItineraryData> _itineraries = [];
+  //行程スポットのリスト
+  List<SpotItineraryData> _spotItineraries = [];
+  //行程メモのリスト
+  List<MemoItineraryData> _memoItineraries = [];
+  //行程交通機関のリスト
+  List<TrafficItineraryData> _trafficItineraries = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _getPlan();
+    _getItiData();
+
+    _controller = TabController(length: 1, vsync: this);
+  }
+
+  Future<int> _getPlan() async{
+    http.Response response = await Network().getData("plan/get/" + widget.planId.toString());
+    List list = json.decode(response.body);
+    print(list[0].toString());
+
+    setState(() {
+      _planName = list[0]["title"];
+      _planDetail = list[0]["description"] == null ? "" : list[0]["description"];
+    });
+    _startDateTime = DateTime.parse(list[0]["start_day"]);
+    _endDateTime = DateTime.parse(list[0]["end_day"]);
+
+    setState(() {
+      _planDates = _getDateTimeList(_dateTimeFunc(_startDateTime), _dateTimeFunc(_endDateTime));
+    });
+
+    print(_planDates.length);
+
+    setState(() {
+      _controller = _createNewTabController();
+    });
+    return _planDates.length;
+
+  }
+
+  TabController _createNewTabController() => TabController(
+    vsync: this,
+    length: _planDates.length,
+  );
+
+  void _getItiData() async{
+    _itineraries.clear();
+    _spotItineraries.clear();
+    _trafficItineraries.clear();
+    _memoItineraries.clear();
+    //行程データ取得
+    http.Response response = await Network().getData("itinerary/get/" + widget.planId.toString());
+    List<dynamic> list = json.decode(response.body);
+    List<int> ids = [];
+    for(int i=0; i<list.length; i++){
+      DateTime date = DateTime.parse(list[i]["day"]);
+      _itineraries.add(ItineraryData(list[i]["id"], list[i]["itinerary_order"], list[i]["plan_id"], date, false));
+      ids.add(list[i]["id"]);
+      print(list[i]["id"].toString());
+    }
+
+    final data = {
+      "ids" : ids,
+    };
+
+    //List<String> id = [];
+    http.Response responseSpot = await Network().postData(data, "itinerary/get/spot");
+    print(responseSpot.body);
+    List list2 = json.decode(responseSpot.body);
+    for(int i=0; i<list2.length; i++){
+      _spotItineraries.add(SpotItineraryData(list2[i]["itinerary_id"], list2[i]["spot_id"], list2[i]["spot_name"], list2[i]["latitube"], list2[i]["longitube"], list2[i]["image_url"], null , null, 0));
+      // print(_spotItineraries[i].spotName);
+    }
+
+    http.Response responseTraffic = await Network().postData(data, "itinerary/get/traffic");
+    List list3 = json.decode(responseTraffic.body);
+    for(int i=0; i<list3.length; i++){
+      _trafficItineraries.add(TrafficItineraryData(list3[i]["itinerary_id"], list3[i]["traffic_class"], list3[i]["travel_time"], list3[i]["traffic_cost"]));
+    }
+
+    http.Response responseMemo = await Network().postData(data, "itinerary/get/note");
+    List list4 = json.decode(responseMemo.body);
+    for(int i=0; i<list4.length; i++){
+      _memoItineraries.add(MemoItineraryData(list4[i]['itinerary_id'], list4[i]['memo']));
+    }
+
+    setState(() {
+      _itineraries.sort((a,b) => a.itineraryOrder.compareTo(b.itineraryOrder));
+    });
+  }
+
+  //日付のリストを作る
+  List<DateTime> _getDateTimeList(DateTime startDate, DateTime endDate){
+    List<DateTime> dateList = [];
+    print("aa");
+
+    //1日だけのとき
+    if(startDate == endDate){
+      dateList.add(startDate);
+      return dateList;
+    }
+
+    //2日以上あるとき
+    DateTime date = startDate;
+    DateTime lastDate = DateTime(endDate.year, endDate.month, endDate.day+1);
+    while(date != lastDate){
+      dateList.add(date);
+      date = DateTime(date.year, date.month, date.day+1);
+    }
+
+    return dateList;
+  }
+
+  DateTime _dateTimeFunc(DateTime date){
+    return DateTime(date.year, date.month, date.day);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +182,11 @@ class _MakePlanTopState extends State<MakePlanTop> {
               expandedHeight: 200.0,
               actions: [
                 IconButton(
-                  icon: Icon(Icons.share),
+                  icon: Icon(Icons.share, color: Colors.white,),
                   onPressed: (){},
                 ),
                 IconButton(
-                  icon: Icon(Icons.more_vert),
+                  icon: Icon(Icons.more_vert, color: Colors.white,),
                   onPressed: (){},
                 ),
               ],
@@ -91,79 +232,76 @@ class _MakePlanTopState extends State<MakePlanTop> {
                   children: [
                     //スケジュール
                     Card(
-                      margin: EdgeInsets.only(left: 24.0, top: 20.0, right: 24.0),
+                      margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20.0),
                       ),
                       child: Container(
-                        constraints: BoxConstraints.expand(height: 400),
+                        constraints: BoxConstraints.expand(height: 500),
                         child: Stack(
                           children: [
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                _buildTitle("10/23"),
                                 Expanded(
-                                  child: DefaultTabController(
-                                    length: 3,
-                                    child: Builder(
-                                      builder: (BuildContext context) => Stack(
-                                        children: [
-                                          Container(
-                                            height: 400,
-                                            width: 500,
-                                            child: TabBarView(
-                                              children: [
-                                                _buildSchedule("1"),
-                                                _buildSchedule("2"),
-                                                _buildSchedule("3"),
-                                              ],
-                                            ),
-                                          ),
-                                          Positioned(
-                                            bottom: 0.0,
-                                            left: 0.0,
-                                            right: 0.0,
-                                            child: Align(
-                                              alignment: Alignment.center,
-                                              child: TabPageSelector(),
-                                            )
-                                          ),
-                                          Positioned(
-                                            top: 0.0,
-                                            bottom: 0.0,
-                                            left: -30.0,
-                                            child: IconButton(
-                                              icon: Icon(Icons.chevron_left),
-                                              iconSize: 80.0,
-                                              color: Colors.orange,
-                                              onPressed: (){
-                                                final TabController controller = DefaultTabController.of(context);
-                                                if(!(controller.index == 0)){
-                                                  controller.animateTo(controller.index - 1);
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: 0.0,
-                                            bottom: 0.0,
-                                            right: -30,
-                                            child: IconButton(
-                                              icon: Icon(Icons.chevron_right),
-                                              iconSize: 80.0,
-                                              color: Colors.orange,
-                                              onPressed: (){
-                                                final TabController controller = DefaultTabController.of(context);
-                                                if(!(controller.index == 2)){
-                                                  controller.animateTo(controller.index + 1);
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                        ],
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        margin: EdgeInsets.only(top: 10.0),
+                                        height: 400,
+                                        width: 500,
+                                        child: TabBarView(
+                                          controller: _controller,
+                                          children: [
+                                            for(int i=0; i<_planDates.length; i++)
+                                              SingleChildScrollView(
+                                                child: _buildSchedule("1", _planDates[i]),
+                                              )
+                                          ],
+                                        ),
                                       ),
-                                    ),
+                                      Positioned(
+                                          bottom: 0.0,
+                                          left: 0.0,
+                                          right: 0.0,
+                                          child: Align(
+                                            alignment: Alignment.center,
+                                            child: TabPageSelector(
+                                              controller: _controller,
+                                            ),
+                                          )
+                                      ),
+                                      Positioned(
+                                        top: 0.0,
+                                        bottom: 0.0,
+                                        left: -30.0,
+                                        child: IconButton(
+                                          icon: Icon(Icons.chevron_left),
+                                          iconSize: 80.0,
+                                          color: Colors.orange,
+                                          onPressed: (){
+                                            if(!(_controller.index == 0)){
+                                              _controller.animateTo(_controller.index - 1);
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 0.0,
+                                        bottom: 0.0,
+                                        right: -30,
+                                        child: IconButton(
+                                          icon: Icon(Icons.chevron_right),
+                                          iconSize: 80.0,
+                                          color: Colors.orange,
+                                          onPressed: (){
+                                            if(!(_controller.index == _planDates.length)){
+                                              _controller.animateTo(_controller.index + 1);
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 Container(
@@ -172,13 +310,18 @@ class _MakePlanTopState extends State<MakePlanTop> {
                                   child: FloatingActionButton(
                                     heroTag: 'planEdit',
                                     backgroundColor: Colors.orange,
-                                    child: Icon(Icons.edit),
+                                    child: Icon(Icons.edit, color: Colors.white,),
                                     onPressed: (){
                                       Navigator.of(context).push(
                                           MaterialPageRoute(
-                                            builder: (context) => MakePlanEdit(),
+                                            builder: (context) => MakePlanEdit(planId: widget.planId, startDateTime: _dateTimeFunc(_startDateTime), endDateTime: _dateTimeFunc(_endDateTime),),
                                           )
-                                      );
+                                      ).then((value){
+                                        setState(() {
+                                          _getPlan();
+                                          _getItiData();
+                                        });
+                                      });
                                     },
                                   ),
                                 ),
@@ -186,11 +329,11 @@ class _MakePlanTopState extends State<MakePlanTop> {
                             ),
                           ],
                         ),
-                      )
+                      ),
                     ),
                     //メンバー
                     Card(
-                      margin: EdgeInsets.only(left: 24.0, top: 20.0, right: 24.0),
+                      margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20.0),
                       ),
@@ -223,7 +366,7 @@ class _MakePlanTopState extends State<MakePlanTop> {
                                 child: FloatingActionButton(
                                   heroTag: 'memberAdd',
                                   backgroundColor: Colors.orange,
-                                  child: Icon(Icons.add),
+                                  child: Icon(Icons.add, color: Colors.white,),
                                   onPressed: (){},
                                 ),
                               ),
@@ -234,7 +377,7 @@ class _MakePlanTopState extends State<MakePlanTop> {
                     ),
                     //アルバム
                     Card(
-                      margin: EdgeInsets.only(left: 24.0, top: 20.0, right: 24.0, bottom: 30.0),
+                      margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0, bottom: 30.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20.0),
                       ),
@@ -254,7 +397,7 @@ class _MakePlanTopState extends State<MakePlanTop> {
                                 child: FloatingActionButton(
                                   heroTag: 'albumAdd',  //これを指定しないと複数FloatingActionButtonが使えない
                                   backgroundColor: Colors.orange,
-                                  child: Icon(Icons.add),
+                                  child: Icon(Icons.add, color: Colors.white,),
                                   onPressed: (){},
                                 ),
                               ),
@@ -282,12 +425,99 @@ class _MakePlanTopState extends State<MakePlanTop> {
   }
 
   //各日程のスケジュール
-  Widget _buildSchedule(String test){
+  Widget _buildSchedule(String test, DateTime date){
     return Container(
       margin: EdgeInsets.only(left: 16.0, top: 5.0, right: 16.0),
-      color: Colors.greenAccent,
-      child: Text(test),
+      width: MediaQuery.of(context).size.width,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            child: Text(date.month.toString() + "/" + date.day.toString(), style: TextStyle(fontSize: 18.0),),
+          ),
+          for(int i=0; i<_itineraries.length; i++)
+            if(_itineraries[i].itineraryDateTime == date)
+            Container(
+              margin: EdgeInsets.only(top: 14.0, left: 10.0),
+              child: _buildPlanPart(_itineraries[i].itineraryID, _itineraries[i].itineraryOrder),
+            ),
+          if(_itineraries.length == 0 || _itineraries.indexWhere((element) => element.itineraryDateTime == date) == -1)
+            Container(
+              margin: EdgeInsets.only(left: 20.0, top: 20.0, right: 20.0, bottom: 20.0),
+              color: Colors.black.withOpacity(0.2),
+              width: MediaQuery.of(context).size.width,
+              height: 350,
+              child: Center(
+                child: Text("まだ予定はありません！"),
+              ),
+            )
+        ],
+      ),
     );
+  }
+
+  //行程のパーツを返すWidget
+  Widget _buildPlanPart(int id, int order){
+    Widget part = Container();
+
+    int itinerariesType = -1;  //0:スポット　1:メモ　2:交通
+    int index = -1;
+
+    //スポット・メモ・交通から、行程IDと一致するものを探す
+    for(int i=0; i<_spotItineraries.length; i++){
+      if(_spotItineraries[i].itineraryId == id){
+        itinerariesType = 0;
+        index = i;
+        break;
+      }
+    }
+    if(itinerariesType == -1){
+      for(int i=0; i<_trafficItineraries.length; i++){
+        if(_trafficItineraries[i].itineraryId == id){
+          itinerariesType = 1;
+          index = i;
+          break;
+        }
+      }
+    }
+    if(itinerariesType == -1){
+      for(int i=0; i<_memoItineraries.length; i++){
+        if(_memoItineraries[i].itineraryId == id){
+          itinerariesType = 2;
+          index = i;
+          break;
+        }
+      }
+    }
+
+    switch (itinerariesType){
+      case 0 :
+        part = PlanPart(
+          number: order,
+          spotName: _spotItineraries[index].spotName,
+          spotPath: _spotItineraries[index].spotImagePath,
+          spotStartDateTime: _spotItineraries[index].spotStartDateTime,
+          spotEndDateTime: _spotItineraries[index].spotEndDateTime,
+          spotParentFlag: _spotItineraries[index].parentFlag,
+          confirmFlag: true,
+          width: MediaQuery.of(context).size.width - 60,
+        );
+        break;
+      case 1 :
+        part = TrafficPart(
+          trafficType: _trafficItineraries[index].trafficClass,
+          minutes: _trafficItineraries[index].travelTime,
+          confirmFlag: true,
+        );
+        break;
+      case 2 :
+        part = MemoPart(
+          memoString: _memoItineraries[index].memo,
+          confirmFlag: true,
+        );
+    }
+    return part;
   }
 }
 

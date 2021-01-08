@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class PlanPart extends StatefulWidget {
   final int number;
@@ -8,6 +9,7 @@ class PlanPart extends StatefulWidget {
   final DateTime spotEndDateTime;
   final int spotParentFlag; //子がいるかどうか
   final bool confirmFlag;  //確定しているかどうか
+  final double width;
 
   PlanPart({
     Key key,
@@ -18,6 +20,7 @@ class PlanPart extends StatefulWidget {
     this.spotEndDateTime,
     this.spotParentFlag,
     this.confirmFlag,
+    this.width,
   }) : super(key: key);
 
   @override
@@ -26,6 +29,7 @@ class PlanPart extends StatefulWidget {
 
 class _PlanPartState extends State<PlanPart> {
   double _opacity = 0.5;
+  final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
   
   @override
   Widget build(BuildContext context) {
@@ -40,7 +44,7 @@ class _PlanPartState extends State<PlanPart> {
             color: widget.confirmFlag == true ? Theme.of(context).primaryColor : Theme.of(context).primaryColor.withOpacity(_opacity) ,
             child: Center(
               child: Text(
-                widget.number.toString(),
+                widget.number==null ? "" : widget.number.toString(),
                 style: TextStyle(
                   color: widget.confirmFlag == true ? Colors.white : Colors.white.withOpacity(_opacity),
                   fontSize: 14.0,
@@ -53,7 +57,7 @@ class _PlanPartState extends State<PlanPart> {
         ),
         SizedBox(
           height: 60.0,
-          width: MediaQuery.of(context).size.width - (MediaQuery.of(context).size.width / 6),
+          width: widget.width - (widget.width / 6),
           child: Stack(
             children: [
               Container(
@@ -75,26 +79,30 @@ class _PlanPartState extends State<PlanPart> {
                   Opacity(
                     opacity: widget.confirmFlag ? 1.0 : _opacity,
                     child: Container(
-                      constraints: BoxConstraints.expand(width: MediaQuery.of(context).size.width / 6),
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: AssetImage(widget.spotPath),
-                            fit: BoxFit.cover
-                        ),
+                      constraints: BoxConstraints.expand(width: widget.width / 6),
+                      child: ClipRRect(
                         borderRadius: BorderRadius.only(
                           topLeft:  const  Radius.circular(20.0),
                           bottomLeft: const  Radius.circular(20.0),
+                        ),
+                        child: widget.spotPath == null ? Container() : Image.network(
+                          'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
+                              '&photoreference=${widget.spotPath}'
+                              '&key=${_kGoogleApiKey}',
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
                   ),
                   Container(
-                    constraints: BoxConstraints.expand(width: MediaQuery.of(context).size.width / 6 * 3),
+                    constraints: BoxConstraints.expand(width: widget.width / 6 * 3),
                     padding: EdgeInsets.only(left: 10.0),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        widget.spotName,
+                        widget.spotName != null ?
+                          widget.spotName:
+                          "",
                         style: TextStyle(
                           color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),
                           fontSize: 14.0,
@@ -105,7 +113,7 @@ class _PlanPartState extends State<PlanPart> {
                     )
                   ),
                   Container(
-                    constraints: BoxConstraints.expand(width: MediaQuery.of(context).size.width /6),
+                    constraints: BoxConstraints.expand(width: widget.width /6),
                     child: Column(
                       children: [
                         Padding(
