@@ -30,7 +30,7 @@ class MemoItineraryData{
 class TrafficItineraryData{
   int itineraryId;
   int trafficClass;
-  int travelTime;
+  String travelTime;
   int cost;
 
   TrafficItineraryData(this.itineraryId, this.trafficClass, this.travelTime, this.cost);
