@@ -85,7 +85,7 @@ class _MapPageState extends State<MapPage> {
 
     //周辺半径５００メートル以内のスポットを取得する
     PlacesSearchResponse response
-      = await _places.searchNearbyWithRadius(Location(lat,lng), 500,language: "ja",type: "tourist_attraction");
+      = await _places.searchNearbyWithRadius(Location(lat,lng), 1000,language: "ja",type: "tourist_attraction");
 
     places = response.results;
 
@@ -425,7 +425,7 @@ class _MapPageState extends State<MapPage> {
                       ListView.builder(
                           scrollDirection: Axis.horizontal,
                           //とりあえず３つ表示にしている
-                          itemCount: 4,
+                          itemCount: places.length > 4 ? 4 : places.length,
                           shrinkWrap: true,
                           itemBuilder: (BuildContext context,int index){
                             return InkWell(
@@ -440,12 +440,17 @@ class _MapPageState extends State<MapPage> {
                                     width: 130,
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8.0),
-                                      child: Image.network(
-                                        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=300'
-                                            '&photoreference=${places[index].photos[0].photoReference}'
-                                            '&key=${_kGoogleApiKey}',
-                                        fit:BoxFit.fill,
-                                      ),
+                                      child: places[index].photos == null ?
+                                          Container(
+                                            color: Colors.black12,
+                                            child: Center(child: Text("no image")),
+                                          )
+                                          : Image.network(
+                                            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=300'
+                                                '&photoreference=${places[index].photos[0].photoReference}'
+                                                '&key=${_kGoogleApiKey}',
+                                            fit:BoxFit.fill,
+                                          ),
                                     ),
                                   ),
                                   Container(
