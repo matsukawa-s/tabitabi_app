@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -149,6 +150,12 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
     final Size size = MediaQuery.of(context).size;
     final dialogWidth = size.width - 30;
     final dialogHeight = size.height - 30;
+
+    if(Platform.isAndroid){
+
+    }else if(Platform.isIOS){
+
+    }
 
     return GestureDetector(
       onTap: (){
