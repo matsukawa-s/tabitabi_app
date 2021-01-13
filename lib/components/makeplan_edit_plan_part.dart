@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 
 class PlanPart extends StatefulWidget {
   final int number;
@@ -10,6 +11,8 @@ class PlanPart extends StatefulWidget {
   final int spotParentFlag; //子がいるかどうか
   final bool confirmFlag;  //確定しているかどうか
   final double width;
+  final bool flg;
+  final DateTime day;
 
   PlanPart({
     Key key,
@@ -21,6 +24,8 @@ class PlanPart extends StatefulWidget {
     this.spotParentFlag,
     this.confirmFlag,
     this.width,
+    this.flg,
+    this.day
   }) : super(key: key);
 
   @override
@@ -30,7 +35,21 @@ class PlanPart extends StatefulWidget {
 class _PlanPartState extends State<PlanPart> {
   double _opacity = 0.5;
   final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
-  
+
+  List<String> _popUpMenuItem = ["開始時間の設定", "終了時間の設定", "スポットの詳細"];
+
+  DateTime startDateTime;
+  DateTime endDateTime;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if(widget.spotStartDateTime != null){
+      startDateTime = widget.spotStartDateTime;
+      endDateTime = widget.spotEndDateTime;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -95,7 +114,7 @@ class _PlanPartState extends State<PlanPart> {
                     ),
                   ),
                   Container(
-                    constraints: BoxConstraints.expand(width: widget.width / 6 * 3),
+                    constraints: BoxConstraints.expand(width: widget.width / 6 * 2 + 30),
                     padding: EdgeInsets.only(left: 10.0),
                     child: Align(
                       alignment: Alignment.centerLeft,
@@ -119,8 +138,8 @@ class _PlanPartState extends State<PlanPart> {
                         Padding(
                           padding: EdgeInsets.only(top: 5.0),
                           child: Text(
-                            widget.spotStartDateTime!=null ?
-                            widget.spotStartDateTime.hour.toString() + ":" + widget.spotStartDateTime.minute.toString() :
+                            startDateTime!=null ?
+                            startDateTime.hour.toString() + ":" + startDateTime.minute.toString() :
                             "",
                             style: TextStyle(
                               color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),
@@ -130,7 +149,7 @@ class _PlanPartState extends State<PlanPart> {
                             ),
                           ),
                         ),
-                        Text(widget.spotStartDateTime!=null ?
+                        Text(endDateTime !=null && startDateTime!=null ?
                           "|" :
                           "",
                           style: TextStyle(
@@ -142,8 +161,8 @@ class _PlanPartState extends State<PlanPart> {
                         ),
                         Padding(
                           padding: EdgeInsets.only(top: 0.0),
-                          child: Text(widget.spotEndDateTime!=null ?
-                            widget.spotEndDateTime.hour.toString() + ":" + widget.spotEndDateTime.minute.toString() :
+                          child: Text(endDateTime!=null ?
+                            endDateTime.hour.toString() + ":" + endDateTime.minute.toString() :
                             "",
                             style: TextStyle(
                               color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),
@@ -156,12 +175,151 @@ class _PlanPartState extends State<PlanPart> {
                       ],
                     ),
                   ),
+                  if(widget.flg)
+                  Container(
+                    constraints: BoxConstraints.expand(width: widget.width /6 -30),
+                    child: PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert),
+                      initialValue: "value",
+                      onSelected: (String s) {
+                        if(s == _popUpMenuItem[0]){
+                          _startSetDateTime();
+                        }else if(s==_popUpMenuItem[1]){
+                          _endSetDateTime();
+                        }
+                        setState(() {
+
+                        });
+                      },
+                      itemBuilder: (BuildContext context) {
+                        return _popUpMenuItem.map((String s) {
+                          return PopupMenuItem(
+                            child: Text(s, style: TextStyle(fontSize: 14.0),),
+                            value: s,
+                          );
+                        }).toList();
+                      },
+                    )
+                  )
                 ],
               ),
             ],
           ),
         )
       ],
+    );
+  }
+
+  _startSetDateTime(){
+    DatePicker.showTimePicker(
+        context,
+        showTitleActions: true,
+        onChanged: (date) {
+          print('change $date in time zone ' + date.timeZoneOffset.inHours.toString());
+        },
+        onConfirm: (date) {
+          print('confirm $date');
+            setState(() {
+            startDateTime = date;
+            });
+        },
+        currentTime: startDateTime==null ? DateTime.now(): startDateTime,
+      onCancel: (){
+         setState(() {
+           startDateTime = null;
+         });
+      }
+    );
+  }
+
+  _endSetDateTime(){
+    DatePicker.showTimePicker(context, showTitleActions: true, onChanged: (date) {
+      print('change $date in time zone ' + date.timeZoneOffset.inHours.toString());
+    }, onConfirm: (date) {
+      print('confirm $date');
+      setState(() {
+        endDateTime = date;
+      });
+    }, currentTime: endDateTime==null ? DateTime.now(): endDateTime,
+        onCancel: (){
+          setState(() {
+            endDateTime = null;
+          });
+        }
+    );
+  }
+
+  _buildDialog(BuildContext context){
+
+    DateTime tempStartDate = startDateTime==null ? DateTime(widget.day.year,widget.day.month,widget.day.day,DateTime.now().hour,DateTime.now().minute):startDateTime;
+    DateTime tempEndDate = endDateTime==null ? DateTime(widget.day.year,widget.day.month,widget.day.day,DateTime.now().hour+1,DateTime.now().minute):endDateTime;
+
+    return showDialog(
+      context: context,
+      builder: (_){
+        return AlertDialog(
+          title: Text("時間の設定", textAlign: TextAlign.center,),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                Text("開始時間", style: TextStyle(fontSize: 14.0),textAlign: TextAlign.left,),
+                GestureDetector(
+                  child: Container(
+                    height: 40.0,
+                    width: 150.0,
+                    margin: EdgeInsets.only(top: 5.0),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10.0),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: Center(
+                      child: Text(
+                        tempStartDate.hour.toString().padLeft(2,"0") + ":" + tempStartDate.minute.toString().padLeft(2,"0")
+                      ),
+                    ),
+                  ),
+                  onTap: (){
+                    DatePicker.showTimePicker(context, showTitleActions: true, onChanged: (date) {
+                      print('change $date in time zone ' + date.timeZoneOffset.inHours.toString());
+                    }, onConfirm: (date) {
+                      print('confirm $date');
+                    }, currentTime: DateTime.now());
+                  },
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top: 5.0),
+                  child: Text("終了時間", style: TextStyle(fontSize: 14.0),textAlign: TextAlign.left,),
+                ),
+                Container(
+                  height: 40.0,
+                  width: 150.0,
+                  margin: EdgeInsets.only(top: 5.0),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10.0),
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: Center(
+                    child: Text(
+                     tempEndDate.hour.toString().padLeft(2,"0") + ":" + tempEndDate.minute.toString().padLeft(2,"0")
+                    ),
+                  ),
+                )
+              ],
+            )
+          ),
+          actions: <Widget>[
+            // ボタン領域
+            FlatButton(
+              child: Text("Cancel"),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
+            ),
+            FlatButton(
+              child: Text("OK"),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
+            ),
+          ],
+        );
+      }
     );
   }
 }

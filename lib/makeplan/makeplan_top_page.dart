@@ -33,6 +33,10 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   DateTime _startDateTime = DateTime.now();
   DateTime _endDateTime = DateTime.now();
   List<DateTime> _planDates = [DateTime.now()];
+  String _userName = "";
+  String _userIconPath;
+
+  int userFlag = 0;
 
   TabController _controller;
 
@@ -66,6 +70,10 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     });
     _startDateTime = DateTime.parse(list[0]["start_day"]);
     _endDateTime = DateTime.parse(list[0]["end_day"]);
+    _userName = list[0]["user_name"];
+    _userIconPath = list[0]["user_icon_path"];
+    userFlag = list[0]["user_flag"];
+    print("userFlg:" + userFlag.toString());
 
     setState(() {
       _planDates = _getDateTimeList(_dateTimeFunc(_startDateTime), _dateTimeFunc(_endDateTime));
@@ -98,6 +106,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
       DateTime date = DateTime.parse(list[i]["day"]);
       _itineraries.add(ItineraryData(list[i]["id"], list[i]["itinerary_order"], list[i]["spot_order"], list[i]["plan_id"], date, false));
       ids.add(list[i]["id"]);
+
       print(list[i]["id"].toString());
     }
 
@@ -225,6 +234,11 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                       ),
                     ]
                 )
+                if(userFlag == 1)
+                IconButton(
+                  icon: Icon(Icons.more_vert, color: Colors.white,),
+                  onPressed: (){},
+                ),
               ],
               flexibleSpace: Container(
                 constraints: BoxConstraints.expand(height: 250.0),
@@ -248,6 +262,26 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    if(userFlag == 0)
+                    Padding(
+                      padding: EdgeInsets.only(right: 10.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _buildIconImageInUserTop(_userIconPath),
+                          Padding(
+                            padding: EdgeInsets.only(left: 5.0),
+                            child: Text(
+                              _userName,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.0
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
                     Padding(
                       padding: EdgeInsets.only(right: 10.0),
                       child: Text(_planName, style: TextStyle(color: Colors.white, fontSize: 32.0)),
@@ -259,7 +293,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                   ],
                 ),
               ),
-              bottom: PreferredSize(child: Text("", style: TextStyle(color: Colors.white)), preferredSize: Size.fromHeight(53.0),),
+              bottom: PreferredSize(child: Text("", style: TextStyle(color: Colors.white)), preferredSize: Size.fromHeight(75.0),),
             ),
             SliverList(
               delegate: SliverChildListDelegate([
@@ -340,6 +374,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                                     ],
                                   ),
                                 ),
+                                if(userFlag == 1)
                                 Container(
                                   alignment: Alignment.bottomRight,
                                   margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
@@ -368,6 +403,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                       ),
                     ),
                     //メンバー
+                    if(userFlag == 1)
                     Card(
                       margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
                       shape: RoundedRectangleBorder(
@@ -412,6 +448,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                       ),
                     ),
                     //アルバム
+                    if(userFlag == 1)
                     Card(
                       margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0, bottom: 30.0),
                       shape: RoundedRectangleBorder(
@@ -442,6 +479,26 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                         ),
                       ),
                     ),
+                    if(userFlag == 0)
+                      Card(
+                        margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        child: Container(
+                          constraints: BoxConstraints.expand(height: 200),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              _buildTitle("コメント"),
+
+                            ],
+                          ),
+                        ),
+                      ),
+                    Container(
+                      height: 100,
+                    )
                   ],
                 ),
               ]),
@@ -538,6 +595,8 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
           spotParentFlag: _spotItineraries[index].parentFlag,
           confirmFlag: true,
           width: MediaQuery.of(context).size.width - 60,
+          flg: false,
+          day: DateTime.now(),
         );
         break;
       case 1 :
@@ -554,6 +613,22 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
         );
     }
     return part;
+  }
+
+  Widget _buildIconImageInUserTop(String iconPath){
+    final double iconSize = 15.0;
+    if(iconPath == null){
+      return CircleAvatar(
+        backgroundColor: Colors.grey,
+        radius: iconSize,
+      );
+    }else{
+      return CircleAvatar(
+        backgroundColor: Colors.black12,
+        radius: iconSize,
+        backgroundImage: NetworkImage(Network().imagesDirectory("user_icons") + iconPath),
+      );
+    }
   }
 }
 

@@ -430,9 +430,15 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
       return false;
     });
 
+    int upSpotIndex = -1;
+    int downSpotIndex = -1;
+
     if(upIniIndex > -1 && downIniIndex > -1){
-      int upSpotIndex = _spotItineraries.indexWhere((element) => element.itineraryId == _itineraries[upIniIndex].itineraryID);
-      int downSpotIndex = _spotItineraries.indexWhere((element) => element.itineraryId == _itineraries[downIniIndex].itineraryID);
+      upSpotIndex = _spotItineraries.indexWhere((element) => element.itineraryId == _itineraries[upIniIndex].itineraryID);
+      downSpotIndex = _spotItineraries.indexWhere((element) => element.itineraryId == _itineraries[downIniIndex].itineraryID);
+    }
+
+    if(upSpotIndex > -1 && downSpotIndex > -1){
 
       print("up down Spot: " + upSpotIndex.toString() + "," + downSpotIndex.toString());
       String start = _spotItineraries[upSpotIndex].latitude.toString() + "," + _spotItineraries[upSpotIndex].longitude.toString();
@@ -473,10 +479,11 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
       //並び替え時
       setState(() {
         _itineraries[iniIndex].itineraryOrder = goOrder;
+        _itineraries[iniIndex].spotOrder = _itineraries[index].spotOrder;
         _itineraries.sort((a,b) => a.itineraryOrder.compareTo(b.itineraryOrder));
       });
 
-      http.Response res = await Network().getData("itinerary/rearrange/" + _dragAndDropData.dataId.toString() + "/" + goOrder.toString() + "/" + tempItineraryData.spotOrder.toString() + "/"+ _dragAndDropData.dataType.toString());
+      http.Response res = await Network().getData("itinerary/rearrange/" + _dragAndDropData.dataId.toString() + "/" + goOrder.toString() + "/" + _itineraries[index].spotOrder.toString() + "/"+ _dragAndDropData.dataType.toString());
     }else{
       //追加時
       String day = DateFormat('yyyy-MM-dd').format(_travelDateTime[_tabController.index]);
@@ -792,6 +799,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                             spotParentFlag: 0,
                             confirmFlag: false,
                             width: MediaQuery.of(context).size.width,
+                            flg: true,
                           ),
                         ),
                         Container(
@@ -894,6 +902,8 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                                    spotParentFlag: 0,
                                    confirmFlag: false,
                                    width: MediaQuery.of(context).size.width,
+                                   flg: false,
+                                   day: DateTime.now(),
                                  ),
                                ),
                              //並び替え時
@@ -909,6 +919,8 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                                    spotParentFlag: 0,
                                    confirmFlag: false,
                                    width: MediaQuery.of(context).size.width,
+                                   flg: false,
+                                   day: DateTime.now(),
                                  ),
                                ),
                            ],
@@ -1015,6 +1027,8 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                             spotParentFlag: 0,
                             confirmFlag: false,
                             width: MediaQuery.of(context).size.width,
+                            flg: true,
+                            day: _travelDateTime[_tabController.index],
                           ),
                         ),
                         Container(
@@ -1105,6 +1119,8 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
             spotParentFlag: _spotItineraries[index].parentFlag,
             confirmFlag: true,
             width: MediaQuery.of(context).size.width,
+            flg: true,
+            day: _travelDateTime[_tabController.index],
           ),
        );
        break;
