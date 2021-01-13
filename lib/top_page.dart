@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:page_transition/page_transition.dart';
+import 'package:tabitabi_app/join_plan_page.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
@@ -39,7 +41,15 @@ class TopPage extends StatelessWidget {
                           color: Colors.orangeAccent,
                           shape: const StadiumBorder(),
                           onPressed: (){
-
+                            Navigator.push(
+                              context,
+                              PageTransition(
+                                  type: PageTransitionType.fade,
+                                  child: JoinPlanPage(),
+                                  inheritTheme: true,
+                                  ctx: context
+                              ),
+                            );
                           }
                       ),
                     ),
