@@ -10,6 +10,7 @@ class InvitePlanPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(plans);
     return Scaffold(
       appBar: AppBar(
         title: Text("プランコード"),
@@ -24,29 +25,26 @@ class InvitePlanPage extends StatelessWidget {
               data: plans["plan_code"],
               version: QrVersions.auto,
               size: 200.0,
+//              embeddedImage: AssetImage('images/logo_square.jpg'),
+//              embeddedImageStyle: QrEmbeddedImageStyle(
+//                size: Size(40, 40),
+//              ),
             ),
-            Container(
-//              color: Colors.red,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                      margin: EdgeInsets.only(top: 50.0),
-//                      color: Colors.grey,
-                      child: Text(
-                        plans["plan_code"],
-                        textAlign: TextAlign.start,
-                        style: TextStyle(
-                            fontSize: 24,
-                        ),
-                      )
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  plans["plan_code"],
+                  textAlign: TextAlign.start,
+                  style: TextStyle(
+                      fontSize: 24,
                   ),
-                  IconButton(
-                      icon: Icon(Icons.copy),
-                      onPressed: () => clipboardCopy()
-                  )
-                ],
-              ),
+                ),
+                IconButton(
+                    icon: Icon(Icons.copy),
+                    onPressed: () => clipboardCopy()
+                )
+              ],
             )
 
           ],

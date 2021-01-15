@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,8 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
   List<int> _selectsPrefectures = []; // 都道府県の絞り込み
   List<int> _selectsTypes = []; // 場所タイプの絞り込み
   List<int> _selectedSpotItems = []; // 選択しているスポット(spotId)
+  Size size;
+  final double paddingGridView = 4.0; // GridViewのPadding
 
   @override
   void initState() {
@@ -42,103 +45,116 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+    size = MediaQuery.of(context).size;
+  }
+
+  @override
   Widget build(BuildContext context) {
    final model = Provider.of<FavoriteSpotViewModel>(context);
-        return model.spots == null || model.types == null ? Center(
-          child: CircularProgressIndicator()
-        )
-        : model.spots.isEmpty ? Center(child: Text("お気に入り登録しているスポットがありません"))
-        : SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                child: SmartSelect.multiple(
-                  title: '都道府県で絞り込む',
-                  value: _selectsPrefectures,
-                  onChange: (state) => setState(
-                      () => {
-                        _selectsPrefectures = state.value,
-                        model.narrowDownByPrefectureAndTypes(_selectsPrefectures,_selectsTypes)
-                      }
-                  ),
-                  choiceItems: model.prefectures,
-                  choiceType: S2ChoiceType.chips,
-                  modalType: S2ModalType.popupDialog,
-                  choiceLayout: S2ChoiceLayout.list,
-                  tileBuilder: (context,state){
-                    return S2Tile.fromState(
-                      state,
-                      isTwoLine: false, //選択しているアイテムを出す
-                    );
-                  },
+
+      return model.spots == null || model.types == null ? Center(
+        child: CircularProgressIndicator()
+      )
+      : model.spots.isEmpty ? Center(child: Text("お気に入り登録しているスポットがありません"))
+      : SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              child: SmartSelect.multiple(
+                title: '都道府県で絞り込む',
+                value: _selectsPrefectures,
+                onChange: (state) => setState(
+                    () => {
+                      _selectsPrefectures = state.value,
+                      model.narrowDownByPrefectureAndTypes(_selectsPrefectures,_selectsTypes)
+                    }
                 ),
-              ),
-              Container(
-                child: SmartSelect.multiple(
-                  title: 'タイプで絞り込む',
-                  value: _selectsPrefectures,
-                  onChange: (state) => setState(
-                      () => {
-                        _selectsTypes = state.value,
-                        model.narrowDownByPrefectureAndTypes(_selectsPrefectures,_selectsTypes)
-                      }
-                  ),
-                  choiceItems: model.types,
-                  choiceType: S2ChoiceType.checkboxes,
-                  modalType: S2ModalType.popupDialog,
-                  choiceLayout: S2ChoiceLayout.list,
-                  tileBuilder: (context,state){
-                    return S2Tile.fromState(
-                      state,
-                      isTwoLine: false, //選択しているアイテムを出す
-                    );
-                  },
-                ),
-              ),
-              Divider(),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: 5),
-                itemCount: model.showSpots.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10
-                ),
-                itemBuilder: (context,index){
-                  if(widget.mode){
-                    return _buildSelectableItem(model.showSpots[index],model);
-                  }else{
-                    return _buildShowDetailsSpotItem(model.showSpots[index],model);
-                  }
+                choiceItems: model.prefectures,
+                choiceType: S2ChoiceType.chips,
+                modalType: S2ModalType.popupDialog,
+                choiceLayout: S2ChoiceLayout.list,
+                tileBuilder: (context,state){
+                  return S2Tile.fromState(
+                    state,
+                    isTwoLine: false, //選択しているアイテムを出す
+                  );
                 },
               ),
-            ],
-          ),
-        );
+            ),
+            Container(
+              child: SmartSelect.multiple(
+                title: 'タイプで絞り込む',
+                value: _selectsPrefectures,
+                onChange: (state) => setState(
+                    () => {
+                      _selectsTypes = state.value,
+                      model.narrowDownByPrefectureAndTypes(_selectsPrefectures,_selectsTypes)
+                    }
+                ),
+                choiceItems: model.types,
+                choiceType: S2ChoiceType.checkboxes,
+                modalType: S2ModalType.popupDialog,
+                choiceLayout: S2ChoiceLayout.list,
+                tileBuilder: (context,state){
+                  return S2Tile.fromState(
+                    state,
+                    isTwoLine: false, //選択しているアイテムを出す
+                  );
+                },
+              ),
+            ),
+            Divider(),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.all(paddingGridView),
+              itemCount: model.showSpots.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 6,
+                crossAxisSpacing: 6
+              ),
+              itemBuilder: (context,index){
+                if(widget.mode){
+                  return _buildSelectableItem(model.showSpots[index],model);
+                }else{
+                  return _buildShowDetailsSpotItem(model.showSpots[index],model);
+                }
+              },
+            ),
+          ],
+        ),
+      );
   }
 
   Widget _buildSpotItem(Spot spot){
     return Column(
       children: [
-        Container(
-          height: 100,
-          width: MediaQuery.of(context).size.width / 3,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: Image.network(
-              'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
-                  '&photoreference=${spot.imageUrl}'
-                  '&key=${_kGoogleApiKey}',
-              fit: BoxFit.fill,
+        Expanded(
+          flex: 4,
+          child: Container(
+            width: (size.width - paddingGridView * 2) / 3,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.network(
+                'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
+                    '&photoreference=${spot.imageUrl}'
+                    '&key=${_kGoogleApiKey}',
+                fit: BoxFit.fill,
+              ),
             ),
           ),
         ),
-        Text(
-          spot.spotName,
-          overflow: TextOverflow.ellipsis,
+        Expanded(
+          flex: 1,
+          child: Text(
+            spot.spotName,
+            overflow: TextOverflow.ellipsis,
+          ),
         )
       ],
     );
@@ -146,9 +162,14 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
 
   // お気に入りスポット画面のアイテム（タップ時に詳細ダイアログ開く）
   Widget _buildShowDetailsSpotItem(spot,model){
-    final Size size = MediaQuery.of(context).size;
     final dialogWidth = size.width - 30;
     final dialogHeight = size.height - 30;
+
+    if(Platform.isAndroid){
+
+    }else if(Platform.isIOS){
+
+    }
 
     return GestureDetector(
       onTap: (){
