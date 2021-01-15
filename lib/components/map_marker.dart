@@ -18,6 +18,7 @@ Future<Uint8List> getBytesFromCanvas(int width, int height, int order) async {
       ),
       paint);
   TextPainter Painter = TextPainter(textDirection: TextDirection.ltr);
+
   Painter.text = TextSpan(
     text: order.toString(),
     style: TextStyle(fontSize: 40.0, color: Colors.white),
