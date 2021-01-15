@@ -13,7 +13,7 @@
         android:label="tabitabi_app"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAH6FyuqAi4bJ2-2cpMg5p16eeVgZ5s18I"/>
+            android:value=""/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

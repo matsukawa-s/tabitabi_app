@@ -85,7 +85,7 @@ class _MapPageState extends State<MapPage> {
 
     //周辺半径５００メートル以内のスポットを取得する
     PlacesSearchResponse response
-      = await _places.searchNearbyWithRadius(Location(lat,lng), 500,language: "ja",type: "tourist_attraction");
+      = await _places.searchNearbyWithRadius(Location(lat,lng), 1000,language: "ja",type: "tourist_attraction");
 
     places = response.results;
 
@@ -212,8 +212,6 @@ class _MapPageState extends State<MapPage> {
         photoRequests.add(photos[i].photoReference);
       }
     }
-
-    print(placesDetailsResponse.result.types);
 
     var prefectureName; //都道府県名
     // スポットの都道府県を取得
@@ -425,7 +423,7 @@ class _MapPageState extends State<MapPage> {
                       ListView.builder(
                           scrollDirection: Axis.horizontal,
                           //とりあえず３つ表示にしている
-                          itemCount: 4,
+                          itemCount: places.length > 4 ? 4 : places.length,
                           shrinkWrap: true,
                           itemBuilder: (BuildContext context,int index){
                             return InkWell(
@@ -440,12 +438,17 @@ class _MapPageState extends State<MapPage> {
                                     width: 130,
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8.0),
-                                      child: Image.network(
-                                        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=300'
-                                            '&photoreference=${places[index].photos[0].photoReference}'
-                                            '&key=${_kGoogleApiKey}',
-                                        fit:BoxFit.fill,
-                                      ),
+                                      child: places[index].photos == null ?
+                                          Container(
+                                            color: Colors.black12,
+                                            child: Center(child: Text("no image")),
+                                          )
+                                          : Image.network(
+                                            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=300'
+                                                '&photoreference=${places[index].photos[0].photoReference}'
+                                                '&key=${_kGoogleApiKey}',
+                                            fit:BoxFit.fill,
+                                          ),
                                     ),
                                   ),
                                   Container(
@@ -516,7 +519,7 @@ class _MapPageState extends State<MapPage> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   if(place.weekdayText != null)
-                                    for(int i = 0; i < 7; i++)
+                                    for(int i = 0; i < place.weekdayText.length; i++)
                                       Container(
                                         padding: EdgeInsets.only(left: 74),
                                         child: Row(
@@ -558,63 +561,75 @@ class _MapPageState extends State<MapPage> {
                           ),
                         ],
                       ),
-                    ListTile(
-                      title: Text("レビュー"),
-                    ),
+//                    ListTile(
+//                      title: Text("レビュー"),
+//                    ),
                     if(place.reviews != null)
                       Container(
-                        padding: EdgeInsets.only(left: 16.0,right: 16.0),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          scrollDirection: Axis.vertical,
-                          itemCount: place.reviews.length,
-                          itemBuilder: (BuildContext context, int index){
-                            return InkWell(
-                              onTap: (){
-                                showReviewDialog(place.reviews[index]);
-                              },
-                              child: Container(
-                                margin: EdgeInsets.only(bottom: 4.0),
-                                padding: EdgeInsets.all(4.0),
-                                decoration: BoxDecoration(
-                                  color: Colors.black12,
-                                  borderRadius: BorderRadius.circular(10)
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          place.reviews[index].authorName,
-                                          style: TextStyle(fontWeight: FontWeight.w600),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        RatingBar.builder(
-                                          itemSize: 12,
-                                          initialRating: place.reviews[index].rating.toDouble(),
-                                          direction: Axis.horizontal,
-                                          allowHalfRating: true,
-                                          itemCount: 5,
-                                          itemBuilder: (context, _) => Icon(
-                                            Icons.star,
-                                            color: Colors.amber,
+                        padding: EdgeInsets.only(left: 8.0,right: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                                margin: EdgeInsets.all(4.0),
+                                child: Text("レビュー")
+                            ),
+                            Container(
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                scrollDirection: Axis.vertical,
+                                itemCount: place.reviews.length,
+                                itemBuilder: (BuildContext context, int index){
+                                  return InkWell(
+                                    onTap: (){
+                                      showReviewDialog(place.reviews[index]);
+                                    },
+                                    child: Container(
+                                      margin: EdgeInsets.only(bottom: 4.0),
+                                      padding: EdgeInsets.all(4.0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black12,
+                                        borderRadius: BorderRadius.circular(10)
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                place.reviews[index].authorName,
+                                                style: TextStyle(fontWeight: FontWeight.w600),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              RatingBar.builder(
+                                                itemSize: 12,
+                                                initialRating: place.reviews[index].rating.toDouble(),
+                                                direction: Axis.horizontal,
+                                                allowHalfRating: true,
+                                                itemCount: 5,
+                                                itemBuilder: (context, _) => Icon(
+                                                  Icons.star,
+                                                  color: Colors.amber,
+                                                ),
+                                                itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
+                                              ),
+                                            ],
                                           ),
-                                          itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
-                                        ),
-                                      ],
+                                          Text(
+                                            place.reviews[index].text ?? "",
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 2,
+                                          )
+                                        ],
+                                      ),
                                     ),
-                                    Text(
-                                      place.reviews[index].text ?? "",
-                                      overflow: TextOverflow.ellipsis,
-                                    )
-                                  ],
-                                ),
+                                  );
+                                }
                               ),
-                            );
-                          }
+                            ),
+                          ],
                         ),
                       ),
                     Container()
@@ -624,9 +639,9 @@ class _MapPageState extends State<MapPage> {
           );
         }else{
           return Container(
-            height: 700,
-            color: Colors.pink,
-            child: Text("-----------何か表示する------------"),
+            height: 100,
+//            color: Colors.pink,
+//            child: Text("-----------何か表示する------------"),
           );
         }
 
