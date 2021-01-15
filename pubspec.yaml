@@ -48,6 +48,7 @@ dependencies:
   smart_select: ^4.3.2
   qr_flutter: ^3.2.0
   google_directions_api: ^0.5.0
+  fluttertoast: ^7.1.6
 
 
 dev_dependencies:
