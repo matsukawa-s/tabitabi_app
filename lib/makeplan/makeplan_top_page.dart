@@ -624,6 +624,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
           trafficType: _trafficItineraries[index].trafficClass,
           minutes: _trafficItineraries[index].travelTime,
           confirmFlag: true,
+          flg: false,
         );
         break;
       case 2 :

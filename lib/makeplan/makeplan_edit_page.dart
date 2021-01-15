@@ -98,6 +98,12 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
   //マーカー
   Set<Marker> _markers = Set();
 
+  List<String> _hourList = ["0", "1", "2", "3", "4", "5", "6"];
+  List<String> _minutesList = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
+  //選択している日付削除できるかフラグ
+  bool _dateDeleteFlag = true;
+
   void _onMapCreated(GoogleMapController controller) {
     setState(() {
       mapController = controller;
@@ -255,6 +261,96 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
 
   }
 
+  //日付削除の処理
+  _deleteDateTime() async{
+    //確認ダイアログ
+    bool flg = false;
+
+    await showDialog(
+        context: context,
+        builder:(context){
+          return StatefulBuilder(
+              builder: (_, setState) {
+                return AlertDialog(
+                  title: Text("確認", style: TextStyle(fontSize: 18.0),
+                      textAlign: TextAlign.center),
+                  content: SingleChildScrollView(
+                    child: Container(
+                      child: Center(
+                        child: Text(_travelDateTime[_tabController.index].month.toString() + "/" +  _travelDateTime[_tabController.index].day.toString() + "の予定を削除してよろしいでしょうか？"),
+                      ),
+                    )
+                  ),
+                  actions: <Widget>[
+                    // ボタン領域
+                    FlatButton(
+                      child: Text("Cancel"),
+                      onPressed: () =>
+                          Navigator.of(context, rootNavigator: true).pop(
+                              context),
+                    ),
+                    FlatButton(
+                        child: Text("OK"),
+                        onPressed: () {
+                          flg = true;
+                          Navigator.of(context, rootNavigator: true).pop(
+                              context);
+                        }
+                    ),
+                  ],
+                );
+              }
+          );
+        }
+    );
+
+    if(!flg){
+      return null;
+    }
+
+    //削除する日付の行程データを削除
+    String day = DateFormat('yyyy-MM-dd').format(_travelDateTime[_tabController.index]);
+    print(day);
+    http.Response res = await Network().getData("itinerary/day/delete/" + day);
+    print(res.body);
+
+    var removeId = [];
+
+    _itineraries.forEach((element) {
+      if(_dataTimeFunc(element.itineraryDateTime) == _dataTimeFunc(_travelDateTime[_tabController.index])){
+        removeId.add(element.itineraryID);
+      }
+    });
+
+    _itineraries.removeWhere((element) => removeId.contains(element.itineraryID));
+
+    //リストから日付削除
+    _travelDateTime.removeAt(_tabController.index);
+
+    _startDateTime = _travelDateTime[0];
+    _endDateTime = _travelDateTime[_travelDateTime.length-1];
+
+    String startDate = DateFormat('yy-MM-dd').format(_startDateTime);
+    String endDate = DateFormat('yy-MM-dd').format(_endDateTime);
+
+    final data = {
+      "id" : widget.planId,
+      "start_day" : startDate,
+      "end_day" : endDate,
+    };
+
+    http.Response response = await Network().postData(data, "plan/update/date");
+    print(response.body);
+
+    //タブから日付削除
+    _tabController = _createNewTabController();
+    setState(() {
+
+    });
+
+  }
+
+
   TabController _createNewTabController() => TabController(
     vsync: this,
     length: _travelDateTime.length,
@@ -408,8 +504,14 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
   _addTrafficToPlan(int trafficType, int index) async{
     int iniIndex = _itineraries.indexWhere((element) => element.itineraryID == _dragAndDropData.dataId);
 
-    String trafficTime = "40";
+    String trafficTime = "";
     int cost = 400;
+
+    int type = trafficType;
+    int traId = _trafficItineraries.indexWhere((element) => element.itineraryId == _dragAndDropData.dataId);
+    if(_dragAndDropData.alreadyFlag){
+      type = _trafficItineraries[traId].trafficClass;
+    }
 
     print("traffic iniIndex : " + iniIndex.toString());
     //スポットの合間にあるかどうか
@@ -446,7 +548,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
       String end = _spotItineraries[downSpotIndex].latitude.toString() + "," + _spotItineraries[downSpotIndex].longitude.toString();
 
       print("start end:" + start + "," + end);
-      trafficTime = await DirectionApi().getDirection(start, end, trafficType-1);
+      trafficTime = await DirectionApi().getDirection(start, end, type-1);
     }
 
     print("up down :" + upIniIndex.toString() + "," + downIniIndex.toString());
@@ -486,6 +588,19 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
         }
       }
 
+      print("traffictest: " + _dragAndDropData.dataId.toString());
+      if(trafficTime != ""){
+        _trafficItineraries[traId].travelTime = trafficTime;
+        final data = {
+          "id" : _trafficItineraries[traId].id,
+          "travel_time" : trafficTime,
+        };
+
+        http.Response res = await Network().postData(data, "itinerary/update/traffic/time");
+        print(res.body);
+
+      }
+
       //並び替え時
       setState(() {
         _itineraries[iniIndex].itineraryOrder = goOrder;
@@ -497,6 +612,14 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     }else{
       //追加時
       String day = DateFormat('yyyy-MM-dd').format(_travelDateTime[_tabController.index]);
+
+      //APIから時間取れなかったとき
+      if(trafficTime == ""){
+        trafficTime = await _showTrafficTimeDialog();
+      }
+      if(trafficTime == ""){
+        return null;
+      }
 
       print("trafficTime:" + trafficTime);
 
@@ -534,6 +657,141 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
 
       _dragAndDropData = null;
     }
+  }
+
+  Future<String> _showTrafficTimeDialog() async{
+    String time = "";
+    String hour = "0";
+    String minutes1 = "0";
+    String minutes2 = "0";
+    //文字入力
+    await showDialog(
+        context: context,
+        builder:(context){
+          return StatefulBuilder(
+              builder: (_, setState) {
+                return AlertDialog(
+                  title: Text("時間の設定", style: TextStyle(fontSize: 18.0),
+                      textAlign: TextAlign.center),
+                  content: SingleChildScrollView(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 40.0,
+                          width: 60.0,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10.0),
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: Center(
+                            child: DropdownButton<String>(
+                              value: hour,
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                              onChanged: (String newValue) {
+                                setState(() {
+                                  hour = newValue;
+                                });
+                              },
+                              items: _hourList
+                                  .map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 5.0, right: 5.0),
+                          child: Text("時間"),
+                        ),
+                        Container(
+                            height: 40.0,
+                            width: 120.0,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10.0),
+                              border: Border.all(color: Colors.grey),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                DropdownButton<String>(
+                                  value: minutes1,
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                  onChanged: (String newValue) {
+                                    setState(() {
+                                      minutes1 = newValue;
+                                    });
+                                  },
+                                  items: _minutesList
+                                      .map<DropdownMenuItem<String>>((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
+                                    );
+                                  }).toList(),
+                                ),
+                                DropdownButton<String>(
+                                  value: minutes2,
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                  onChanged: (String newValue) {
+                                    setState(() {
+                                      minutes2 = newValue;
+                                    });
+                                  },
+                                  items: _minutesList
+                                      .map<DropdownMenuItem<String>>((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
+                            )
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 5.0),
+                          child: Text("分"),
+                        )
+                      ],
+                    ),
+                  ),
+                  actions: <Widget>[
+                    // ボタン領域
+                    FlatButton(
+                      child: Text("Cancel"),
+                      onPressed: () =>
+                          Navigator.of(context, rootNavigator: true).pop(
+                              context),
+                    ),
+                    FlatButton(
+                        child: Text("OK"),
+                        onPressed: () {
+                          if(hour != "0"){
+                            time += hour + "時間";
+                          }
+                          if(minutes1 != "0"){
+                            time += minutes1;
+                          }
+                          time += minutes2 + "分";
+
+                          if(hour == "0" && minutes1 == "0" && minutes2 =="0"){
+                            time = "";
+                          }
+                          Navigator.of(context, rootNavigator: true).pop(
+                              context);
+                        }
+                    ),
+                  ],
+                );
+              }
+          );
+        }
+    );
+    return time;
   }
 
   //その他パレットからプランに追加したときの処理
@@ -773,6 +1031,11 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           }
         }
       }
+      if(_tabController.index == 0 || _tabController.index == _travelDateTime.length - 1 ){
+        _dateDeleteFlag = true;
+      }else{
+        _dateDeleteFlag = false;
+      }
     }
     setState(() {
 
@@ -806,9 +1069,34 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
               //日程一覧タブ表示
               Row(
                 children: [
+                  GestureDetector(
+                    child: Container(
+                      height: 50.0,
+                      width: MediaQuery.of(context).size.width/6,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: Offset(4, 4), // changes position of shadow
+                            ),
+                          ]
+                      ),
+                      child: Container(
+                        child: _dateDeleteFlag ? Icon(Icons.remove_circle_outline, size: 30.0,) : Icon(Icons.remove_circle_outline, size: 30.0, color: Colors.black.withOpacity(0.2),),
+                      ),
+                    ),
+                    onTap: (){
+                      if(_dateDeleteFlag){
+                        _deleteDateTime();
+                      }
+                    },
+                  ),
                   Container(
                     height: 50.0,
-                    width: MediaQuery.of(context).size.width - MediaQuery.of(context).size.width/6,
+                    width: MediaQuery.of(context).size.width - (MediaQuery.of(context).size.width/6 * 2),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       boxShadow: [
@@ -816,7 +1104,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                           color: Colors.black.withOpacity(0.1),
                           spreadRadius: 1,
                           blurRadius: 3,
-                          offset: Offset(0, 4), // changes position of shadow
+                          offset: Offset(4, 3), // changes position of shadow
                         ),
                       ],
                     ),
@@ -1118,14 +1406,18 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                                margin: EdgeInsets.only(left: 15.0, top: 10.0),
                                child: _dragAndDropData.alreadyFlag?
                                  TrafficPart(
+                                   id: _trafficItineraries[itiId].id,
                                    trafficType: _trafficItineraries[itiId].trafficClass,
                                    minutes: "",
                                    confirmFlag: false,
+                                   flg: false,
                                  ):
                                  TrafficPart(
+                                   id: 1,
                                    trafficType: _dragAndDropData.dataId,
                                    minutes: "",
                                    confirmFlag: false,
+                                   flg: false,
                                  ),
                              ),
                            ],
@@ -1222,9 +1514,11 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                         Container(
                           margin: EdgeInsets.only(left: 15.0, top: 10.0),
                           child: TrafficPart(
+                            id: 1,
                             trafficType: _dragAndDropData.dataId,
                             minutes: "0",
                             confirmFlag: false,
+                            flg: true,
                           ),
                         ),
                         Container(
@@ -1321,9 +1615,11 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
        break;
       case 1 :
         part = TrafficPart(
+          id: _trafficItineraries[index].id,
           trafficType: _trafficItineraries[index].trafficClass,
           minutes: _trafficItineraries[index].travelTime.toString(),
           confirmFlag: true,
+          flg: true,
         );
         break;
       case 2 :
