@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 
 class TrafficPart extends StatefulWidget {
   final int trafficType;
@@ -76,9 +77,16 @@ class _TrafficPartState extends State<TrafficPart> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Padding(
-            padding: EdgeInsets.only(left: 10.0),
-            child: Icon(_icon, color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),),
+          GestureDetector(
+            child: Padding(
+              padding: EdgeInsets.only(left: 10.0),
+              child: Icon(_icon, color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),),
+            ),
+            onTap: () async{
+              //String time = await _showTrafficTimeDialog();
+
+            },
+            behavior: HitTestBehavior.opaque,
           ),
           Padding(
             padding: EdgeInsets.only(left: 10.0),
@@ -91,23 +99,68 @@ class _TrafficPartState extends State<TrafficPart> {
                     fontWeight: FontWeight.normal
                 ),
             ),
-            // child: Text(
-            //   _hour == 0 ?
-            //     _minutes != 0 ?
-            //     _minutes.toString() + "分" : "" :
-            //     _minutes == 0 ?
-            //     _hour.toString() + "時間" :
-            //     _hour.toString() + "時間" + _minutes.toString() + "分",
-            //   style: TextStyle(
-            //       color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),
-            //       fontSize: 14.0,
-            //       decoration: TextDecoration.none,
-            //       fontWeight: FontWeight.normal
-            //   ),
-            // ),
           )
         ],
       ),
     );
+  }
+
+  Future<String> _showTrafficTimeDialog() async{
+    String time = "";
+    String hour;
+    String minutes;
+    //文字入力
+    await showDialog(
+        context: context,
+        builder: (_){
+      return AlertDialog(
+        title: Text("時間の設定",style: TextStyle(fontSize: 18.0), textAlign: TextAlign.center),
+        content: SingleChildScrollView(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                height: 40.0,
+                width: 60.0,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                  border: Border.all(color: Colors.grey),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 5.0, right: 5.0),
+                child: Text("時間"),
+              ),
+              Container(
+                height: 40.0,
+                width: 60.0,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                  border: Border.all(color: Colors.grey),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 5.0),
+                child: Text("分"),
+              )
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          // ボタン領域
+          FlatButton(
+            child: Text("Cancel"),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
+          ),
+          FlatButton(
+            child: Text("OK"),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
+          ),
+        ],
+      );
+    }
+    );
+
+    return time;
   }
 }

@@ -10,6 +10,7 @@ class InvitePlanPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(plans);
     return Scaffold(
       appBar: AppBar(
         title: Text("プランコード"),
