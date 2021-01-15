@@ -49,6 +49,9 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   //行程交通機関のリスト
   List<TrafficItineraryData> _trafficItineraries = [];
 
+  //アルバムの画像リスト
+  List<Widget> _albumImages = [];
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +59,10 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     _getItiData();
 
     _controller = TabController(length: 1, vsync: this);
+
+    for(int i=0; i<10; i++){
+      _albumImages.add(_photoItem("images/osakajo.jpg"));
+    }
   }
 
   Future<int> _getPlan() async{
@@ -103,6 +110,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     List<dynamic> list = json.decode(response.body);
     List<int> ids = [];
     for(int i=0; i<list.length; i++){
+
       DateTime date = DateTime.parse(list[i]["day"]);
       _itineraries.add(ItineraryData(list[i]["id"], list[i]["itinerary_order"], list[i]["spot_order"], list[i]["plan_id"], date, false));
       ids.add(list[i]["id"]);
@@ -119,20 +127,22 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     print(responseSpot.body);
     List list2 = json.decode(responseSpot.body);
     for(int i=0; i<list2.length; i++){
-      _spotItineraries.add(SpotItineraryData(list2[i]["itinerary_id"], list2[i]["spot_id"], list2[i]["spot_name"], list2[i]["latitube"], list2[i]["longitube"], list2[i]["image_url"], null , null, 0));
+      DateTime startDate = list2[i]["start_date"] == null ? null :DateTime.parse(list2[i]["start_date"]);
+      DateTime endDate = list2[i]["end_date"] == null ? null :DateTime.parse(list2[i]["end_date"]);
+      _spotItineraries.add(SpotItineraryData(list2[i]["id"], list2[i]["itinerary_id"], list2[i]["spot_id"], list2[i]["spot_name"], list2[i]["latitube"], list2[i]["longitube"], list2[i]["image_url"], startDate , endDate, 0));
       // print(_spotItineraries[i].spotName);
     }
 
     http.Response responseTraffic = await Network().postData(data, "itinerary/get/traffic");
     List list3 = json.decode(responseTraffic.body);
     for(int i=0; i<list3.length; i++){
-      _trafficItineraries.add(TrafficItineraryData(list3[i]["itinerary_id"], list3[i]["traffic_class"], list3[i]["travel_time"], list3[i]["traffic_cost"]));
+      _trafficItineraries.add(TrafficItineraryData(list3[i]["id"], list3[i]["itinerary_id"], list3[i]["traffic_class"], list3[i]["travel_time"], list3[i]["traffic_cost"]));
     }
 
     http.Response responseMemo = await Network().postData(data, "itinerary/get/note");
     List list4 = json.decode(responseMemo.body);
     for(int i=0; i<list4.length; i++){
-      _memoItineraries.add(MemoItineraryData(list4[i]['itinerary_id'], list4[i]['memo']));
+      _memoItineraries.add(MemoItineraryData(list4[i]["id"], list4[i]['itinerary_id'], list4[i]['memo']));
     }
 
     setState(() {
@@ -203,6 +213,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
 //                  icon: Icon(Icons.more_vert, color: Colors.white,),
 //                  onPressed: (){},
 //                ),
+                if(userFlag == 1)
                 PopupMenuButton(
                     icon: Icon(Icons.more_vert, color: Colors.white,),
                     onSelected: (WhyFarther result) {
@@ -233,11 +244,6 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                         child: Text('プランを削除する'),
                       ),
                     ]
-                )
-                if(userFlag == 1)
-                IconButton(
-                  icon: Icon(Icons.more_vert, color: Colors.white,),
-                  onPressed: (){},
                 ),
               ],
               flexibleSpace: Container(
@@ -456,30 +462,43 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                       ),
                       child: Container(
                         constraints: BoxConstraints.expand(height: 350),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                        child: Stack(
                           children: [
-                            _buildTitle("アルバム"),
-                            Expanded(
-                              child: Container(),
+                            Container(
+                              height: 50.0,
+                              width: MediaQuery.of(context).size.width,
+                              child: Center(
+                                child: _buildTitle("アルバム"),
+                              ),
                             ),
-                            Expanded(
+                            Positioned(
+                              top: 50.0,
+                              left: 0,
+                              height: 280.0,
+                              width: MediaQuery.of(context).size.width - 24.0,
                               child: Container(
-                                alignment: Alignment.bottomRight,
-                                margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
-                                child: FloatingActionButton(
-                                  heroTag: 'albumAdd',  //これを指定しないと複数FloatingActionButtonが使えない
-                                  backgroundColor: Colors.orange,
-                                  child: Icon(Icons.add, color: Colors.white,),
-                                  onPressed: (){},
+                                child: GridView.count(
+                                  crossAxisCount: 3,
+                                  children: _albumImages,
                                 ),
                               ),
-                            )
+                            ),
+                            Container(
+                              alignment: Alignment.bottomRight,
+                              margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
+                              child: FloatingActionButton(
+                                heroTag: 'albumAdd',  //これを指定しないと複数FloatingActionButtonが使えない
+                                backgroundColor: Colors.orange,
+                                child: Icon(Icons.add, color: Colors.white,),
+                                onPressed: (){},
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ),
                     if(userFlag == 0)
+                      //コメント
                       Card(
                         margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
                         shape: RoundedRectangleBorder(
@@ -588,6 +607,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
       case 0 :
         part = PlanPart(
           number: order,
+          id: _spotItineraries[index].id,
           spotName: _spotItineraries[index].spotName,
           spotPath: _spotItineraries[index].spotImagePath,
           spotStartDateTime: _spotItineraries[index].spotStartDateTime,
@@ -629,6 +649,13 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
         backgroundImage: NetworkImage(Network().imagesDirectory("user_icons") + iconPath),
       );
     }
+  }
+
+  Widget _photoItem(String image) {
+    //var assetsImage = "assets/img/" + image + ".png";
+    return Container(
+      child: Image.asset(image, fit: BoxFit.cover,),
+    );
   }
 }
 

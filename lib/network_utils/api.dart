@@ -10,7 +10,7 @@ class Network{
   //final String _url = 'http://10.0.2.2:8000/api/';
 // IOSシミュレータの場合はlocalhostを使用
   final String _url = 'http://localhost:8000/api/';
-
+  //final String _url = 'http://192.168.1.17:8000/api/';
 
   static var token;
 
