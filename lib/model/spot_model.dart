@@ -119,6 +119,7 @@ class Spot {
   final imageUrl;
   final int prefectureId;
   final types;
+  final isLike;
 
   Spot({
     this.spotId,
@@ -129,6 +130,7 @@ class Spot {
     this.imageUrl,
     this.prefectureId,
     this.types,
+    this.isLike
   });
 
   Spot.fromJson(Map<String,dynamic> json)
@@ -139,7 +141,8 @@ class Spot {
       lng = json["memory_longitube"],
       imageUrl = json["image_url"],
       prefectureId = json["prefecture_id"],
-      types = json["types"];
+      types = json["types"],
+      isLike = json["isLike"];
 }
 
 class Prefecture {
