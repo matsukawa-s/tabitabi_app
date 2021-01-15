@@ -8,7 +8,6 @@ import 'package:http/http.dart' as http;
 import 'package:page_transition/page_transition.dart';
 import 'package:tabitabi_app/join_plan_page.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:tabitabi_app/spot_details_page.dart';
 
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
@@ -33,7 +32,6 @@ class TopPage extends StatelessWidget {
           final List<dynamic> todayPlans = snapshot.data["today_plans"]; //今日のプラン
           final List<dynamic> popularPlans = snapshot.data["popular_plans"]; //人気のプラン
           final List<dynamic> popularSpots = snapshot.data["popular_spots"]; //人気のスポット
-          final List<dynamic> planHistory = snapshot.data["plan_history"]; //最近見たプラン
 
           return SingleChildScrollView(
             child: Container(
@@ -45,7 +43,7 @@ class TopPage extends StatelessWidget {
                     child: SizedBox(
                       width: double.infinity,
                       child: RaisedButton(
-                          child: Text("プランに参加する"),
+                          child: Text("プランに参加する",style: TextStyle(fontSize: 16),),
                           color: Colors.orangeAccent,
                           shape: const StadiumBorder(),
                           onPressed: (){
@@ -67,18 +65,37 @@ class TopPage extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        margin: EdgeInsets.all(4.0),
-                        child: Text(
-                          "今日のプラン",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black54
+                      Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Container(
+                          padding: EdgeInsets.only(bottom: 2.0),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.black54,
+                                width: 1
+                              )
+                            )
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                  margin: EdgeInsets.only(right: 2.0),
+                                  child: Icon(Icons.calendar_today,color: Colors.black54,size: 20,)
+                              ),
+                              Text(
+                                "今日のプラン",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black54
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                       SizedBox(
-                        height: 150,
+                        height: (size.width - pagePadding*2) * 2/5,
                         child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             itemCount: todayPlans.length,
@@ -90,20 +107,27 @@ class TopPage extends StatelessWidget {
                                 child: Column(
                                   children: [
                                     Expanded(
-                                        child: Container(
-                                          child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
-                                          width: size.width - pagePadding*2,
+                                        flex: 4,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(6.0),
+                                          child: Container(
+                                            child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
+                                            width: size.width - pagePadding*2,
+                                          ),
                                         )
                                     ),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          todayPlans[index]["title"],
+                                    Expanded(
+                                      flex: 1,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            todayPlans[index]["title"],
 //                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                        ),
-                                        Text(todayPlans[index]["start_day"] + ' ~ ' + todayPlans[index]["end_day"])
-                                      ],
+                                          ),
+                                          Text(todayPlans[index]["start_day"] + ' ~ ' + todayPlans[index]["end_day"])
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -119,17 +143,35 @@ class TopPage extends StatelessWidget {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          margin: EdgeInsets.all(4.0),
-                          child: Text(
-                            "人気のプラン",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black54
+                        Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Container(
+                            padding: EdgeInsets.only(bottom: 2.0),
+                            decoration: BoxDecoration(
+                                border: Border(
+                                    bottom: BorderSide(
+                                        color: Colors.black54,
+                                        width: 1
+                                    )
+                                )
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                    margin: EdgeInsets.only(right: 2.0),
+                                    child: Icon(Icons.airplanemode_active,color: Colors.black54,size: 20,)
+                                ),
+                                Text(
+                                  "人気のプラン",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black54
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-//                        Divider(),
                         SizedBox(
                           height: popularPlanItemHeight,
                           child: ListView.builder(
@@ -137,21 +179,26 @@ class TopPage extends StatelessWidget {
                               itemCount: popularPlans.length,
                               itemBuilder: (BuildContext context, int index){
                                 return Container(
-//                                  color: Colors.black12,
                                   width: popularPlanItemWidth,
-                                  margin: EdgeInsets.only(right: 6.0),
+                                  padding: EdgeInsets.all(2.0),
                                   child: Column(
                                     children: [
                                       Expanded(
                                         flex: 4,
-                                        child: Container(
-                                          width: popularPlanItemWidth,
-                                          child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(6.0),
+                                          child: Container(
+                                            width: popularPlanItemWidth,
+                                            child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
+                                          ),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 1,
-                                          child: Text(popularPlans[index]["title"])
+                                          child: Text(
+                                            popularPlans[index]["title"],
+                                            overflow: TextOverflow.ellipsis,
+                                          )
                                       ),
                                     ],
                                   ),
@@ -165,13 +212,32 @@ class TopPage extends StatelessWidget {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          margin: EdgeInsets.all(4.0),
-                          child: Text(
-                            "人気のスポット",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black54
+                        Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Container(
+                            padding: EdgeInsets.only(bottom: 2.0),
+                            decoration: BoxDecoration(
+                                border: Border(
+                                    bottom: BorderSide(
+                                        color: Colors.black54,
+                                        width: 1
+                                    )
+                                )
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                    margin: EdgeInsets.only(right: 2.0),
+                                    child: Icon(Icons.add_location,color: Colors.black54,size: 20,)
+                                ),
+                                Text(
+                                  "人気のスポット",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black54
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -206,12 +272,13 @@ class TopPage extends StatelessWidget {
                                         flex: 4,
                                         child: ClipRRect(
                                           borderRadius: BorderRadius.circular(6.0),
-                                          clipBehavior: Clip.hardEdge,
+                                          clipBehavior: Clip.antiAlias,
                                           child: Image.network(
                                             'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
                                                 '&photoreference=${popularSpots[index]["image_url"]}'
                                                 '&key=${_kGoogleApiKey}',
                                             fit: BoxFit.fill,
+                                            width: popularSpotItemSize,
                                           ),
                                         ),
                                       ),
@@ -232,31 +299,35 @@ class TopPage extends StatelessWidget {
                         ),
                       ],
                     ),
-//                  Column(
-//                    crossAxisAlignment: CrossAxisAlignment.start,
-//                    children: [
-//                      Text("最近見たプラン"),
-//                      Divider(),
-//                      SizedBox(
-//                        height: 110,
-//                        child: ListView(
-//                          scrollDirection: Axis.horizontal,
-//                          children: [
-//                            //仮
-//                            for(int i = 0;i < 5;i++)
-//                              Padding(
-//                                padding: const EdgeInsets.all(4.0),
-//                                child: Container(
-//                                  color: Colors.black12,
-//                                  width: 150,
-//                                  child: Text(i.toString()),
-//                                ),
-//                              )
-//                          ],
-//                        ),
-//                      ),
-//                    ],
-//                  )
+                  Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Container(
+                      padding: EdgeInsets.only(bottom: 2.0),
+                      decoration: BoxDecoration(
+                          border: Border(
+                              bottom: BorderSide(
+                                  color: Colors.black54,
+                                  width: 1
+                              )
+                          )
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                              margin: EdgeInsets.only(right: 2.0),
+                              child: Icon(Icons.map,color: Colors.black54,size: 20,)
+                          ),
+                          Text(
+                            "都道府県のスポット(実装予定)",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black54
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
