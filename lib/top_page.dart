@@ -63,7 +63,7 @@ class TopPage extends StatelessWidget {
                     ),
                   ),
                   //今日のプランを表示する
-                  todayPlans.isEmpty ? Container() :
+                  todayPlans == null || todayPlans.isEmpty ? Container() :
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -115,7 +115,7 @@ class TopPage extends StatelessWidget {
                     ],
                   ),
                   //人気のプランを表示する
-                  popularPlans.isEmpty ? Container()
+                  popularPlans == null || popularPlans.isEmpty ? Container()
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -161,7 +161,7 @@ class TopPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                  popularSpots.isEmpty ? Container()
+                  popularSpots == null || popularSpots.isEmpty ? Container()
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
