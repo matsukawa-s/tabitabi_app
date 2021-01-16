@@ -6,6 +6,7 @@ import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:tabitabi_app/data/tag_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tabitabi_app/providers/plan_provider.dart';
 import 'login.dart';
 import 'model/map.dart';
 import 'model/plan.dart';
@@ -46,6 +47,9 @@ Future main() async{
         ),
         ChangeNotifierProvider<FavoriteSpotViewModel>(
             create: (context) => FavoriteSpotViewModel()
+        ),
+        ChangeNotifierProvider<PlanProvider>(
+            create: (context) => PlanProvider()
         )
       ],
       child: MaterialApp(
