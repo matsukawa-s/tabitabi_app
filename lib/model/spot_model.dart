@@ -88,8 +88,8 @@ class FavoriteSpotViewModel extends ChangeNotifier{
     prefectures = List.generate(
         prefecturesMap.length,
         (index) => S2Choice<int>(
-            value: prefecturesMap[index]["code"],
-            title: prefecturesMap[index]["name"]
+            value: prefecturesMap[index]["id"],
+            title: prefecturesMap[index]["prefectures_name"]
         )
     );
 
@@ -146,17 +146,21 @@ class Spot {
 }
 
 class Prefecture {
-  Prefecture(this.code,this.name);
-  final code;
-  final name;
+  Prefecture({this.id,this.name,this.spots});
+  final int id;
+  final String name;
+  final List<Spot> spots;
 
   Prefecture.fromJson(Map<String,dynamic> json)
-      : code = json["code"],
-        name = json["name"];
+      : id = json["id"],
+        name = json["prefectures_name"],
+        spots = List.generate(
+            json["spots"].length, (index) => Spot.fromJson(json["spots"][index])
+        );
 }
 
 class Type {
-  Type(this.id,this.englishName,this.japaneseName);
+  Type({this.id,this.englishName,this.japaneseName});
   final id;
   final englishName;
   final japaneseName;

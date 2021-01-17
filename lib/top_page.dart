@@ -7,16 +7,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:page_transition/page_transition.dart';
 import 'package:tabitabi_app/join_plan_page.dart';
+import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 import 'package:tabitabi_app/spot_details_page.dart';
+import 'package:tabitabi_app/top_prefectures_spot_list_page.dart';
 
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
 class TopPage extends StatelessWidget {
-  final String title;
   final pagePadding = 6.0;
-
-  TopPage({@required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +31,11 @@ class TopPage extends StatelessWidget {
           final List<dynamic> todayPlans = snapshot.data["today_plans"]; //今日のプラン
           final List<dynamic> popularPlans = snapshot.data["popular_plans"]; //人気のプラン
           final List<dynamic> popularSpots = snapshot.data["popular_spots"]; //人気のスポット
+          final List<dynamic> prefecturesSpotsTmp = snapshot.data["prefectures_spots"];
+          
+          final List<Prefecture> prefecturesSpots = List.generate(
+              prefecturesSpotsTmp.length, (index) => Prefecture.fromJson(prefecturesSpotsTmp[index])
+          );
 
           return SingleChildScrollView(
             child: Container(
@@ -318,7 +322,7 @@ class TopPage extends StatelessWidget {
                               child: Icon(Icons.map,color: Colors.black54,size: 20,)
                           ),
                           Text(
-                            "都道府県のスポット(実装予定)",
+                            "都道府県のスポット",
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black54
@@ -328,6 +332,62 @@ class TopPage extends StatelessWidget {
                       ),
                     ),
                   ),
+                  SizedBox(
+                    height: popularSpotItemSize,
+                    child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: prefecturesSpots.length,
+                        itemBuilder: (BuildContext context,int index){
+                          return Container(
+                            padding: EdgeInsets.all(6.0),
+                            width: popularSpotItemSize,
+                            height: popularSpotItemSize,
+                            child: GestureDetector(
+                              onTap: (){
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PrefecturesSpotsListPage(
+                                      prefecture: prefecturesSpots[index],
+                                    )
+                                  )
+                                );
+                              },
+                              child: Container(
+                                  padding: EdgeInsets.all(4.0),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black12,
+                                    border: Border.all(color: Colors.black54),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                          image: AssetImage("images/map-osaka.png")
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Container(
+                                        width: double.infinity,
+//                                        padding: EdgeInsets.all(2.0),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white60,
+                                          borderRadius: BorderRadius.circular(30),
+                                        ),
+                                        child: Text(
+                                            prefecturesSpots[index].name,
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                              ),
+                            ),
+                          );
+                        }
+                    ),
+                  )
                 ],
               ),
             ),
