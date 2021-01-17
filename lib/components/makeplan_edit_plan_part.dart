@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:tabitabi_app/network_utils/api.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui';
-import 'package:fluttertoast/fluttertoast.dart';
 
 class PlanPart extends StatefulWidget {
   final int number;
