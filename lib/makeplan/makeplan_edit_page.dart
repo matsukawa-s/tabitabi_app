@@ -342,6 +342,10 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     http.Response response = await Network().postData(data, "plan/update/date");
     print(response.body);
 
+    if(_travelDateTime.length == 1){
+      _dateDeleteFlag = false;
+    }
+
     //タブから日付削除
     _tabController = _createNewTabController();
     setState(() {
@@ -349,7 +353,6 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     });
 
   }
-
 
   TabController _createNewTabController() => TabController(
     vsync: this,
@@ -1031,14 +1034,16 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           }
         }
       }
-      if(_tabController.index == 0 || _tabController.index == _travelDateTime.length - 1 ){
-        _dateDeleteFlag = true;
+      if(_tabController.index == 0 || _tabController.index == _travelDateTime.length - 1){
+        if(_travelDateTime.length > 1){
+          _dateDeleteFlag = true;
+        }
       }else{
         _dateDeleteFlag = false;
       }
     }
     setState(() {
-
+      print("flg:" + _dateDeleteFlag.toString());
     });
   }
 

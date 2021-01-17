@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:tabitabi_app/makeplan/invite_plan_page.dart';
 import 'dart:convert';
+import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:flutter_absolute_path/flutter_absolute_path.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 import 'makeplan_edit_page.dart';
 import 'package:tabitabi_app/data/itinerary_data.dart';
@@ -9,6 +12,10 @@ import 'package:tabitabi_app/data/itinerary_part_data.dart';
 import 'package:tabitabi_app/components/makeplan_edit_traffic_part.dart';
 import 'package:tabitabi_app/components/makeplan_edit_plan_part.dart';
 import 'package:tabitabi_app/components/makeplan_edit_memo_part.dart';
+import 'package:tabitabi_app/network_utils/aws_s3.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'dart:typed_data';
+import 'dart:io';
 
 enum WhyFarther { JoinPlan, DeletePlan }
 
@@ -49,8 +56,14 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   //行程交通機関のリスト
   List<TrafficItineraryData> _trafficItineraries = [];
 
+  List<Asset> _images = [];
+
   //アルバムの画像リスト
   List<Widget> _albumImages = [];
+
+  //アップロードフラグ
+  bool isFileUploading = false;
+  String message = "";
 
   @override
   void initState() {
@@ -59,10 +72,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     _getItiData();
 
     _controller = TabController(length: 1, vsync: this);
-
-    for(int i=0; i<10; i++){
-      _albumImages.add(_photoItem("images/osakajo.jpg"));
-    }
+    _getPhoto();
   }
 
   Future<int> _getPlan() async{
@@ -172,8 +182,152 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     return dateList;
   }
 
+  //画像を取得
+  void _getPhoto() async{
+    _albumImages.clear();
+
+    http.Response response = await Network().getData("photo/get/" + widget.planId.toString());
+    List list = json.decode(response.body);
+    for(int i=0; i<list.length; i++){
+      _albumImages.add(_photoItem(list[i]["id"], list[i]["photo_url"], i));
+    }
+
+    setState(() {
+
+    });
+
+  }
+
   DateTime _dateTimeFunc(DateTime date){
     return DateTime(date.year, date.month, date.day);
+  }
+
+  //アルバム画像追加処理
+  Future<void> _addAlbum() async{
+    List<Asset> resultList = List<Asset>();
+    String error = 'No Error Dectected';
+
+    //image選択
+    try {
+      resultList = await MultiImagePicker.pickImages(
+        maxImages: 300,
+        enableCamera: true,
+        //selectedAssets: _images,
+        cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
+        materialOptions: MaterialOptions(
+          actionBarColor: "#abcdef",
+          actionBarTitle: "Example App",
+          allViewTitle: "All Photos",
+          useDetailsView: false,
+          selectCircleStrokeColor: "#000000",
+        ),
+      );
+    } on Exception catch (e) {
+      error = e.toString();
+    }
+
+    if (!mounted) return;
+
+    if(resultList.isEmpty){
+      print("ee");
+      return null;
+    }
+
+    //選択した画像をアップロード
+    setState(() {
+      message = "画像をアップロードしています";
+      isFileUploading = true;
+    });
+
+    //保存先のパス
+    List<String> uploadPaths = [];
+
+    for(int i=0; i<resultList.length; i++){
+      var path = await FlutterAbsolutePath.getAbsolutePath(resultList[i].identifier);
+
+      var uploadPath = await AwsS3().uploadImage(path, "album/"+ widget.planId.toString());
+      uploadPaths.add(uploadPath);
+    }
+
+    final data = {
+      "urls" : uploadPaths,
+      "plan_id" : widget.planId,
+    };
+
+    http.Response res = await Network().postData(data, "photo/store");
+    print(res.body);
+
+    _getPhoto();
+
+    setState(() {
+      isFileUploading = false;
+    });
+  }
+
+  //アルバム画像保存処理
+  Future<void> _saveAlbum(int id, String imagePath) async{
+    //選択した画像をアップロード
+    setState(() {
+      message = "画像を保存しています";
+      isFileUploading = true;
+    });
+    Uint8List buffer = (await NetworkAssetBundle(Uri.parse(imagePath)).load(imagePath)).buffer.asUint8List();
+    final result = await ImageGallerySaver.saveImage(buffer);
+    print(result);
+    setState(() {
+      isFileUploading = false;
+    });
+  }
+
+  //アルバム削除処理
+  Future<void> _deleteAlbum(int id, String imageUrl, int index) async{
+    bool flg = false;
+    //確認ダイアログ表示
+    await showDialog(
+      context: context,
+      builder: (context){
+        return AlertDialog(
+          title: Text("確認"),
+          content: Text("選択した画像を削除していいですか？"),
+          actions: [
+            FlatButton(
+              child: Text("Cancel"),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
+            ),
+            FlatButton(
+              child: Text("OK"),
+              onPressed: (){
+                flg = true;
+                Navigator.of(context, rootNavigator: true).pop(context);
+              }
+            ),
+          ],
+        );
+      }
+    );
+
+    //いいえのとき
+    if(!flg){
+      return null;
+    }
+
+    //選択した画像をアップロード
+    setState(() {
+      message = "画像を削除しています";
+      isFileUploading = true;
+    });
+
+    String result = await AwsS3().deleteImage(imageUrl);
+    print(result);
+
+    http.Response response = await Network().getData("photo/delete/" + id.toString());
+    print(response.body);
+
+    //リストから削除
+    _albumImages.removeAt(index);
+    setState(() {
+      isFileUploading = false;
+    });
   }
 
   @override
@@ -183,347 +337,395 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
       //   title: Text('トップ'),
       // ),
       resizeToAvoidBottomInset : false,
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-              image: AssetImage("images/paper_00108.jpg"),
-              //colorFilter: ColorFilter.mode(Colors.white.withOpacity(0.3), BlendMode.color),
-              fit: BoxFit.cover
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              spreadRadius: 5,
-              blurRadius: 7,
-              offset: Offset(0, 3), // changes position of shadow
-            ),
-          ],
-        ),
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              pinned: true,
-              expandedHeight: 200.0,
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.share, color: Colors.white,),
-                  onPressed: (){},
+      body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage("images/paper_00108.jpg"),
+                  //colorFilter: ColorFilter.mode(Colors.white.withOpacity(0.3), BlendMode.color),
+                  fit: BoxFit.cover
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  spreadRadius: 5,
+                  blurRadius: 7,
+                  offset: Offset(0, 3), // changes position of shadow
                 ),
+              ],
+            ),
+            child: CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  pinned: true,
+                  expandedHeight: 200.0,
+                  actions: [
+                    IconButton(
+                      icon: Icon(Icons.share, color: Colors.white,),
+                      onPressed: (){},
+                    ),
 //                IconButton(
 //                  icon: Icon(Icons.more_vert, color: Colors.white,),
 //                  onPressed: (){},
 //                ),
-                if(userFlag == 1)
-                PopupMenuButton(
-                    icon: Icon(Icons.more_vert, color: Colors.white,),
-                    onSelected: (WhyFarther result) {
-                      switch(result){
-                        case WhyFarther.JoinPlan:
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) {
-                                return InvitePlanPage(plans);
-                              },
-                            ),
-                          );
-                          break;
-                        case WhyFarther.DeletePlan:
+                    if(userFlag == 1)
+                    PopupMenuButton(
+                        icon: Icon(Icons.more_vert, color: Colors.white,),
+                        onSelected: (WhyFarther result) {
+                          switch(result){
+                            case WhyFarther.JoinPlan:
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) {
+                                    return InvitePlanPage(plans);
+                                  },
+                                ),
+                              );
+                              break;
+                            case WhyFarther.DeletePlan:
 
-                          break;
+                              break;
 
-                      }
-                    },
-                    itemBuilder: (BuildContext context) => <PopupMenuEntry<WhyFarther>>[
-                      const PopupMenuItem<WhyFarther>(
-                        value: WhyFarther.JoinPlan,
-                        child: Text('プラン招待コード'),
-                      ),
-                      const PopupMenuItem<WhyFarther>(
-                        value: WhyFarther.DeletePlan,
-                        child: Text('プランを削除する'),
-                      ),
-                    ]
-                ),
-              ],
-              flexibleSpace: Container(
-                constraints: BoxConstraints.expand(height: 250.0),
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage("images/2304099_m.jpg"),
-                    //image: NetworkImage("https://picsum.photos/1500/800"),
-                    colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),
-                    fit: BoxFit.cover,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: Offset(0, 3), // changes position of shadow
+                          }
+                        },
+                        itemBuilder: (BuildContext context) => <PopupMenuEntry<WhyFarther>>[
+                          const PopupMenuItem<WhyFarther>(
+                            value: WhyFarther.JoinPlan,
+                            child: Text('プラン招待コード'),
+                          ),
+                          const PopupMenuItem<WhyFarther>(
+                            value: WhyFarther.DeletePlan,
+                            child: Text('プランを削除する'),
+                          ),
+                        ]
                     ),
                   ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if(userFlag == 0)
-                    Padding(
-                      padding: EdgeInsets.only(right: 10.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          _buildIconImageInUserTop(_userIconPath),
-                          Padding(
-                            padding: EdgeInsets.only(left: 5.0),
-                            child: Text(
-                              _userName,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16.0
-                              ),
-                            ),
-                          )
-                        ],
+                  flexibleSpace: Container(
+                    constraints: BoxConstraints.expand(height: 250.0),
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage("images/2304099_m.jpg"),
+                        //image: NetworkImage("https://picsum.photos/1500/800"),
+                        colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),
+                        fit: BoxFit.cover,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          spreadRadius: 5,
+                          blurRadius: 7,
+                          offset: Offset(0, 3), // changes position of shadow
+                        ),
+                      ],
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(right: 10.0),
-                      child: Text(_planName, style: TextStyle(color: Colors.white, fontSize: 32.0)),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(right: 5.0, bottom: 10.0),
-                      child: Text(_planDetail, style: TextStyle(color: Colors.white)),
-                    )
-                  ],
-                ),
-              ),
-              bottom: PreferredSize(child: Text("", style: TextStyle(color: Colors.white)), preferredSize: Size.fromHeight(75.0),),
-            ),
-            SliverList(
-              delegate: SliverChildListDelegate([
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    //スケジュール
-                    Card(
-                      margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      child: Container(
-                        constraints: BoxConstraints.expand(height: 500),
-                        child: Stack(
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Stack(
-                                    children: [
-                                      Container(
-                                        margin: EdgeInsets.only(top: 10.0),
-                                        height: 400,
-                                        width: 500,
-                                        child: TabBarView(
-                                          controller: _controller,
-                                          children: [
-                                            for(int i=0; i<_planDates.length; i++)
-                                              SingleChildScrollView(
-                                                child: _buildSchedule("1", _planDates[i]),
-                                              )
-                                          ],
-                                        ),
-                                      ),
-                                      Positioned(
-                                          bottom: 0.0,
-                                          left: 0.0,
-                                          right: 0.0,
-                                          child: Align(
-                                            alignment: Alignment.center,
-                                            child: TabPageSelector(
-                                              controller: _controller,
-                                            ),
-                                          )
-                                      ),
-                                      Positioned(
-                                        top: 0.0,
-                                        bottom: 0.0,
-                                        left: -30.0,
-                                        child: IconButton(
-                                          icon: Icon(Icons.chevron_left),
-                                          iconSize: 80.0,
-                                          color: Colors.orange,
-                                          onPressed: (){
-                                            if(!(_controller.index == 0)){
-                                              _controller.animateTo(_controller.index - 1);
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                      Positioned(
-                                        top: 0.0,
-                                        bottom: 0.0,
-                                        right: -30,
-                                        child: IconButton(
-                                          icon: Icon(Icons.chevron_right),
-                                          iconSize: 80.0,
-                                          color: Colors.orange,
-                                          onPressed: (){
-                                            if(!(_controller.index == _planDates.length)){
-                                              _controller.animateTo(_controller.index + 1);
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                    ],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if(userFlag == 0)
+                        Padding(
+                          padding: EdgeInsets.only(right: 10.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _buildIconImageInUserTop(_userIconPath),
+                              Padding(
+                                padding: EdgeInsets.only(left: 5.0),
+                                child: Text(
+                                  _userName,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16.0
                                   ),
                                 ),
-                                if(userFlag == 1)
+                              )
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(right: 10.0),
+                          child: Text(_planName, style: TextStyle(color: Colors.white, fontSize: 32.0)),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(right: 5.0, bottom: 10.0),
+                          child: Text(_planDetail, style: TextStyle(color: Colors.white)),
+                        )
+                      ],
+                    ),
+                  ),
+                  bottom: PreferredSize(child: Text("", style: TextStyle(color: Colors.white)), preferredSize: Size.fromHeight(75.0),),
+                ),
+                SliverList(
+                  delegate: SliverChildListDelegate([
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        //スケジュール
+                        Card(
+                          margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                          child: Container(
+                            constraints: BoxConstraints.expand(height: 500),
+                            child: Stack(
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            margin: EdgeInsets.only(top: 10.0),
+                                            height: 400,
+                                            width: 500,
+                                            child: TabBarView(
+                                              controller: _controller,
+                                              children: [
+                                                for(int i=0; i<_planDates.length; i++)
+                                                  SingleChildScrollView(
+                                                    child: _buildSchedule("1", _planDates[i]),
+                                                  )
+                                              ],
+                                            ),
+                                          ),
+                                          Positioned(
+                                              bottom: 0.0,
+                                              left: 0.0,
+                                              right: 0.0,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: TabPageSelector(
+                                                  controller: _controller,
+                                                ),
+                                              )
+                                          ),
+                                          Positioned(
+                                            top: 0.0,
+                                            bottom: 0.0,
+                                            left: -30.0,
+                                            child: IconButton(
+                                              icon: Icon(Icons.chevron_left),
+                                              iconSize: 80.0,
+                                              color: Colors.orange,
+                                              onPressed: (){
+                                                if(!(_controller.index == 0)){
+                                                  _controller.animateTo(_controller.index - 1);
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 0.0,
+                                            bottom: 0.0,
+                                            right: -30,
+                                            child: IconButton(
+                                              icon: Icon(Icons.chevron_right),
+                                              iconSize: 80.0,
+                                              color: Colors.orange,
+                                              onPressed: (){
+                                                if(!(_controller.index == _planDates.length)){
+                                                  _controller.animateTo(_controller.index + 1);
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if(userFlag == 1)
+                                    Container(
+                                      alignment: Alignment.bottomRight,
+                                      margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
+                                      child: FloatingActionButton(
+                                        heroTag: 'planEdit',
+                                        backgroundColor: Colors.orange,
+                                        child: Icon(Icons.edit, color: Colors.white,),
+                                        onPressed: (){
+                                          Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (context) => MakePlanEdit(planId: widget.planId, startDateTime: _dateTimeFunc(_startDateTime), endDateTime: _dateTimeFunc(_endDateTime),),
+                                              )
+                                          ).then((value){
+                                            setState(() {
+                                              _getPlan();
+                                              _getItiData();
+                                            });
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        //メンバー
+                        if(userFlag == 1)
+                        Card(
+                          margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                          child: Container(
+                            constraints: BoxConstraints.expand(height: 200),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                _buildTitle("メンバー"),
+                                Row(
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.all(10.0),
+                                      child: Icon(Icons.account_circle, size: 64.0),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.all(10.0),
+                                      child: Icon(Icons.account_circle, size: 64.0),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.all(10.0),
+                                      child: Icon(Icons.account_circle, size: 64.0),
+                                    ),
+                                  ],
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    alignment: Alignment.bottomRight,
+                                    margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
+                                    child: FloatingActionButton(
+                                      heroTag: 'memberAdd',
+                                      backgroundColor: Colors.orange,
+                                      child: Icon(Icons.add, color: Colors.white,),
+                                      onPressed: (){},
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        //アルバム
+                        if(userFlag == 1)
+                        Card(
+                          margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0, bottom: 30.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                          child: Container(
+                            constraints: BoxConstraints.expand(height: 350),
+                            child: Stack(
+                              children: [
+                                Container(
+                                  height: 50.0,
+                                  width: MediaQuery.of(context).size.width,
+                                  child: Center(
+                                    child: _buildTitle("アルバム"),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 50.0,
+                                  left: 0,
+                                  height: 280.0,
+                                  width: MediaQuery.of(context).size.width - 24.0,
+                                  child: _albumImages.length == 0 ?
+                                      Container(
+                                        margin: EdgeInsets.only(left: 24.0, right: 24.0),
+                                        color: Colors.black.withOpacity(0.2),
+                                        child: Center(
+                                          child: Text("まだ写真はありません！"),
+                                        ),
+                                      )
+                                      : Container(
+                                        child: GridView.builder(
+                                          gridDelegate:  SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 3,
+                                          ),
+                                          itemCount: _albumImages.length,
+                                          itemBuilder: (context, index){
+                                            return _albumImages[index];
+                                          }
+                                        )
+                                      ),
+                                ),
                                 Container(
                                   alignment: Alignment.bottomRight,
                                   margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
                                   child: FloatingActionButton(
-                                    heroTag: 'planEdit',
+                                    heroTag: 'albumAdd',  //これを指定しないと複数FloatingActionButtonが使えない
                                     backgroundColor: Colors.orange,
-                                    child: Icon(Icons.edit, color: Colors.white,),
-                                    onPressed: (){
-                                      Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (context) => MakePlanEdit(planId: widget.planId, startDateTime: _dateTimeFunc(_startDateTime), endDateTime: _dateTimeFunc(_endDateTime),),
-                                          )
-                                      ).then((value){
-                                        setState(() {
-                                          _getPlan();
-                                          _getItiData();
-                                        });
-                                      });
+                                    child: Icon(Icons.add, color: Colors.white,),
+                                    onPressed: () async{
+                                      _addAlbum();
                                     },
                                   ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    //メンバー
-                    if(userFlag == 1)
-                    Card(
-                      margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      child: Container(
-                        constraints: BoxConstraints.expand(height: 200),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            _buildTitle("メンバー"),
-                            Row(
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.all(10.0),
-                                  child: Icon(Icons.account_circle, size: 64.0),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.all(10.0),
-                                  child: Icon(Icons.account_circle, size: 64.0),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.all(10.0),
-                                  child: Icon(Icons.account_circle, size: 64.0),
-                                ),
-                              ],
-                            ),
-                            Expanded(
-                              child: Container(
-                                alignment: Alignment.bottomRight,
-                                margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
-                                child: FloatingActionButton(
-                                  heroTag: 'memberAdd',
-                                  backgroundColor: Colors.orange,
-                                  child: Icon(Icons.add, color: Colors.white,),
-                                  onPressed: (){},
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    //アルバム
-                    if(userFlag == 1)
-                    Card(
-                      margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0, bottom: 30.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      child: Container(
-                        constraints: BoxConstraints.expand(height: 350),
-                        child: Stack(
-                          children: [
-                            Container(
-                              height: 50.0,
-                              width: MediaQuery.of(context).size.width,
-                              child: Center(
-                                child: _buildTitle("アルバム"),
-                              ),
-                            ),
-                            Positioned(
-                              top: 50.0,
-                              left: 0,
-                              height: 280.0,
-                              width: MediaQuery.of(context).size.width - 24.0,
-                              child: Container(
-                                child: GridView.count(
-                                  crossAxisCount: 3,
-                                  children: _albumImages,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              alignment: Alignment.bottomRight,
-                              margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
-                              child: FloatingActionButton(
-                                heroTag: 'albumAdd',  //これを指定しないと複数FloatingActionButtonが使えない
-                                backgroundColor: Colors.orange,
-                                child: Icon(Icons.add, color: Colors.white,),
-                                onPressed: (){},
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if(userFlag == 0)
-                      //コメント
-                      Card(
-                        margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20.0),
-                        ),
-                        child: Container(
-                          constraints: BoxConstraints.expand(height: 200),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              _buildTitle("コメント"),
-
-                            ],
                           ),
                         ),
-                      ),
-                    Container(
-                      height: 100,
-                    )
-                  ],
+                        if(userFlag == 0)
+                          //コメント
+                          Card(
+                            margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20.0),
+                            ),
+                            child: Container(
+                              constraints: BoxConstraints.expand(height: 200),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  _buildTitle("コメント"),
+
+                                ],
+                              ),
+                            ),
+                          ),
+                        Container(
+                          height: 100,
+                        )
+                      ],
+                    ),
+                  ]),
                 ),
-              ]),
+              ],
             ),
-          ],
-        ),
+          ),
+          if(isFileUploading == true)
+            Container(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              color: Colors.black.withOpacity(0.3),
+              child: Center(
+                child: Container(
+                  height: 110,
+                  width: 122,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(11),
+                    color: Colors.black.withOpacity(0.6),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 5.0),
+                        child: Text(message, style: TextStyle(color: Colors.white, fontSize: 12.0, fontWeight: FontWeight.bold),),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            )
+        ],
       ),
     );
   }
@@ -652,10 +854,123 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     }
   }
 
-  Widget _photoItem(String image) {
+  Widget _photoItem(int id, String imagePath, int index) {
     //var assetsImage = "assets/img/" + image + ".png";
-    return Container(
-      child: Image.asset(image, fit: BoxFit.cover,),
+    return GestureDetector(
+      child: Container(
+        child: Image.network(imagePath, fit: BoxFit.cover,),
+      ),
+      onTap: () async{
+        await _showPictureDialog(id, imagePath, index);
+      },
+    );
+  }
+
+  _showPictureDialog (int id, String imagePath, int index) async{
+    await showDialog(
+      context: context,
+      builder: (context){
+        return StatefulBuilder(
+          builder: (_, setState){
+            return SimpleDialog(
+              backgroundColor: Colors.black,
+              children: [
+                Stack(
+                  children: [
+                    Container(
+                      height: MediaQuery.of(context).size.height - MediaQuery.of(context).size.height / 2,
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        image: DecorationImage(
+                          image: NetworkImage(imagePath),
+                          fit: BoxFit.fitWidth
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 0,
+                      right: 10.0,
+                      height: 30.0,
+                      width: 30.0,
+                      child: GestureDetector(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                          child: Center(
+                            child: Icon(Icons.clear),
+                          ),
+                        ),
+                        onTap: (){
+                          Navigator.of(context, rootNavigator: true).pop(context);
+                        },
+                      ),
+                    ),
+                    //ボタン
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      width: MediaQuery.of(context).size.width - MediaQuery.of(context).size.width/4,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            child: Container(
+                                height: 35.0,
+                                width: 80.0,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                  border: Border.all(color: Colors.white),
+                                  color: Colors.black.withOpacity(0.5)
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.delete, color: Colors.white, size: 20.0,),
+                                    Text("削除", style: TextStyle(color: Colors.white),)
+                                  ],
+                                )
+                            ),
+                            onTap: () async{
+                              Navigator.of(context, rootNavigator: true).pop(context);
+                              await _deleteAlbum(id, imagePath, index);
+                            },
+                          ),
+                          GestureDetector(
+                            child: Container(
+                              margin: EdgeInsets.only(left: 10.0),
+                              height: 35.0,
+                              width: 80.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10.0),
+                                border: Border.all(color: Colors.white),
+                                color: Colors.black.withOpacity(0.5)
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.upload_rounded, color: Colors.white, size: 20.0,),
+                                  Text("保存", style: TextStyle(color: Colors.white),)
+                                ],
+                              )
+                            ),
+                            onTap: (){
+                              Navigator.of(context, rootNavigator: true).pop(context);
+                              _saveAlbum(id, imagePath);
+                            },
+                          )
+                        ],
+                      )
+                    )
+                  ],
+                ),
+              ],
+            );
+          }
+        );
+      }
     );
   }
 }

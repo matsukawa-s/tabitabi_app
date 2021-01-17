@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_picker/flutter_picker.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:tabitabi_app/network_utils/api.dart';
