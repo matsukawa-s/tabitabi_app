@@ -30,10 +30,10 @@ class TopPage extends StatelessWidget {
       future: getInitialTopData(),
       builder: (context, snapshot) {
         if(snapshot.hasData){
-          final List<dynamic> todayPlans = snapshot.data["today_plans"]; //今日のプラン
-          final List<dynamic> popularPlans = snapshot.data["popular_plans"]; //人気のプラン
-          final List<dynamic> popularSpots = snapshot.data["popular_spots"]; //人気のスポット
-          final List<dynamic> prefecturesSpotsTmp = snapshot.data["prefectures_spots"];
+          final List<dynamic> todayPlans = snapshot.data["today_plans"] ?? []; //今日のプラン
+          final List<dynamic> popularPlans = snapshot.data["popular_plans"] ?? []; //人気のプラン
+          final List<dynamic> popularSpots = snapshot.data["popular_spots"] ?? []; //人気のスポット
+          final List<dynamic> prefecturesSpotsTmp = snapshot.data["prefectures_spots"] ?? [];
           
           final List<Prefecture> prefecturesSpots = List.generate(
               prefecturesSpotsTmp.length, (index) => Prefecture.fromJson(prefecturesSpotsTmp[index])
@@ -67,7 +67,7 @@ class TopPage extends StatelessWidget {
                     ),
                   ),
                   //今日のプランを表示する
-                  todayPlans == null || todayPlans.isEmpty ? Container() :
+                  todayPlans.isEmpty ? Container() :
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -155,7 +155,7 @@ class TopPage extends StatelessWidget {
                     ],
                   ),
                   //人気のプランを表示する
-                  popularPlans == null || popularPlans.isEmpty ? Container()
+                  popularPlans.isEmpty ? Container()
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -236,7 +236,7 @@ class TopPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                  popularSpots == null || popularSpots.isEmpty ? Container()
+                  popularSpots.isEmpty ? Container()
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -327,91 +327,98 @@ class TopPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                  Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Container(
-                      padding: EdgeInsets.only(bottom: 2.0),
-                      decoration: BoxDecoration(
-                          border: Border(
-                              bottom: BorderSide(
-                                  color: Colors.black54,
-                                  width: 1
+                  prefecturesSpots.isEmpty ? Container()
+                    : Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Container(
+                          padding: EdgeInsets.only(bottom: 2.0),
+                          decoration: BoxDecoration(
+                              border: Border(
+                                  bottom: BorderSide(
+                                      color: Colors.black54,
+                                      width: 1
+                                  )
                               )
-                          )
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                              margin: EdgeInsets.only(right: 2.0),
-                              child: Icon(Icons.map,color: Colors.black54,size: 20,)
                           ),
-                          Text(
-                            "都道府県のスポット",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black54
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: popularSpotItemSize,
-                    child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: prefecturesSpots.length,
-                        itemBuilder: (BuildContext context,int index){
-                          return Container(
-                            padding: EdgeInsets.all(6.0),
-                            width: popularSpotItemSize,
-                            height: popularSpotItemSize,
-                            child: GestureDetector(
-                              onTap: (){
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PrefecturesSpotsListPage(
-                                      prefecture: prefecturesSpots[index],
-                                    )
-                                  )
-                                );
-                              },
-                              child: Container(
-                                  padding: EdgeInsets.all(4.0),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black12,
-                                    border: Border.all(color: Colors.black54),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                          image: AssetImage("images/map-osaka.png")
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Container(
-                                        width: double.infinity,
-//                                        padding: EdgeInsets.all(2.0),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white60,
-                                          borderRadius: BorderRadius.circular(30),
-                                        ),
-                                        child: Text(
-                                            prefecturesSpots[index].name,
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    ),
-                                  )
+                          child: Row(
+                            children: [
+                              Container(
+                                  margin: EdgeInsets.only(right: 2.0),
+                                  child: Icon(Icons.map,color: Colors.black54,size: 20,)
                               ),
-                            ),
-                          );
-                        }
-                    ),
+                              Text(
+                                "都道府県のスポット",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black54
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: popularSpotItemSize,
+                        child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: prefecturesSpots.length,
+                            itemBuilder: (BuildContext context,int index){
+                              return Container(
+                                padding: EdgeInsets.all(6.0),
+                                width: popularSpotItemSize,
+                                height: popularSpotItemSize,
+                                child: GestureDetector(
+                                  onTap: (){
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => PrefecturesSpotsListPage(
+                                              prefecture: prefecturesSpots[index],
+                                            )
+                                        )
+                                    );
+                                  },
+                                  child: Container(
+                                      padding: EdgeInsets.all(4.0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black12,
+                                        border: Border.all(color: Colors.black54),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          image: DecorationImage(
+//                                              image: AssetImage("images/map-osaka.png")
+                                            image: NetworkImage("${Network().baseUrl}prefectures_images/${prefecturesSpots[index].image}")
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Container(
+                                            width: double.infinity,
+//                                        padding: EdgeInsets.all(2.0),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white60,
+                                              borderRadius: BorderRadius.circular(30),
+                                            ),
+                                            child: Text(
+                                              prefecturesSpots[index].name,
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                  ),
+                                ),
+                              );
+                            }
+                        ),
+                      )
+                    ],
                   )
+
                 ],
               ),
             ),
@@ -431,42 +438,4 @@ class TopPage extends StatelessWidget {
     return json.decode(res.body);
 
   }
-
-  Widget _buildFavoriteSpotItem(){
-    return GestureDetector(
-
-    );
-  }
-
-//  Widget appBar(){
-//    Color iconColor = Colors.orange[300];
-//    return AppBar(
-//      backgroundColor: Colors.white,
-//      leading: Builder(
-//        builder: (context) => IconButton(
-//          color: iconColor,
-//          icon: new Icon(Icons.menu),
-//          onPressed: () => Scaffold.of(context).openDrawer(),
-//        ),
-//      ),
-//      actions: [
-//        IconButton(
-//          icon: Icon(Icons.settings_outlined),
-//          color: iconColor,
-//          onPressed: () {
-//
-//          },
-//        ),
-//      ],
-//    );
-//  }
-
-//  Widget floatingActionButton(){
-//    return FloatingActionButton(
-//      onPressed: (){},
-//      tooltip: 'Increment',
-//      child: Icon(Icons.add),
-//    );
-//  }
-
 }

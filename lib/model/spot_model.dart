@@ -146,14 +146,16 @@ class Spot {
 }
 
 class Prefecture {
-  Prefecture({this.id,this.name,this.spots});
+  Prefecture({this.id,this.name,this.image,this.spots});
   final int id;
   final String name;
+  final String image;
   final List<Spot> spots;
 
   Prefecture.fromJson(Map<String,dynamic> json)
       : id = json["id"],
         name = json["prefectures_name"],
+        image = json["image"],
         spots = List.generate(
             json["spots"].length, (index) => Spot.fromJson(json["spots"][index])
         );
