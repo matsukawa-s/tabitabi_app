@@ -224,21 +224,70 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
         context: context,
         builder: (context){
           return AlertDialog(
-            title: Text("確認"),
-            content: Text("プランを削除してよろしいですか？"),
-            actions: [
-              FlatButton(
-                child: Text("Cancel"),
-                onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
+              content: Container(
+                height: 150.0,
+                width: 250.0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                        padding: EdgeInsets.only(bottom: 10.0),
+                        child: Text("プランを削除しますか?", style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),)
+                    ),
+                    Padding(
+                        padding: EdgeInsets.only(bottom: 20.0),
+                        child: Text("※削除したプランは元に戻りません！", style: TextStyle(color: Colors.red, fontSize: 13.0,fontWeight: FontWeight.bold),)
+                    ),
+                    Container(
+                      height: 40,
+                      width: 250,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            child: Container(
+                              height: 40.0,
+                              width: 100.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30.0),
+                                color: Colors.grey,
+                              ),
+                              child: Center(
+                                child: Text("いいえ", style: TextStyle(color: Colors.white),),
+                              ),
+                            ),
+                            onTap: (){
+                              Navigator.of(context, rootNavigator: true).pop(context);
+                            },
+                          ),
+                          GestureDetector(
+                            child: Container(
+                              margin: EdgeInsets.only(left: 10.0),
+                              height: 40.0,
+                              width: 100.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30.0),
+                                color: Colors.orange,
+                              ),
+                              child: Center(
+                                child: Text("はい", style: TextStyle(color: Colors.white),),
+                              ),
+                            ),
+                            onTap: (){
+                              flg = true;
+                              Navigator.of(context, rootNavigator: true).pop(context);
+                            },
+                          )
+                        ],
+                      ),
+                    )
+                  ],
+                ),
               ),
-              FlatButton(
-                  child: Text("OK"),
-                  onPressed: (){
-                    flg = true;
-                    Navigator.of(context, rootNavigator: true).pop(context);
-                  }
-              ),
-            ],
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(32.0)))
           );
         }
     );
@@ -399,56 +448,99 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
         context: context,
         builder: (context){
           return AlertDialog(
-            title: Text("確認"),
-            content: Container(
-              height: 100.0,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 20.0),
-                    child: Text("公開設定を変更しますか？"),
-                  ),
-                  Row(
-                    children: [
-                      Text("現在の公開設定："),
-                      Container(
-                          height: 10.0,
-                          width: 10.0,
-                          decoration: BoxDecoration(
-                              color: _isOpen == 0 ? Colors.grey : Colors.greenAccent,
-                              shape: BoxShape.circle
-                          )
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 5.0),
-                        child: Text(
-                          _isOpen == 0 ? "非公開" : "公開中",
-                          style: TextStyle(
-                              fontSize: 14.0
+              content: Container(
+                height: 150.0,
+                width: 250.0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                        padding: EdgeInsets.only(bottom: 10.0),
+                        child: Text("プランを削除しますか?", style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),)
+                    ),
+                    Container(
+                      margin: EdgeInsets.only(bottom: 20.0),
+                      height: 20.0,
+                      width: 250.0,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("現在の公開設定："),
+                          Container(
+                              height: 10.0,
+                              width: 10.0,
+                              decoration: BoxDecoration(
+                                  color: _isOpen == 0 ? Colors.grey : Colors.greenAccent,
+                                  shape: BoxShape.circle
+                              )
                           ),
-                        ),
-                      )
-                    ],
-                  )
-                ],
+                          Padding(
+                            padding: EdgeInsets.only(left: 5.0),
+                            child: Text(
+                              _isOpen == 0 ? "非公開" : "公開中",
+                              style: TextStyle(
+                                  fontSize: 14.0
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    Container(
+                      height: 40,
+                      width: 250,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            child: Container(
+                              height: 40.0,
+                              width: 100.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30.0),
+                                color: Colors.grey,
+                              ),
+                              child: Center(
+                                child: Text("いいえ", style: TextStyle(color: Colors.white),),
+                              ),
+                            ),
+                            onTap: (){
+                              Navigator.of(context, rootNavigator: true).pop(context);
+                            },
+                          ),
+                          GestureDetector(
+                            child: Container(
+                              margin: EdgeInsets.only(left: 10.0),
+                              height: 40.0,
+                              width: 100.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30.0),
+                                color: Colors.orange,
+                              ),
+                              child: Center(
+                                child: Text("はい", style: TextStyle(color: Colors.white),),
+                              ),
+                            ),
+                            onTap: (){
+                              _updateIsOpenPlan(openId);
+                              Navigator.of(context, rootNavigator: true).pop(context);
+                            },
+                          )
+                        ],
+                      ),
+                    )
+                  ],
+                ),
               ),
-            ),
-            actions: [
-              FlatButton(
-                child: Text("Cancel"),
-                onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
-              ),
-              FlatButton(
-                  child: Text("OK"),
-                  onPressed: (){
-                    _updateIsOpenPlan(openId);
-                    Navigator.of(context, rootNavigator: true).pop(context);
-                  }
-              ),
-            ],
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(32.0)))
           );
         }
     );
+
   }
 
   //帰ってきたときに表示するダイアログ
@@ -541,6 +633,104 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     });
   }
 
+  //プランコピー
+  Future<void> _planCopy() async{
+    bool flg = false;
+    await showDialog(
+        context: context,
+        builder: (context){
+          return AlertDialog(
+              content: Container(
+                height: 150.0,
+                width: 250.0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 30.0),
+                      child: Text("プランをコピーしますか?", style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),)
+                    ),
+                    Container(
+                      height: 50,
+                      width: 250,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            child: Container(
+                              height: 40.0,
+                              width: 100.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30.0),
+                                color: Colors.grey,
+                              ),
+                              child: Center(
+                                child: Text("いいえ", style: TextStyle(color: Colors.white),),
+                              ),
+                            ),
+                            onTap: (){
+                              Navigator.of(context, rootNavigator: true).pop(context);
+                            },
+                          ),
+                          GestureDetector(
+                            child: Container(
+                              margin: EdgeInsets.only(left: 10.0),
+                              height: 40.0,
+                              width: 100.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30.0),
+                                color: Colors.orange,
+                              ),
+                              child: Center(
+                                child: Text("はい", style: TextStyle(color: Colors.white),),
+                              ),
+                            ),
+                            onTap: (){
+                              flg = true;
+                              Navigator.of(context, rootNavigator: true).pop(context);
+                            },
+                          )
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(32.0)))
+          );
+        }
+    );
+
+    if(!flg){
+      return null;
+    }
+
+    setState(() {
+      isFileUploading = true;
+      message = "プランをコピー中";
+    });
+
+    http.Response res = await Network().getData("plan/copy/" + widget.planId.toString());
+    print(res.body);
+    int newPlanId = int.parse(res.body);
+
+    setState(() {
+      isFileUploading = false;
+    });
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return MakePlanTop(planId: newPlanId);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -569,6 +759,9 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
             child: CustomScrollView(
               slivers: [
                 SliverAppBar(
+                  iconTheme: IconThemeData(
+                    color: Colors.white
+                  ),
                   pinned: true,
                   expandedHeight: 200.0,
                   actions: [
@@ -822,6 +1015,24 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                                         },
                                       ),
                                     ),
+                                    if(userFlag == 0)
+                                    GestureDetector(
+                                      child: Container(
+                                        margin: EdgeInsets.only(top: 8.0, bottom: 8.0),
+                                        width: 300.0,
+                                        height: 40.0,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(20.0),
+                                          color: Colors.orange
+                                        ),
+                                        child: Center(
+                                          child: Text("このプランをコピーする", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                                        ),
+                                      ),
+                                      onTap: (){
+                                        _planCopy();
+                                      },
+                                    )
                                   ],
                                 ),
                               ],

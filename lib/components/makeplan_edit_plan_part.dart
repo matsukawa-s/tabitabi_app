@@ -127,8 +127,14 @@ class _PlanPartState extends State<PlanPart> {
                           topLeft:  const  Radius.circular(20.0),
                           bottomLeft: const  Radius.circular(20.0),
                         ),
-                        child: widget.spotPath == null ? Container() : Image.network(
-                          'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
+                        child: widget.spotPath == null ? Container() :
+                          widget.spotPath.contains("https://") ?
+                            Image.network(
+                              widget.spotPath,
+                              fit: BoxFit.cover,
+                            ):
+                            Image.network(
+                            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
                               '&photoreference=${widget.spotPath}'
                               '&key=${_kGoogleApiKey}',
                           fit: BoxFit.cover,
