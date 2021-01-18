@@ -61,6 +61,7 @@ class _PlanInfoEditPageState extends State<PlanInfoEditPage> {
     context.read<TagDataProvider>().clearTagData();
     for(int i=0; i<_tags.length; i++){
       context.read<TagDataProvider>().addTagData(_tags[i]);
+      print(_tags[i].tagName);
     }
 
     super.initState();
