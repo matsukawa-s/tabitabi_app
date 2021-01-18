@@ -19,7 +19,7 @@ import 'package:tabitabi_app/makeplan/plan_info_edit_page.dart';
 import 'package:tabitabi_app/data/tag_data.dart';
 import 'dart:io';
 
-enum WhyFarther { EditPlan, JoinPlan, DeletePlan }
+enum WhyFarther { EditPlan, OpenPlan, JoinPlan, DeletePlan }
 
 class MakePlanTop extends StatefulWidget {
 
@@ -46,6 +46,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   String _userIconPath;
   List<TagData> _tags = [];
   String _tagText = "";
+  int _isOpen = 0;
 
   int userFlag = 0;
 
@@ -86,6 +87,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     print(list);
     plans = list[0];
     _tagText = "";
+    _tags.clear();
 
     setState(() {
       _planName = list[0]["title"];
@@ -96,6 +98,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     _imageUrl = list[0]["image_url"];
     _userName = list[0]["user_name"];
     _userIconPath = list[0]["user_icon_path"];
+    _isOpen = list[0]["is_open"];
     for(int i=0; i<list[0]["tags"].length; i++){
       _tags.add(TagData(list[0]["tag_id"][i], list[0]["tags"][i]));
       _tagText += "#" + list[0]["tags"][i] + " ";
@@ -386,6 +389,158 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     });
   }
 
+  //公開設定確認ダイアログ
+  Future<void> _showOpenDialog() async{
+    int openId = 0;
+    if(_isOpen == 0){
+      openId = 1;
+    }
+    await showDialog(
+        context: context,
+        builder: (context){
+          return AlertDialog(
+            title: Text("確認"),
+            content: Container(
+              height: 100.0,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 20.0),
+                    child: Text("公開設定を変更しますか？"),
+                  ),
+                  Row(
+                    children: [
+                      Text("現在の公開設定："),
+                      Container(
+                          height: 10.0,
+                          width: 10.0,
+                          decoration: BoxDecoration(
+                              color: _isOpen == 0 ? Colors.grey : Colors.greenAccent,
+                              shape: BoxShape.circle
+                          )
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 5.0),
+                        child: Text(
+                          _isOpen == 0 ? "非公開" : "公開中",
+                          style: TextStyle(
+                              fontSize: 14.0
+                          ),
+                        ),
+                      )
+                    ],
+                  )
+                ],
+              ),
+            ),
+            actions: [
+              FlatButton(
+                child: Text("Cancel"),
+                onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
+              ),
+              FlatButton(
+                  child: Text("OK"),
+                  onPressed: (){
+                    _updateIsOpenPlan(openId);
+                    Navigator.of(context, rootNavigator: true).pop(context);
+                  }
+              ),
+            ],
+          );
+        }
+    );
+  }
+
+  //帰ってきたときに表示するダイアログ
+  Future<void> _showDialog() async{
+    int openId = 0;
+    if(_isOpen == 0){
+      openId = 1;
+    }
+    await showDialog(
+        context: context,
+        builder: (context){
+          return AlertDialog(
+            content: Container(
+              height: 200.0,
+              width: 250.0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("プランを公開しよう！", style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),),
+                  Image.asset(
+                    "images/travel05.png",
+                    height: 100,
+                    width: 100,
+                    fit: BoxFit.fitHeight,
+                  ),
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          child: Container(
+                            height: 40.0,
+                            width: 100.0,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30.0),
+                              color: Colors.grey,
+                            ),
+                            child: Center(
+                              child: Text("公開しない", style: TextStyle(color: Colors.white),),
+                            ),
+                          ),
+                          onTap: (){
+                            Navigator.of(context, rootNavigator: true).pop(context);
+                          },
+                        ),
+                        GestureDetector(
+                          child: Container(
+                            margin: EdgeInsets.only(left: 10.0),
+                            height: 40.0,
+                            width: 100.0,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30.0),
+                              color: Colors.orange,
+                            ),
+                            child: Center(
+                              child: Text("公開する", style: TextStyle(color: Colors.white),),
+                            ),
+                          ),
+                          onTap: (){
+                            _updateIsOpenPlan(openId);
+                            Navigator.of(context, rootNavigator: true).pop(context);
+                          },
+                        )
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(32.0)))
+          );
+        }
+    );
+  }
+  //公開設定変更
+  Future<void> _updateIsOpenPlan(int open) async{
+    final data = {
+      "id" : widget.planId,
+      "is_open" : open,
+    };
+
+    http.Response res = await Network().postData(data, "plan/update/open");
+    print(res.body);
+
+    setState(() {
+      _isOpen = open;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -442,6 +597,9 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                                 _getPlan();
                               });
                               break;
+                            case WhyFarther.OpenPlan:
+                              _showOpenDialog();
+                              break;
                             case WhyFarther.JoinPlan:
                               Navigator.push(
                                 context,
@@ -462,6 +620,10 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                           const PopupMenuItem<WhyFarther>(
                             value: WhyFarther.EditPlan,
                             child: Text('プラン情報の編集'),
+                          ),
+                          const PopupMenuItem<WhyFarther>(
+                            value: WhyFarther.OpenPlan,
+                            child: Text('プランの公開設定'),
                           ),
                           const PopupMenuItem<WhyFarther>(
                             value: WhyFarther.JoinPlan,
@@ -516,12 +678,39 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                             ],
                           ),
                         ),
+                        if(userFlag == 1)
+                          Padding(
+                            padding: EdgeInsets.only(right: 10.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Container(
+                                  height: 10.0,
+                                  width: 10.0,
+                                  decoration: BoxDecoration(
+                                    color: _isOpen == 0 ? Colors.grey : Colors.greenAccent,
+                                    shape: BoxShape.circle
+                                  )
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(left: 5.0),
+                                  child: Text(
+                                    _isOpen == 0 ? "非公開" : "公開中",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14.0
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
                         Padding(
                           padding: EdgeInsets.only(right: 10.0),
                           child: Text(_planName, style: TextStyle(color: Colors.white, fontSize: 32.0)),
                         ),
                         Padding(
-                          padding: EdgeInsets.only(right: 5.0, bottom: 10.0),
+                          padding: EdgeInsets.only(right: 5.0, bottom: 3.0),
                           child: Text(_tagText, style: TextStyle(color: Colors.white)),
                         )
                       ],
@@ -626,6 +815,9 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                                               _getPlan();
                                               _getItiData();
                                             });
+                                            if(_isOpen==0){
+                                              _showDialog();
+                                            }
                                           });
                                         },
                                       ),
