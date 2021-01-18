@@ -21,7 +21,7 @@ class _SpotPartState extends State<SpotPart> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 90.0,
+      height: 100.0,
       width: 100.0,
       child: Stack(
         children: [
@@ -48,19 +48,25 @@ class _SpotPartState extends State<SpotPart> {
                     topLeft:  const  Radius.circular(10.0),
                     topRight: const  Radius.circular(10.0),
                   ),
-                  child: widget.spotPath == null ? Container() :Image.network(
-                    'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
-                        '&photoreference=${widget.spotPath}'
-                        '&key=${_kGoogleApiKey}',
-                    fit: BoxFit.cover,
+                  child: widget.spotPath == null ? Container() :
+                    widget.spotPath.contains("https://") ?
+                        Image.network(
+                          widget.spotPath,
+                          fit: BoxFit.cover,
+                        ):
+                        Image.network(
+                        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
+                            '&photoreference=${widget.spotPath}'
+                            '&key=${_kGoogleApiKey}',
+                          fit: BoxFit.cover,
                   ),
                 ),
               ),
               Container(
-                constraints: BoxConstraints.expand(height: 30.0),
+                constraints: BoxConstraints.expand(height: 40.0),
                 child: Center(
                   child: Text(widget.spotName,
-                    style: TextStyle(color: Colors.black,fontSize: 14.0, decoration: TextDecoration.none, fontWeight: FontWeight.normal),),
+                    style: TextStyle(color: Colors.black,fontSize: 12.0, decoration: TextDecoration.none, fontWeight: FontWeight.normal),),
                 ),
               )
             ],
