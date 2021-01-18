@@ -50,8 +50,15 @@ dependencies:
   qr_code_scanner: ^0.2.1
   google_directions_api: ^0.5.0
   modal_bottom_sheet: ^1.0.0+1
-  fluttertoast: ^7.1.6
-
+  aws_s3: ^0.1.1+hotfix.5
+  amazon_s3_cognito:
+    git:
+      url: https://github.com/opqrstuvcut/amazon_s3_cognito
+  multi_image_picker: ^4.7.14
+  flutter_absolute_path: ^1.0.6
+  flutter_image_compress: ^0.7.0
+  path_provider: ^1.6.27
+  image_gallery_saver: ^1.6.7
 
 dev_dependencies:
   flutter_test:
