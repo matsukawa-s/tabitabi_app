@@ -12,6 +12,8 @@ import 'package:tabitabi_app/network_utils/api.dart';
 import 'package:tabitabi_app/spot_details_page.dart';
 import 'package:tabitabi_app/top_prefectures_spot_list_page.dart';
 
+import 'makeplan/makeplan_top_page.dart';
+
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
 class TopPage extends StatelessWidget {
@@ -104,36 +106,46 @@ class TopPage extends StatelessWidget {
                             scrollDirection: Axis.horizontal,
                             itemCount: todayPlans.length,
                             itemBuilder: (BuildContext context, int index){
-                              return Container(
+                              return GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) {
+                                      return MakePlanTop(planId: todayPlans[index]["id"]);
+                                    },
+                                  ),
+                                ),
+                                child: Container(
 //                                margin: EdgeInsets.all(4.0),
-                                padding: EdgeInsets.all(2.0),
-                                width: size.width - pagePadding*2,
-                                child: Column(
-                                  children: [
-                                    Expanded(
-                                        flex: 4,
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(6.0),
-                                          child: Container(
-                                            child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
-                                            width: size.width - pagePadding*2,
-                                          ),
-                                        )
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            todayPlans[index]["title"],
-//                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                          ),
-                                          Text(todayPlans[index]["start_day"] + ' ~ ' + todayPlans[index]["end_day"])
-                                        ],
+                                  padding: EdgeInsets.all(2.0),
+                                  width: size.width - pagePadding*2,
+                                  child: Column(
+                                    children: [
+                                      Expanded(
+                                          flex: 4,
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(6.0),
+                                            child: Container(
+                                              child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
+                                              width: size.width - pagePadding*2,
+                                            ),
+                                          )
                                       ),
-                                    ),
-                                  ],
+                                      Expanded(
+                                        flex: 1,
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              todayPlans[index]["title"],
+//                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                            ),
+                                            Text(todayPlans[index]["start_day"] + ' ~ ' + todayPlans[index]["end_day"])
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             }
@@ -182,29 +194,41 @@ class TopPage extends StatelessWidget {
                               scrollDirection: Axis.horizontal,
                               itemCount: popularPlans.length,
                               itemBuilder: (BuildContext context, int index){
-                                return Container(
-                                  width: popularPlanItemWidth,
-                                  padding: EdgeInsets.all(2.0),
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                        flex: 4,
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(6.0),
-                                          child: Container(
-                                            width: popularPlanItemWidth,
-                                            child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
+                                return GestureDetector(
+                                  onTap: (){
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) {
+                                          return MakePlanTop(planId: popularPlans[index]["id"]);
+                                        },
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: popularPlanItemWidth,
+                                    padding: EdgeInsets.all(2.0),
+                                    child: Column(
+                                      children: [
+                                        Expanded(
+                                          flex: 4,
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(6.0),
+                                            child: Container(
+                                              width: popularPlanItemWidth,
+                                              child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      Expanded(
-                                        flex: 1,
-                                          child: Text(
-                                            popularPlans[index]["title"],
-                                            overflow: TextOverflow.ellipsis,
-                                          )
-                                      ),
-                                    ],
+                                        Expanded(
+                                          flex: 1,
+                                            child: Text(
+                                              popularPlans[index]["title"],
+                                              overflow: TextOverflow.ellipsis,
+                                            )
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 );
                               }
