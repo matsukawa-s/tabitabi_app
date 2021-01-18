@@ -103,6 +103,7 @@ class _AddTagPageState extends State<AddTagPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("タグの追加"),
+        backgroundColor: Colors.white.withOpacity(0.7),
         actions: [
           Align(
             widthFactor: 1.0,
@@ -110,7 +111,7 @@ class _AddTagPageState extends State<AddTagPage> {
             child: Padding(
               padding: EdgeInsets.only(right: 10.0),
               child: GestureDetector(
-                child: Text("決定", style: TextStyle(color: Colors.white, fontSize: 17.0),),
+                child: Text("決定", style: TextStyle(fontSize: 17.0),),
                 onTap: (){
                   Navigator.of(context).pop();
                 },
