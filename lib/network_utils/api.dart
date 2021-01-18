@@ -24,6 +24,8 @@ class Network{
     return _url + route;
   }
 
+  get baseUrl => _baseUrl;
+
   get getMultiHeaders => _multiHeaders();
 
   String imagesDirectory(selectImageDirectory){

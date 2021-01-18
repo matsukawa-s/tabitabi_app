@@ -225,7 +225,7 @@ class _MapPageState extends State<MapPage> {
     });
 
     //都道府県名に一致する都道府県コードを検索・取得
-    final index = prefectures["prefectures"].indexWhere((item) => item["name"] == prefectureName);
+    final index = prefectures["prefectures"].indexWhere((item) => item["prefectures_name"] == prefectureName);
     final prefectureId = index + 1;
 
     place = Place(

@@ -6,6 +6,8 @@ import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:tabitabi_app/data/tag_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tabitabi_app/initial_login_check_page.dart';
+import 'package:tabitabi_app/providers/plan_provider.dart';
 import 'login.dart';
 import 'model/map.dart';
 import 'model/plan.dart';
@@ -21,7 +23,7 @@ import 'navigationbar_provider.dart';
 import 'plan_search_model.dart';
 import 'makeplan/makeplan_initial_page.dart';
 
-//右上ポップアップメニュー
+//ユーザーページの右上ポップアップメニュー
 enum WhyFarther { Logout }
 
 Future main() async{
@@ -46,65 +48,23 @@ Future main() async{
         ),
         ChangeNotifierProvider<FavoriteSpotViewModel>(
             create: (context) => FavoriteSpotViewModel()
+        ),
+        ChangeNotifierProvider<PlanProvider>(
+            create: (context) => PlanProvider()
         )
       ],
       child: MaterialApp(
-        home: MyApp(),
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.orange,
+        ),
+        home: InitialLoginCheckPage(),
       ),
     ),);
 }
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return  MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-      ),
-      home: CheckAuth(),
-    );
-  }
-}
-
-class CheckAuth extends StatefulWidget {
-  @override
-  _CheckAuthState createState() => _CheckAuthState();
-}
-
-class _CheckAuthState extends State<CheckAuth> {
-  bool isAuth = false;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _checkLogin();
-  }
-
-  void _checkLogin() async{
-    SharedPreferences localStorage = await SharedPreferences.getInstance();
-    var token = localStorage.getString('token');
-    if(token != null){
-      setState(() {
-        isAuth = true;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if(isAuth){
-      return MyHomePage();
-    }else{
-      return LoginPage();
-    }
-  }
-}
-
-
 class MyHomePage extends StatelessWidget {
-  Color iconColor = Colors.orange[300];
+  final Color iconColor = Colors.orange[300];
 
   @override
   Widget build(BuildContext context) {
@@ -416,7 +376,7 @@ class MyHomePage extends StatelessWidget {
         context,
         PageTransition(
             type: PageTransitionType.fade,
-            child: CheckAuth(),
+            child: InitialLoginCheckPage(),
             inheritTheme: true,
             ctx: context
         ),
