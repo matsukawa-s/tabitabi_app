@@ -15,9 +15,11 @@ import 'package:tabitabi_app/components/makeplan_edit_memo_part.dart';
 import 'package:tabitabi_app/network_utils/aws_s3.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'dart:typed_data';
+import 'package:tabitabi_app/makeplan/plan_info_edit_page.dart';
+import 'package:tabitabi_app/data/tag_data.dart';
 import 'dart:io';
 
-enum WhyFarther { JoinPlan, DeletePlan }
+enum WhyFarther { EditPlan, JoinPlan, DeletePlan }
 
 class MakePlanTop extends StatefulWidget {
 
@@ -36,12 +38,14 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   var plans;
 
   String _planName = "";
-  String _planDetail = "";
+  String _imageUrl = "";
   DateTime _startDateTime = DateTime.now();
   DateTime _endDateTime = DateTime.now();
   List<DateTime> _planDates = [DateTime.now()];
   String _userName = "";
   String _userIconPath;
+  List<TagData> _tags = [];
+  String _tagText = "";
 
   int userFlag = 0;
 
@@ -77,18 +81,25 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
 
   Future<int> _getPlan() async{
     http.Response response = await Network().getData("plan/get/" + widget.planId.toString());
-    List list = json.decode(response.body);
-    plans = list[0];
+    //print(response.body);
+    var list = json.decode(response.body);
     print(list);
+    plans = list[0];
+    _tagText = "";
 
     setState(() {
       _planName = list[0]["title"];
-      _planDetail = list[0]["description"] == null ? "" : list[0]["description"];
+      //_planDetail = list[0]["description"] == null ? "" : list[0]["description"];
     });
     _startDateTime = DateTime.parse(list[0]["start_day"]);
     _endDateTime = DateTime.parse(list[0]["end_day"]);
+    _imageUrl = list[0]["image_url"];
     _userName = list[0]["user_name"];
     _userIconPath = list[0]["user_icon_path"];
+    for(int i=0; i<list[0]["tags"].length; i++){
+      _tags.add(TagData(list[0]["tag_id"][i], list[0]["tags"][i]));
+      _tagText += "#" + list[0]["tags"][i] + " ";
+    }
     userFlag = list[0]["user_flag"];
     print("userFlg:" + userFlag.toString());
 
@@ -202,6 +213,51 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     return DateTime(date.year, date.month, date.day);
   }
 
+  //プラン削除処理
+  Future<void> _deletePlan() async{
+    bool flg = false;
+    //確認ダイアログ表示
+    await showDialog(
+        context: context,
+        builder: (context){
+          return AlertDialog(
+            title: Text("確認"),
+            content: Text("プランを削除してよろしいですか？"),
+            actions: [
+              FlatButton(
+                child: Text("Cancel"),
+                onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
+              ),
+              FlatButton(
+                  child: Text("OK"),
+                  onPressed: (){
+                    flg = true;
+                    Navigator.of(context, rootNavigator: true).pop(context);
+                  }
+              ),
+            ],
+          );
+        }
+    );
+
+    //いいえのとき
+    if(!flg){
+      return null;
+    }
+
+    //プランを削除
+    setState(() {
+      message = "プランを削除しています";
+      isFileUploading = true;
+    });
+
+    http.Response response = await Network().getData("plan/delete/" + widget.planId.toString());
+
+    print(response.body);
+
+    Navigator.of(context).pop();
+  }
+
   //アルバム画像追加処理
   Future<void> _addAlbum() async{
     List<Asset> resultList = List<Asset>();
@@ -311,7 +367,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
       return null;
     }
 
-    //選択した画像をアップロード
+    //選択した画像を削除
     setState(() {
       message = "画像を削除しています";
       isFileUploading = true;
@@ -374,6 +430,18 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                         icon: Icon(Icons.more_vert, color: Colors.white,),
                         onSelected: (WhyFarther result) {
                           switch(result){
+                            case WhyFarther.EditPlan:
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) {
+                                    return PlanInfoEditPage(widget.planId, _planName, _tags, _startDateTime, _endDateTime, _imageUrl);
+                                  },
+                                ),
+                              ).then((value){
+                                _getPlan();
+                              });
+                              break;
                             case WhyFarther.JoinPlan:
                               Navigator.push(
                                 context,
@@ -385,12 +453,16 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                               );
                               break;
                             case WhyFarther.DeletePlan:
-
+                              _deletePlan();
                               break;
 
                           }
                         },
                         itemBuilder: (BuildContext context) => <PopupMenuEntry<WhyFarther>>[
+                          const PopupMenuItem<WhyFarther>(
+                            value: WhyFarther.EditPlan,
+                            child: Text('プラン情報の編集'),
+                          ),
                           const PopupMenuItem<WhyFarther>(
                             value: WhyFarther.JoinPlan,
                             child: Text('プラン招待コード'),
@@ -406,7 +478,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                     constraints: BoxConstraints.expand(height: 250.0),
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: AssetImage("images/2304099_m.jpg"),
+                        image: _imageUrl == null ? AssetImage("images/2304099_m.jpg") : NetworkImage(_imageUrl),
                         //image: NetworkImage("https://picsum.photos/1500/800"),
                         colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),
                         fit: BoxFit.cover,
@@ -450,7 +522,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                         ),
                         Padding(
                           padding: EdgeInsets.only(right: 5.0, bottom: 10.0),
-                          child: Text(_planDetail, style: TextStyle(color: Colors.white)),
+                          child: Text(_tagText, style: TextStyle(color: Colors.white)),
                         )
                       ],
                     ),

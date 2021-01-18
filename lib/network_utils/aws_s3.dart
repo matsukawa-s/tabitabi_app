@@ -16,7 +16,7 @@ class AwsS3{
       path,
       minWidth: 1236,
       minHeight: 1236,
-      quality: 60,
+      quality: 50,
     );
 
     final Directory extDir = await getApplicationDocumentsDirectory();
