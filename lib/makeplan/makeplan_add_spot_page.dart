@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tabitabi_app/favorite_spot_page.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
-
+import 'package:tabitabi_app/makeplan/make_spot_page.dart';
 class AddSpotPage extends StatefulWidget {
   @override
   _AddSpotPageState createState() => _AddSpotPageState();
@@ -35,6 +35,7 @@ class _AddSpotPageState extends State<AddSpotPage> with SingleTickerProviderStat
       child: Scaffold(
         appBar: AppBar(
           title: const Text('スポットの追加'),
+          backgroundColor: Colors.white.withOpacity(0.7),
         ),
         body: Column(
           children: [
@@ -69,7 +70,7 @@ class _AddSpotPageState extends State<AddSpotPage> with SingleTickerProviderStat
                     child: Text("2"),
                   ),
                   Container(
-                    child: Text("3"),
+                    child: MakeSpotPage(),
                   ),
                 ],
               ),

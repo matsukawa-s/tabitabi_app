@@ -1199,6 +1199,26 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                   ],
                 )
             ),
+          Positioned(
+            top: 40.0,
+            left: 10.0,
+            height: 40.0,
+            width: 40.0,
+            child: GestureDetector(
+              child: Container(
+                decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.6),
+                    shape: BoxShape.circle
+                ),
+                child: Center(
+                  child: Icon(Icons.arrow_back_ios_outlined, color: Colors.black,),
+                ),
+              ),
+              onTap: (){
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
           if(_dragFlag)
           //削除パレット部分
             Positioned(
@@ -1757,7 +1777,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           padding: EdgeInsets.only(left: 15.0, bottom: 20.0),
           child: GestureDetector(
             child:  SizedBox(
-              height: 90.0,
+              height: 100.0,
               width: 100.0,
               child: Container(
                 decoration: BoxDecoration(
@@ -1789,7 +1809,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                     builder: (context) => AddSpotPage(),
                   )
               );
-              print("a" + result[0].spotName);
+              //print("a" + result[0].spotName);
               if(result != null){
                 List<Map<String, int>> data = [];
                 for(int i=0; i<result.length; i++){

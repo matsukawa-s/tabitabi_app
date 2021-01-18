@@ -272,6 +272,7 @@ class TopPage extends StatelessWidget {
 
   Future<dynamic> getInitialTopData() async{
     http.Response res  = await Network().getData("top");
+    print(res.body);
 
     return json.decode(res.body);
 
