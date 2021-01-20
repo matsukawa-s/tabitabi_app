@@ -22,12 +22,12 @@ class PlanSearchPage extends StatelessWidget {
     final double _width = MediaQuery.of(context).size.width;
     final double _height = MediaQuery.of(context).size.height;
     return FutureBuilder(
-      future: Provider.of<PlanSearchModel>(context,listen: false).fetchPostPlansList(),
+      future: Provider.of<PlanSearchModel>(context,listen: false).fetchPostPlans(),
       builder: (ctx,dataSnapshot){
         return Consumer<PlanSearchModel>(
             builder: (_, model, __) {
               return RefreshIndicator(
-                onRefresh: () => model.fetchPostPlansList(),
+                onRefresh: () => model.fetchPostPlans(),
                 child: model.plans == null
                     // 検索結果がnullの間、ぐるぐる表示
                     ? Center(
@@ -119,7 +119,9 @@ class PlanSearchPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Center(
-                child: Row(children: [
+                child: Row(
+//                  mainAxisSize: MainAxisSize.min,
+                  children: [
                   IconButton(
                     icon: (model.plans[index].isFavorite)? Icon(Icons.favorite,color: Colors.pink): Icon(Icons.favorite_outline,color: iconColor,),
                     onPressed: (){
