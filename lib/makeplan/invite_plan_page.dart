@@ -1,5 +1,8 @@
+//import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
+import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share/share.dart';
 
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -14,7 +17,17 @@ class InvitePlanPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("プランコード"),
+        centerTitle: true,
         backgroundColor: Colors.white.withOpacity(0.7),
+        actions: [
+          IconButton(
+              icon: Icon(Icons.share),
+              onPressed: () async {
+                final links = await _createDynamicLink();
+                Share.share(links.toString());
+              }
+          )
+        ],
       ),
       extendBodyBehindAppBar: true,
       body: Center(
@@ -57,5 +70,26 @@ class InvitePlanPage extends StatelessWidget {
     final data = ClipboardData(text: plans["plan_code"]);
     await Clipboard.setData(data);
     print("コピーしたよ");
+  }
+
+  _createDynamicLink() async {
+    final DynamicLinkParameters parameters = DynamicLinkParameters(
+      uriPrefix: 'https://tabitabiapp.page.link',
+      link: Uri.parse('https://google.com/?id=${plans['id']}'),
+      androidParameters: AndroidParameters(
+        packageName: 'com.sk3a.tabitabi_app',
+        minimumVersion: 0,
+      ),
+      iosParameters: IosParameters(
+        bundleId: 'com.sk3a.tabitabi_app',
+        minimumVersion: '0',
+      ),
+    );
+
+    final ShortDynamicLink shortLink = await parameters.buildShortLink();
+    final Uri dynamicUrl = shortLink.shortUrl;
+
+    return dynamicUrl.toString();
+
   }
 }
