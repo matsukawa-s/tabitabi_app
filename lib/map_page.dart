@@ -14,7 +14,6 @@ import 'package:http/http.dart' as http;
 import 'package:google_maps_webservice/places.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
-//import 'package:permission_handler/permission_handler.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:tabitabi_app/map_search_page.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -268,7 +267,6 @@ class _MapPageState extends State<MapPage> {
     }
 
     if(history.containsKey(place.placeId)){
-      print("すでに検索履歴が存在したよ！");
       history.remove(place.placeId);
     }
 
@@ -308,7 +306,6 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget _buildPlaceDetailsSlidingSheet(Place place){
-    final dayOfWeek = ["日","月","火","水","木","金","土"];
     //区切り線の設定
     final borderDesign = BoxDecoration(
         border: Border(
@@ -428,7 +425,6 @@ class _MapPageState extends State<MapPage> {
                     children: [
                       ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          //とりあえず３つ表示にしている
                           itemCount: places.length > 4 ? 4 : places.length,
                           shrinkWrap: true,
                           itemBuilder: (BuildContext context,int index){
