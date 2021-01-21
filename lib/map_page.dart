@@ -15,6 +15,7 @@ import 'package:google_maps_webservice/places.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
+import 'package:tabitabi_app/makeplan/makeplan_top_page.dart';
 import 'package:tabitabi_app/map_search_page.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tabitabi_app/model/map.dart';
@@ -538,36 +539,43 @@ class _MapPageState extends State<MapPage> {
                         ),
                       ),
                     if(planContainingSpots.isNotEmpty)
-                      Column(
-                        children: [
-                          ListTile(
-                            title: Text("このスポットが入っているプラン"),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 16.0,right: 16.0),
-                            child: SizedBox(
-                              height: 80,
+                      Padding(
+                        padding: EdgeInsets.only(left: 8.0,right: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                                margin: EdgeInsets.all(4.0),
+                                child: Text("このスポットが入っているプラン")
+                            ),
+                            SizedBox(
+                              height: 90,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: planContainingSpots.length,
                                 itemBuilder: (BuildContext context,int index){
-                                  return Container(
-                                    margin: EdgeInsets.only(right: 4.0),
-                                    width: 100,
-                                    color: Colors.black12,
-                                    child: Text(planContainingSpots[index]["title"]),
+                                  return GestureDetector(
+                                    onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => MakePlanTop(planId: planContainingSpots[index]["id"],)
+                                        )
+                                    ),
+                                    child: Container(
+                                      margin: EdgeInsets.only(right: 4.0),
+                                      width: 120,
+                                      color: Colors.black12,
+                                      child: Text(planContainingSpots[index]["title"]),
+                                    ),
                                   );
                                 },
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-//                    ListTile(
-//                      title: Text("レビュー"),
-//                    ),
                     if(place.reviews != null)
-                      Container(
+                      Padding(
                         padding: EdgeInsets.only(left: 8.0,right: 8.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
