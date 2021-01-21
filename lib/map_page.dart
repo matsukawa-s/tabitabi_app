@@ -266,6 +266,12 @@ class _MapPageState extends State<MapPage> {
     if (prefs.containsKey('history')) {
       history = jsonDecode(prefs.getString('history'));
     }
+
+    if(history.containsKey(place.placeId)){
+      print("すでに検索履歴が存在したよ！");
+      history.remove(place.placeId);
+    }
+
     history[place.placeId] = place.name;
     prefs.setString('history', jsonEncode(history));
 
