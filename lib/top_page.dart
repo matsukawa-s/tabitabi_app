@@ -49,9 +49,18 @@ class TopPage extends StatelessWidget {
                     child: SizedBox(
                       width: double.infinity,
                       child: RaisedButton(
-                          child: Text("プランに参加する",style: TextStyle(fontSize: 16),),
-                          color: Colors.orangeAccent,
-                          shape: const StadiumBorder(),
+                          child: Text(
+                            "プランに参加する",
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold
+                            ),
+                          ),
+                          color: Colors.orange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           onPressed: (){
                             Navigator.push(
                               context,
@@ -384,7 +393,7 @@ class TopPage extends StatelessWidget {
                                       padding: EdgeInsets.all(4.0),
                                       decoration: BoxDecoration(
                                         color: Colors.black12,
-                                        border: Border.all(color: Colors.black54),
+                                        border: Border.all(color: Colors.white24),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Container(
@@ -399,7 +408,7 @@ class TopPage extends StatelessWidget {
                                             width: double.infinity,
 //                                        padding: EdgeInsets.all(2.0),
                                             decoration: BoxDecoration(
-                                              color: Colors.white60,
+                                              color: Colors.white70,
                                               borderRadius: BorderRadius.circular(30),
                                             ),
                                             child: Text(
