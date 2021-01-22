@@ -206,31 +206,31 @@ class PlanSearchHistoryPage extends StatelessWidget {
           )
         ],
         ),
-      ),
-      body: FutureBuilder(
-        future: getHistory(),
-        builder: (BuildContext context, AsyncSnapshot snapshot){
-          if(snapshot.hasData){
-            final List<String> history = snapshot.data;
-            return (history.length == null) ? Container() : ListView.builder(
-                itemCount: history.length,
-                itemBuilder:(BuildContext context, int index){
-                  return ListTile(
-                    title:Text(history[index]),
-                    onTap: (){
-                      Provider.of<PlanSearchModel>(context,listen: false).setKeyword(history[index]);
-                      setHistory(history[index]);
-                      Navigator.of(context).pop();
-                    },
-                  );
-                }
-            );
-          }else{
-            return CircularProgressIndicator();
-          }
-        },
-      ),
-    );
+      );
+//      body: FutureBuilder(
+//        future: getHistory(),
+//        builder: (BuildContext context, AsyncSnapshot snapshot){
+//          if(snapshot.hasData){
+//            final List<String> history = snapshot.data;
+//            return (history.length == null) ? Container() : ListView.builder(
+//                itemCount: history.length,
+//                itemBuilder:(BuildContext context, int index){
+//                  return ListTile(
+//                    title:Text(history[index]),
+//                    onTap: (){
+//                      Provider.of<PlanSearchModel>(context,listen: false).setKeyword(history[index]);
+//                      setHistory(history[index]);
+//                      Navigator.of(context).pop();
+//                    },
+//                  );
+//                }
+//            );
+//          }else{
+//            return CircularProgressIndicator();
+//          }
+//        },
+//      ),
+//    );
   }
 
   Widget allClearButton(model){

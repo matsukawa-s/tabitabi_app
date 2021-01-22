@@ -96,30 +96,6 @@ class PlanSearchPage extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-        ),
-        // プランのサブアイテム表示
-        Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Center(
-                child: Row(
-//                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                  IconButton(
-                    icon: (model.plans[index].isFavorite)? Icon(Icons.favorite,color: Colors.pink): Icon(Icons.favorite_outline,color: iconColor,),
-                    onPressed: (){
-                      // ローカルのお気に入りデータ更新
-                      model.setFavoriteChange(index);
-                      onPlanLikeButtonTapped(1, model.plans[index].id);
-                      print(model.plans[index].favoriteCount);
-                    },
-                  ),
-                  Text(
-                      NumberFormat.compact().format(model.plans[index].favoriteCount),
-                    style: TextStyle(
-                      color: iconColor,
             // プランのタイトル表示
             Expanded(
               child: Container(
@@ -159,7 +135,7 @@ class PlanSearchPage extends StatelessWidget {
                           },
                         ),
                         Text(
-                            NumberFormat.compact().format(model.plans[index].favoriteCount),
+                          NumberFormat.compact().format(model.plans[index].favoriteCount),
                           style: TextStyle(
                             color: iconColor,
                           ),
@@ -210,6 +186,7 @@ class PlanSearchPage extends StatelessWidget {
       },
     );
   }
+
   // お気に入りカウントアップ
   Future<bool> onPlanLikeButtonTapped(userId,favoritePlanId) async {
     // お気に入り状態を更新するためのリクエストデータ
