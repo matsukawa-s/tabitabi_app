@@ -23,24 +23,57 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("ログイン"),
-      ),
+//      backgroundColor: Colors.orange[200].withOpacity(0.7),
       body: SafeArea(
-        child: Container(
-          padding: EdgeInsets.all(16.0),
-          child: Center(
+        child: SingleChildScrollView(
+          child: Container(
+            padding: EdgeInsets.all(16.0),
+            height: MediaQuery.of(context).size.height,
+            child: Center(
               child: Column(
                 children: [
+//                  Container(
+//                      width: double.infinity,
+//                      child: Text(
+//                        "旅行のプランの作成・共有・検索アプリ",
+//                        style: TextStyle(
+//                          color: Colors.grey,
+//                          fontSize: 16,
+//                          fontWeight: FontWeight.bold,
+//                          decoration: TextDecoration.underline,
+//                        ),
+//                        textAlign: TextAlign.start,
+//                      )
+//                  ),
+                  Container(
+                    height: MediaQuery.of(context).size.height / 3,
+                    child: Center(
+                        child: Image.asset(
+                          'images/logo_round.png',
+                          width: MediaQuery.of(context).size.width / 3,
+                        )
+                    ),
+                  ),
                   Form(
                       key: _formKey,
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Text(
+                            'メールアドレス',
+                            style: TextStyle(
+                                color: Colors.black54,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold
+                            ),
+                          ),
                           TextFormField(
                             decoration: InputDecoration(
-                              icon: Icon(Icons.email),
-                              border: OutlineInputBorder(),
-                              labelText: 'メールアドレス',
+                              hintText: 'exsample@ecc.com',
+                              hintStyle: TextStyle(
+                                color: Colors.black26,
+                                fontSize: 16
+                              )
                             ),
                             validator: (inputEmail){
                               if(inputEmail.isEmpty){
@@ -51,37 +84,59 @@ class _LoginPageState extends State<LoginPage> {
                             },
                           ),
                           Container(
-                            margin: EdgeInsets.only(top: 12.0,bottom: 12.0),
-                            child: TextFormField(
-                              obscureText: true,
-                              decoration: InputDecoration(
-                                icon: Icon(Icons.vpn_key),
-                                border: OutlineInputBorder(),
-                                labelText: 'パスワード',
-                              ),
-                              validator: (inputPassword){
-                                if(inputPassword.isEmpty){
-                                  return 'パスワードを入力してください';
-                                }
-                                _password = inputPassword;
-                                return null;
-                              },
+                            margin: EdgeInsets.all(10),
+                          ),
+                          Text(
+                            'パスワード',
+                            style: TextStyle(
+                                color: Colors.black54,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold
                             ),
                           ),
-                          RaisedButton(
-                            child: Text("ログイン"),
-                            color: Colors.grey,
-                            textColor: Colors.white,
-                            onPressed: (){
-                              if(_formKey.currentState.validate()){
-                                _login();
+                          TextFormField(
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              hintText: '8文字以上で入力してください。',
+                              hintStyle: TextStyle(
+                                color: Colors.black26,
+                                fontSize: 16
+                              )
+                            ),
+                            validator: (inputPassword){
+                              if(inputPassword.isEmpty){
+                                return 'パスワードを入力してください';
                               }
-                            }
+                              _password = inputPassword;
+                              return null;
+                            },
                           ),
                           Container(
                             child: Text(
                               errorMessage,
                               style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                          Container(
+                            width: double.infinity,
+                            margin: EdgeInsets.all(12.0),
+                            child: RaisedButton(
+                                padding: EdgeInsets.all(10.0),
+                                child: Text(
+                                    "ログイン",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold
+                                    ),
+                                ),
+                                color: Colors.orange,
+                                textColor: Colors.white,
+                                shape: const StadiumBorder(),
+                                onPressed: (){
+                                  if(_formKey.currentState.validate()){
+                                    _login();
+                                  }
+                                }
                             ),
                           ),
                         ],
@@ -100,10 +155,18 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         );
                       },
-                      child: Text("新規登録はこちら")
+                      child: Text(
+                          "新規登録はこちら",
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold
+                          ),
+                      )
                   )
                 ],
               ),
+            )
           ),
         ),
       ),
