@@ -27,7 +27,7 @@ class InitialLoginCheckPage extends StatelessWidget {
         }
 
         if(snapshot.data){
-          initDynamicLinks(context);
+//          initDynamicLinks(context);
         }
 
         return snapshot.data ? MyHomePage() : LoginPage();

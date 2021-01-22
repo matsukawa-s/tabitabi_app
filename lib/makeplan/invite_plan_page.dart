@@ -1,4 +1,7 @@
 //import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
+import 'dart:io';
+//import 'dart:html';
+
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,8 +26,16 @@ class InvitePlanPage extends StatelessWidget {
           IconButton(
               icon: Icon(Icons.share),
               onPressed: () async {
-                final links = await _createDynamicLink();
-                Share.share(links.toString());
+                if(Platform.isAndroid){
+                  final links = await _createDynamicLink();
+                  Share.share(links.toString());
+                }
+//                if(Platform.isIOS){
+//                  final snackBar = SnackBar(
+//                    content: Text('お知らせ！'),
+//                  );
+//                  Scaffold.of(context).showSnackBar(snackBar);
+//                }
               }
           )
         ],
@@ -38,10 +49,10 @@ class InvitePlanPage extends StatelessWidget {
               data: plans["plan_code"],
               version: QrVersions.auto,
               size: 200.0,
-//              embeddedImage: AssetImage('images/logo_square.jpg'),
-//              embeddedImageStyle: QrEmbeddedImageStyle(
-//                size: Size(40, 40),
-//              ),
+              embeddedImage: AssetImage('images/logo_square.png'),
+              embeddedImageStyle: QrEmbeddedImageStyle(
+                size: Size(25, 25),
+              ),
             ),
             Row(
               mainAxisSize: MainAxisSize.min,
