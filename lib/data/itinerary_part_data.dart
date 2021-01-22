@@ -5,6 +5,7 @@
 
 //行程のスポットデータを入れる
 class SpotItineraryData{
+  int id;
   int itineraryId;
   int spotId;
   String spotName;
@@ -15,23 +16,25 @@ class SpotItineraryData{
   DateTime spotEndDateTime;
   int parentFlag;
 
-  SpotItineraryData(this.itineraryId, this.spotId, this.spotName, this.latitude, this.longitude, this.spotImagePath, this.spotStartDateTime, this.spotEndDateTime, this.parentFlag);
+  SpotItineraryData(this.id, this.itineraryId, this.spotId, this.spotName, this.latitude, this.longitude, this.spotImagePath, this.spotStartDateTime, this.spotEndDateTime, this.parentFlag);
 }
 
 //行程のメモ
 class MemoItineraryData{
+  int id;
   int itineraryId;
   String memo;
 
-  MemoItineraryData(this.itineraryId, this.memo);
+  MemoItineraryData(this.id, this.itineraryId, this.memo);
 }
 
 //行程の交通手段
 class TrafficItineraryData{
+  int id;
   int itineraryId;
   int trafficClass;
-  int travelTime;
+  String travelTime;
   int cost;
 
-  TrafficItineraryData(this.itineraryId, this.trafficClass, this.travelTime, this.cost);
+  TrafficItineraryData(this.id, this.itineraryId, this.trafficClass, this.travelTime, this.cost);
 }

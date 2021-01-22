@@ -23,6 +23,8 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("新規登録"),
+        centerTitle: true,
+        backgroundColor: Colors.white,
       ),
       body: SafeArea(
         child: Container(
@@ -83,15 +85,27 @@ class _RegisterPageState extends State<RegisterPage> {
                             },
                           ),
                         ),
-                        RaisedButton(
-                            child: Text("登録する"),
-                            color: Colors.grey,
-                            textColor: Colors.white,
-                            onPressed: (){
-                              if(_formKey.currentState.validate()){
-                                _register();
+                        Container(
+                          width: double.infinity,
+                          margin: EdgeInsets.all(12.0),
+                          child: RaisedButton(
+                              padding: EdgeInsets.all(10.0),
+                              child: Text(
+                                  "登録する",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold
+                                  ),
+                              ),
+                              color: Colors.black12,
+                              textColor: Colors.white,
+                              shape: const StadiumBorder(),
+                              onPressed: (){
+                                if(_formKey.currentState.validate()){
+                                  _register();
+                                }
                               }
-                            }
+                          ),
                         ),
                         Container(
                           child: Text(

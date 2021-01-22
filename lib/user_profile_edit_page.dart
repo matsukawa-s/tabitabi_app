@@ -94,6 +94,7 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
     };
 
     var res = Network().postUploadImage(data, _image, 'user/profileSave');
+    print(res.body);
   }
 
   Widget _buildIconImage(){

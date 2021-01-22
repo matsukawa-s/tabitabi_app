@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -24,7 +25,6 @@ class _MapSearchPageState extends State<MapSearchPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 //    FocusScope.of(context).requestFocus(focusNode);
     isHistoryOrSearch = false;
@@ -37,14 +37,13 @@ class _MapSearchPageState extends State<MapSearchPage> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey('history')) {
       history = jsonDecode(prefs.getString('history'));
+      history = LinkedHashMap.fromEntries(history.entries.toList().reversed);
     }
-    print("getHistory");
     return true;
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     _searchKeywordController.dispose();
     super.dispose();
   }
@@ -53,7 +52,6 @@ class _MapSearchPageState extends State<MapSearchPage> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-//      onTap: () => print("tapped"),
       child: Scaffold(
         resizeToAvoidBottomPadding: false,
         body: FutureBuilder(
@@ -139,7 +137,10 @@ class _MapSearchPageState extends State<MapSearchPage> {
             children: [
               Container(
                   margin: EdgeInsets.only(left: 16.0,top: 4.0),
-                  child: Text("履歴",style: TextStyle(fontWeight: FontWeight.bold),)
+                  child: Text(
+                    "過去に見たスポット",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  )
               ),
               Flexible(
                 child: ListView.builder(
@@ -154,6 +155,10 @@ class _MapSearchPageState extends State<MapSearchPage> {
                             Navigator.pop(context,key);
 //                          searchPlaces(key);
                         },
+                        trailing: IconButton(
+                          icon: Icon(Icons.clear),
+                          onPressed: () => deleteHistoryItem(key)
+                        ),
                       );
                     }
                 ),
@@ -181,19 +186,15 @@ class _MapSearchPageState extends State<MapSearchPage> {
       print(_searchKeywordController.text.toString());
       PlacesSearchResponse res =
           await _places.searchByText(_searchKeywordController.text.toString(),language: "ja");
-//      PlacesAutocompleteResponse res =
-//        await _places.autocomplete(_keyWordController.text.toString(),language: "ja");
 
       if(res.status == "OK"){
-        print(items);
         setState(() {
           items = res.results;
           //表示を切り替えて検索結果を表示する
           isHistoryOrSearch = true;
         });
-        print("items.length : ${items.length.toString()}");
       }else{
-        print("NO");
+        print("error");
       }
     }
   }
@@ -201,6 +202,15 @@ class _MapSearchPageState extends State<MapSearchPage> {
 //  地図画面に選択した場所を戻す
   void onTapPlace(placeId){
     Navigator.pop(context,placeId);
+  }
+
+//  過去に見たスポットのアイテムひとつを削除する
+  deleteHistoryItem(key) async{
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    history = jsonDecode(prefs.getString('history'));
+    history.remove(key);
+    prefs.setString('history', jsonEncode(history));
+    setState(() { });
   }
 
 }

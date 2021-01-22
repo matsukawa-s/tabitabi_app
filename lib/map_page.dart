@@ -14,8 +14,8 @@ import 'package:http/http.dart' as http;
 import 'package:google_maps_webservice/places.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
-//import 'package:permission_handler/permission_handler.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
+import 'package:tabitabi_app/makeplan/makeplan_top_page.dart';
 import 'package:tabitabi_app/map_search_page.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tabitabi_app/model/map.dart';
@@ -47,6 +47,7 @@ class _MapPageState extends State<MapPage> {
   Place place; //プレイス情報クラス変数
   List<PlacesSearchResult> places = []; //現在地周辺スポット
   TextEditingController _searchKeywordController; //検索キーワード用コントローラー
+  var planContainingSpots = []; //対象スポットが入っているプラン
 
   var lat; // 緯度
   var lng; // 経度
@@ -84,7 +85,7 @@ class _MapPageState extends State<MapPage> {
 
     //周辺半径５００メートル以内のスポットを取得する
     PlacesSearchResponse response
-      = await _places.searchNearbyWithRadius(Location(lat,lng), 500,language: "ja",type: "tourist_attraction");
+      = await _places.searchNearbyWithRadius(Location(lat,lng), 1000,language: "ja",type: "tourist_attraction");
 
     places = response.results;
 
@@ -212,8 +213,6 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
-    print(placesDetailsResponse.result.types);
-
     var prefectureName; //都道府県名
     // スポットの都道府県を取得
     placesDetailsResponse.result.addressComponents.forEach((element) {
@@ -226,7 +225,7 @@ class _MapPageState extends State<MapPage> {
     });
 
     //都道府県名に一致する都道府県コードを検索・取得
-    final index = prefectures["prefectures"].indexWhere((item) => item["name"] == prefectureName);
+    final index = prefectures["prefectures"].indexWhere((item) => item["prefectures_name"] == prefectureName);
     final prefectureId = index + 1;
 
     place = Place(
@@ -251,8 +250,6 @@ class _MapPageState extends State<MapPage> {
       types: placesDetailsResponse.result.types
     );
 
-    print(place.types);
-
     //スポットがお気に入り登録されているかどうか取得する
     http.Response res = await Network().getData("getOneFavorite/${placesDetailsResponse.result.placeId}");
 
@@ -260,7 +257,8 @@ class _MapPageState extends State<MapPage> {
 
     place.isFavorite = body["isFavorite"];
     place.spotId = body["spot_id"];
-    print("spotId : ${place.spotId}");
+
+    planContainingSpots = body["plan_containing_spots"];
 
     //検索履歴を保存する
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -268,6 +266,11 @@ class _MapPageState extends State<MapPage> {
     if (prefs.containsKey('history')) {
       history = jsonDecode(prefs.getString('history'));
     }
+
+    if(history.containsKey(place.placeId)){
+      history.remove(place.placeId);
+    }
+
     history[place.placeId] = place.name;
     prefs.setString('history', jsonEncode(history));
 
@@ -304,7 +307,6 @@ class _MapPageState extends State<MapPage> {
   }
 
   Widget _buildPlaceDetailsSlidingSheet(Place place){
-    final dayOfWeek = ["日","月","火","水","木","金","土"];
     //区切り線の設定
     final borderDesign = BoxDecoration(
         border: Border(
@@ -424,8 +426,7 @@ class _MapPageState extends State<MapPage> {
                     children: [
                       ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          //とりあえず３つ表示にしている
-                          itemCount: 4,
+                          itemCount: places.length > 4 ? 4 : places.length,
                           shrinkWrap: true,
                           itemBuilder: (BuildContext context,int index){
                             return InkWell(
@@ -440,12 +441,17 @@ class _MapPageState extends State<MapPage> {
                                     width: 130,
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8.0),
-                                      child: Image.network(
-                                        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=300'
-                                            '&photoreference=${places[index].photos[0].photoReference}'
-                                            '&key=${_kGoogleApiKey}',
-                                        fit:BoxFit.fill,
-                                      ),
+                                      child: places[index].photos == null ?
+                                          Container(
+                                            color: Colors.black12,
+                                            child: Center(child: Text("no image")),
+                                          )
+                                          : Image.network(
+                                            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=300'
+                                                '&photoreference=${places[index].photos[0].photoReference}'
+                                                '&key=${_kGoogleApiKey}',
+                                            fit:BoxFit.fill,
+                                          ),
                                     ),
                                   ),
                                   Container(
@@ -516,7 +522,7 @@ class _MapPageState extends State<MapPage> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   if(place.weekdayText != null)
-                                    for(int i = 0; i < 7; i++)
+                                    for(int i = 0; i < place.weekdayText.length; i++)
                                       Container(
                                         padding: EdgeInsets.only(left: 74),
                                         child: Row(
@@ -524,15 +530,6 @@ class _MapPageState extends State<MapPage> {
                                             children: [
                                               Text(place.weekdayText[i])
                                             ],
-//                                          children: [
-//                                            Text(dayOfWeek[i] + "曜日"),
-//                                            Text(
-//                                                "${place.openingHours[i].open.time.toString().substring(0,2)}:"
-//                                                    "${place.openingHours[i].open.time.toString().substring(2,4)} ~ "
-//                                                "${place.openingHours[i].close.time.toString().substring(0,2)}:"
-//                                                    "${place.openingHours[i].close.time.toString().substring(2,4)}"
-//                                            )
-//                                          ],
                                         ),
                                       )
                                 ],
@@ -541,83 +538,108 @@ class _MapPageState extends State<MapPage> {
                           ),
                         ),
                       ),
-                    ListTile(
-                      title: Text("このスポットが入っているプラン"),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16.0,right: 16.0),
-                      child: SizedBox(
-                        height: 80,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
+                    if(planContainingSpots.isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.only(left: 8.0,right: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            for(int i = 0;i < 4;i++)
-                              Container(
-                                width: 160,
-                                color: Colors.yellow,
-                                margin: EdgeInsets.only(right: 10),
+                            Container(
+                                margin: EdgeInsets.all(4.0),
+                                child: Text("このスポットが入っているプラン")
+                            ),
+                            SizedBox(
+                              height: 90,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: planContainingSpots.length,
+                                itemBuilder: (BuildContext context,int index){
+                                  return GestureDetector(
+                                    onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => MakePlanTop(planId: planContainingSpots[index]["id"],)
+                                        )
+                                    ),
+                                    child: Container(
+                                      margin: EdgeInsets.only(right: 4.0),
+                                      width: 120,
+                                      color: Colors.black12,
+                                      child: Text(planContainingSpots[index]["title"]),
+                                    ),
+                                  );
+                                },
                               ),
+                            ),
                           ],
                         ),
                       ),
-                    ),
-                    ListTile(
-                      title: Text("レビュー"),
-                    ),
                     if(place.reviews != null)
-                      Container(
-                        padding: EdgeInsets.only(left: 16.0,right: 16.0),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          scrollDirection: Axis.vertical,
-                          itemCount: place.reviews.length,
-                          itemBuilder: (BuildContext context, int index){
-                            return InkWell(
-                              onTap: (){
-                                showReviewDialog(place.reviews[index]);
-                              },
-                              child: Container(
-                                margin: EdgeInsets.only(bottom: 4.0),
-                                padding: EdgeInsets.all(4.0),
-                                decoration: BoxDecoration(
-                                  color: Colors.black12,
-                                  borderRadius: BorderRadius.circular(10)
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          place.reviews[index].authorName,
-                                          style: TextStyle(fontWeight: FontWeight.w600),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        RatingBar.builder(
-                                          itemSize: 12,
-                                          initialRating: place.reviews[index].rating.toDouble(),
-                                          direction: Axis.horizontal,
-                                          allowHalfRating: true,
-                                          itemCount: 5,
-                                          itemBuilder: (context, _) => Icon(
-                                            Icons.star,
-                                            color: Colors.amber,
+                      Padding(
+                        padding: EdgeInsets.only(left: 8.0,right: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                                margin: EdgeInsets.all(4.0),
+                                child: Text("レビュー")
+                            ),
+                            Container(
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                scrollDirection: Axis.vertical,
+                                itemCount: place.reviews.length,
+                                itemBuilder: (BuildContext context, int index){
+                                  return InkWell(
+                                    onTap: (){
+                                      showReviewDialog(place.reviews[index]);
+                                    },
+                                    child: Container(
+                                      margin: EdgeInsets.only(bottom: 4.0),
+                                      padding: EdgeInsets.all(4.0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black12,
+                                        borderRadius: BorderRadius.circular(10)
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                place.reviews[index].authorName,
+                                                style: TextStyle(fontWeight: FontWeight.w600),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              RatingBar.builder(
+                                                itemSize: 12,
+                                                initialRating: place.reviews[index].rating.toDouble(),
+                                                direction: Axis.horizontal,
+                                                allowHalfRating: true,
+                                                itemCount: 5,
+                                                itemBuilder: (context, _) => Icon(
+                                                  Icons.star,
+                                                  color: Colors.amber,
+                                                ),
+                                                itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
+                                              ),
+                                            ],
                                           ),
-                                          itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
-                                        ),
-                                      ],
+                                          Text(
+                                            place.reviews[index].text ?? "",
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 2,
+                                          )
+                                        ],
+                                      ),
                                     ),
-                                    Text(
-                                      place.reviews[index].text ?? "",
-                                      overflow: TextOverflow.ellipsis,
-                                    )
-                                  ],
-                                ),
+                                  );
+                                }
                               ),
-                            );
-                          }
+                            ),
+                          ],
                         ),
                       ),
                     Container()
@@ -627,9 +649,9 @@ class _MapPageState extends State<MapPage> {
           );
         }else{
           return Container(
-            height: 700,
-            color: Colors.pink,
-            child: Text("-----------何か表示する------------"),
+            height: 100,
+//            color: Colors.pink,
+//            child: Text("-----------何か表示する------------"),
           );
         }
 

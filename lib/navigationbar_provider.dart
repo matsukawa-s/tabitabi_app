@@ -15,7 +15,7 @@ class NavigationBarProvider extends ChangeNotifier {
   int _selectedFIndex = 0;
   int get selectedFIndex => _selectedFIndex;
   static List<Widget> _pageList = [
-    TopPage(title: 'TOP'),
+    TopPage(),
     PlanSearchPage(),
     MapPage(title: 'MAP'),
     FavoritePage(title: 'FAVORITE'),

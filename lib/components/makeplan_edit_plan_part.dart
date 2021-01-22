@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:tabitabi_app/network_utils/api.dart';
+import 'package:intl/intl.dart';
+import 'dart:ui';
 
 class PlanPart extends StatefulWidget {
   final int number;
+  final int id;
   final String spotName;
   final String spotPath;
   final DateTime spotStartDateTime;
@@ -10,10 +16,13 @@ class PlanPart extends StatefulWidget {
   final int spotParentFlag; //子がいるかどうか
   final bool confirmFlag;  //確定しているかどうか
   final double width;
+  final bool flg;
+  final DateTime day;
 
   PlanPart({
     Key key,
     this.number,
+    this.id,
     this.spotName,
     this.spotPath,
     this.spotStartDateTime,
@@ -21,6 +30,8 @@ class PlanPart extends StatefulWidget {
     this.spotParentFlag,
     this.confirmFlag,
     this.width,
+    this.flg,
+    this.day
   }) : super(key: key);
 
   @override
@@ -30,7 +41,38 @@ class PlanPart extends StatefulWidget {
 class _PlanPartState extends State<PlanPart> {
   double _opacity = 0.5;
   final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
-  
+
+  List<String> _popUpMenuItem = ["開始時間の設定", "終了時間の設定", "スポットの詳細"];
+
+  DateTime startDateTime;
+  DateTime endDateTime;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if(widget.spotStartDateTime != null){
+      startDateTime = widget.spotStartDateTime;
+      endDateTime = widget.spotEndDateTime;
+    }
+  }
+
+  //日付の更新
+  Future<void> _updateDate() async{
+    String start = startDateTime==null ? "" : DateFormat('yy-MM-dd HH:mm').format(startDateTime);
+    String end = endDateTime==null ? "" : DateFormat('yy-MM-dd HH:mm').format(endDateTime);
+
+    print(start);
+    print(end);
+    final data = {
+      "id" : widget.id,
+      "start_date" : start,
+      "end_date" : end,
+    };
+
+    http.Response res = await Network().postData(data, "itinerary/update/spot/date");
+    print(res.body);
+  }
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -85,8 +127,14 @@ class _PlanPartState extends State<PlanPart> {
                           topLeft:  const  Radius.circular(20.0),
                           bottomLeft: const  Radius.circular(20.0),
                         ),
-                        child: widget.spotPath == null ? Container() : Image.network(
-                          'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
+                        child: widget.spotPath == null ? Container() :
+                          widget.spotPath.contains("https://") ?
+                            Image.network(
+                              widget.spotPath,
+                              fit: BoxFit.cover,
+                            ):
+                            Image.network(
+                            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
                               '&photoreference=${widget.spotPath}'
                               '&key=${_kGoogleApiKey}',
                           fit: BoxFit.cover,
@@ -95,7 +143,7 @@ class _PlanPartState extends State<PlanPart> {
                     ),
                   ),
                   Container(
-                    constraints: BoxConstraints.expand(width: widget.width / 6 * 3),
+                    constraints: BoxConstraints.expand(width: widget.width / 6 * 2 + 30),
                     padding: EdgeInsets.only(left: 10.0),
                     child: Align(
                       alignment: Alignment.centerLeft,
@@ -119,8 +167,8 @@ class _PlanPartState extends State<PlanPart> {
                         Padding(
                           padding: EdgeInsets.only(top: 5.0),
                           child: Text(
-                            widget.spotStartDateTime!=null ?
-                            widget.spotStartDateTime.hour.toString() + ":" + widget.spotStartDateTime.minute.toString() :
+                            startDateTime!=null ?
+                            startDateTime.hour.toString().padLeft(2,"0") + ":" + startDateTime.minute.toString().padLeft(2,"0") :
                             "",
                             style: TextStyle(
                               color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),
@@ -130,7 +178,7 @@ class _PlanPartState extends State<PlanPart> {
                             ),
                           ),
                         ),
-                        Text(widget.spotStartDateTime!=null ?
+                        Text(endDateTime !=null && startDateTime!=null ?
                           "|" :
                           "",
                           style: TextStyle(
@@ -142,8 +190,8 @@ class _PlanPartState extends State<PlanPart> {
                         ),
                         Padding(
                           padding: EdgeInsets.only(top: 0.0),
-                          child: Text(widget.spotEndDateTime!=null ?
-                            widget.spotEndDateTime.hour.toString() + ":" + widget.spotEndDateTime.minute.toString() :
+                          child: Text(endDateTime!=null ?
+                            endDateTime.hour.toString().padLeft(2,"0") + ":" + endDateTime.minute.toString().padLeft(2,"0") :
                             "",
                             style: TextStyle(
                               color: widget.confirmFlag ? Colors.black : Colors.black.withOpacity(_opacity),
@@ -156,6 +204,32 @@ class _PlanPartState extends State<PlanPart> {
                       ],
                     ),
                   ),
+                  if(widget.flg)
+                  Container(
+                    constraints: BoxConstraints.expand(width: widget.width /6 -30),
+                    child: PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert),
+                      initialValue: "value",
+                      onSelected: (String s) {
+                        if(s == _popUpMenuItem[0]){
+                          _startSetDateTime();
+                        }else if(s==_popUpMenuItem[1]){
+                          _endSetDateTime();
+                        }
+                        setState(() {
+
+                        });
+                      },
+                      itemBuilder: (BuildContext context) {
+                        return _popUpMenuItem.map((String s) {
+                          return PopupMenuItem(
+                            child: Text(s, style: TextStyle(fontSize: 14.0),),
+                            value: s,
+                          );
+                        }).toList();
+                      },
+                    )
+                  )
                 ],
               ),
             ],
@@ -164,4 +238,128 @@ class _PlanPartState extends State<PlanPart> {
       ],
     );
   }
+
+  _startSetDateTime(){
+    DatePicker.showTimePicker(
+        context,
+        showTitleActions: true,
+        onConfirm: (date) {
+          print('confirm $date');
+            setState(() {
+            startDateTime = date;
+            });
+            _updateDate();
+        },
+        currentTime: startDateTime==null ? DateTime.now(): startDateTime,
+      onCancel: (){
+         setState(() {
+           startDateTime = null;
+         });
+         _updateDate();
+      }
+    );
+  }
+
+  _endSetDateTime(){
+    DatePicker.showTimePicker(context,
+        showTitleActions: true,
+        onConfirm: (date) {
+      print('confirm $date');
+      setState(() {
+        if(startDateTime == null){
+          endDateTime = date;
+          _updateDate();
+        }else if(date.isAfter(startDateTime)){
+          endDateTime = date;
+          _updateDate();
+        }
+      });
+    }, currentTime: endDateTime==null ? DateTime.now(): endDateTime,
+        onCancel: (){
+          setState(() {
+            endDateTime = null;
+          });
+          _updateDate();
+        }
+    );
+    // DatePicker.showPicker(context, showTitleActions: true, onChanged: (date) {
+    //   print('change $date in time zone ' + date.timeZoneOffset.inHours.toString());
+    // }, onConfirm: (date) {
+    //   print('confirm $date');
+    // }, pickerModel: CustomPicker(currentTime: DateTime.now()), locale: LocaleType.en);
+  }
+
+  // _buildDialog(BuildContext context){
+  //
+  //   DateTime tempStartDate = startDateTime==null ? DateTime(widget.day.year,widget.day.month,widget.day.day,DateTime.now().hour,DateTime.now().minute):startDateTime;
+  //   DateTime tempEndDate = endDateTime==null ? DateTime(widget.day.year,widget.day.month,widget.day.day,DateTime.now().hour+1,DateTime.now().minute):endDateTime;
+  //
+  //   return showDialog(
+  //     context: context,
+  //     builder: (_){
+  //       return AlertDialog(
+  //         title: Text("時間の設定", textAlign: TextAlign.center,),
+  //         content: SingleChildScrollView(
+  //           child: Column(
+  //             children: [
+  //               Text("開始時間", style: TextStyle(fontSize: 14.0),textAlign: TextAlign.left,),
+  //               GestureDetector(
+  //                 child: Container(
+  //                   height: 40.0,
+  //                   width: 150.0,
+  //                   margin: EdgeInsets.only(top: 5.0),
+  //                   decoration: BoxDecoration(
+  //                     borderRadius: BorderRadius.circular(10.0),
+  //                     border: Border.all(color: Colors.grey),
+  //                   ),
+  //                   child: Center(
+  //                     child: Text(
+  //                       tempStartDate.hour.toString().padLeft(2,"0") + ":" + tempStartDate.minute.toString().padLeft(2,"0")
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 onTap: (){
+  //                   DatePicker.showTimePicker(context, showTitleActions: true, onChanged: (date) {
+  //                     print('change $date in time zone ' + date.timeZoneOffset.inHours.toString());
+  //                   }, onConfirm: (date) {
+  //                     print('confirm $date');
+  //                   }, currentTime: DateTime.now());
+  //                 },
+  //               ),
+  //               Padding(
+  //                 padding: EdgeInsets.only(top: 5.0),
+  //                 child: Text("終了時間", style: TextStyle(fontSize: 14.0),textAlign: TextAlign.left,),
+  //               ),
+  //               Container(
+  //                 height: 40.0,
+  //                 width: 150.0,
+  //                 margin: EdgeInsets.only(top: 5.0),
+  //                 decoration: BoxDecoration(
+  //                   borderRadius: BorderRadius.circular(10.0),
+  //                   border: Border.all(color: Colors.grey),
+  //                 ),
+  //                 child: Center(
+  //                   child: Text(
+  //                    tempEndDate.hour.toString().padLeft(2,"0") + ":" + tempEndDate.minute.toString().padLeft(2,"0")
+  //                   ),
+  //                 ),
+  //               )
+  //             ],
+  //           )
+  //         ),
+  //         actions: <Widget>[
+  //           // ボタン領域
+  //           FlatButton(
+  //             child: Text("Cancel"),
+  //             onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
+  //           ),
+  //           FlatButton(
+  //             child: Text("OK"),
+  //             onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
+  //           ),
+  //         ],
+  //       );
+  //     }
+  //   );
+  // }
 }
