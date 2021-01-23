@@ -79,40 +79,6 @@ class MyHomePage extends StatelessWidget {
               }
           ),
         ),
-        drawer: Container(
-          width: 295,
-          child: Drawer(
-            child: ListView(
-              children: <Widget>[
-                UserAccountsDrawerHeader(
-                  accountName: Text("User Name"),
-                  accountEmail: Text("User Email"),
-                  currentAccountPicture: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    backgroundImage: NetworkImage("https://pbs.twimg.com/profile_images/885510796691689473/rR9aWvBQ_400x400.jpg"),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[300],
-                  ),
-                ),
-                ListTile(
-                  title: Text("Item 1"),
-                  trailing: Icon(Icons.arrow_forward),
-                  onTap: (){
-
-                  },
-                ),
-                ListTile(
-                  title: Text("Item 2"),
-                  trailing: Icon(Icons.arrow_forward),
-                  onTap: (){
-
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
         floatingActionButton: floatingActionButton(context),
         bottomNavigationBar: Consumer<NavigationBarProvider>(
             builder: (_, model, __) {
@@ -197,41 +163,13 @@ class MyHomePage extends StatelessWidget {
       return userPageAppbar(context);
     }
   }
-  // TopPageAppBar
-  AppBar topPageAppBar(){
-    return AppBar(
-      backgroundColor: Colors.white,
-      leading: Builder(
-        builder: (context) => IconButton(
-          color: iconColor,
-          icon: new Icon(Icons.menu),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-      ),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.settings_outlined),
-          color: iconColor,
-          onPressed: () {
 
-          },
-        ),
-      ],
-    );
-  }
   // SearchPageAppBar
   AppBar searchPageAppBar(context){
     var _textEditingController =
     TextEditingController(text: Provider.of<PlanSearchModel>(context).keyword);
     return AppBar(
       backgroundColor: Colors.white,
-      leading: Builder(
-        builder: (context) => IconButton(
-          color: iconColor,
-          icon: new Icon(Icons.menu),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-      ),
       title: TextField(
         controller: _textEditingController,
         readOnly: true,
@@ -288,39 +226,8 @@ class MyHomePage extends StatelessWidget {
   AppBar favoritePageAppBar(context) {
     return AppBar(
       backgroundColor: Colors.white,
-      leading: Builder(
-        builder: (context) => IconButton(
-          color: iconColor,
-          icon: new Icon(Icons.menu),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-      ),
       title: Text("お気に入り"),
-//      title: TextField(
-//        cursorColor: iconColor,
-//        decoration: InputDecoration(
-////              border: OutlineInputBorder(
-////                borderRadius: BorderRadius.circular(25.0),
-////                  borderSide: BorderSide(
-////                    color: Colors.white,
-////                  ),
-////              ),
-//          border: InputBorder.none,
-//          filled: true,
-//          hintStyle: TextStyle(color: Colors.grey[500]),
-//          hintText: "Type in your text",
-////              fillColor: Colors.grey
-//        ),
-//      ),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.settings_outlined),
-          color: iconColor,
-          onPressed: () {
-
-          },
-        ),
-      ],
+      centerTitle: true,
       bottom: ColoredTabBar(
         color: Colors.white,
         tabBar: TabBar(
@@ -336,13 +243,6 @@ class MyHomePage extends StatelessWidget {
   AppBar userPageAppbar(BuildContext context){
     return AppBar(
       backgroundColor: Colors.white,
-      leading: Builder(
-        builder: (context) => IconButton(
-          color: iconColor,
-          icon: new Icon(Icons.menu),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-      ),
       title: Text("マイページ"),
       centerTitle: true,
       actions: [

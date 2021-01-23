@@ -22,8 +22,8 @@ class NavigationBarProvider extends ChangeNotifier {
     UserPage(),
   ];
   final List<TabInfo> _tabs = [
-    TabInfo(0,"Plan", FavoritePlanPage()),
-    TabInfo(1,"Spot", FavoriteSpotPage()),
+    TabInfo(0,"プラン", FavoritePlanPage()),
+    TabInfo(1,"スポット", FavoriteSpotPage()),
   ];
   List<TabInfo> get tabs => _tabs;
 
