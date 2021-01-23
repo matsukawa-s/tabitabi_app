@@ -18,8 +18,8 @@ class UserProfileEditPage extends StatefulWidget {
 
 class _UserProfileEditPageState extends State<UserProfileEditPage> {
   File _image;
-  String _name;
   TextEditingController _userNameController;
+  bool isSubmit = false;
 
   final picker = ImagePicker();
 
@@ -30,6 +30,9 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
       if (pickedFile != null) {
         print(pickedFile.path);
         _image = File(pickedFile.path);
+        setState(() {
+          isSubmit = true;
+        });
       } else {
         print('No image selected.');
       }
@@ -50,25 +53,31 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
         centerTitle: true,
         backgroundColor: Colors.white,
         actions: [
-//          FlatButton(onPressed: ()=>{}, child: Text("保存"))
-          IconButton(icon: Icon(Icons.check), onPressed: (){})
+          FlatButton(
+              onPressed: isSubmit ? saveProfile : null,
+              child: Text(
+                "保存",
+                style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16,),
+              )
+          )
+//          IconButton(icon: Icon(Icons.check), onPressed: (){})
         ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
-            padding: EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(16.0),
             child: Center(
               child: Column(
                 children: [
                   _buildIconImage(),
                   FlatButton(
                       onPressed: getImage,
-                      child: Text("写真を変更する")
+                      child: Text("写真を変更する",style: TextStyle(fontSize: 14,color: Colors.black87),)
                   ),
                   Padding(
                       padding: EdgeInsets.all(8.0),
-                      child: TextField(
+                      child: TextFormField(
                         controller: _userNameController,
                         style: TextStyle(fontSize: 26),
                         decoration: InputDecoration(
@@ -76,19 +85,24 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
                           labelText: 'ユーザーネーム',
                           labelStyle: TextStyle(fontSize: 20)
                         ),
+                        onChanged: (input){
+                          setState(() {
+                            isSubmit = input == widget.userProfile["name"] ? false : true;
+                          });
+                        },
                       ),
                   ),
-                  Builder(
-                    builder: (BuildContext context){
-                      return Container(
-                        margin: EdgeInsets.only(top: 16.0),
-                        child: RaisedButton(
-                          onPressed: saveProfile,
-                          child: Text("変更を保存する"),
-                        ),
-                      );
-                    },
-                  )
+//                  Builder(
+//                    builder: (BuildContext context){
+//                      return Container(
+//                        margin: EdgeInsets.only(top: 16.0),
+//                        child: RaisedButton(
+//                          onPressed: saveProfile,
+//                          child: Text("変更を保存する"),
+//                        ),
+//                      );
+//                    },
+//                  )
                 ],
               ),
             ),
@@ -126,8 +140,19 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
           );
     }else{
       return CircleAvatar(
-        backgroundColor: Colors.black12,
+        backgroundColor: Colors.black26,
         radius: iconSize,
+//        child: Icon(Icons.person_sharp,size: constraint.biggest.height,color: Colors.white,),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: LayoutBuilder(builder: (context, constraint) {
+            return Icon(
+                Icons.person,
+                color: Colors.white,
+                size: constraint.biggest.height
+            );
+          }),
+        ),
       );
     }
   }
