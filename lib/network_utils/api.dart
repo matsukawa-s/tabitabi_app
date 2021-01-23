@@ -77,10 +77,8 @@ class Network{
     }
     request.headers.addAll(_setHeaders());
 
-    var response = await request.send();
-    if (response.statusCode == 200) print('Uploaded!');
+    return await request.send();
   }
-
 
   _setHeaders() => {
     'Content-type' : 'application/json',

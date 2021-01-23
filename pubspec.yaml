@@ -62,6 +62,7 @@ dependencies:
   image_gallery_saver: ^1.6.7
   firebase_dynamic_links: ^0.7.0+1
   share: ^0.6.5+4
+  fluttertoast: ^7.1.6
 
 dev_dependencies:
   flutter_test:

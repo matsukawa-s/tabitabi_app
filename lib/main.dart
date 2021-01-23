@@ -121,23 +121,23 @@ class MyHomePage extends StatelessWidget {
                 items: const <BottomNavigationBarItem>[
                   BottomNavigationBarItem(
                     icon: Icon(Icons.home_outlined),
-                    label: 'Home',
+                    label: 'ホーム',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.search),
-                    label: 'Search',
+                    label: 'プラン検索',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.map_outlined),
-                    label: 'Map',
+                    label: '地図',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.star_outline),
-                    label: 'Favorite',
+                    icon: Icon(Icons.favorite_border),
+                    label: 'お気に入り',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.person_outline),
-                    label: 'User',
+                    label: 'マイページ',
                   ),
                 ],
                 currentIndex: model.selectedIndex,

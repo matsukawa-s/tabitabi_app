@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:page_transition/page_transition.dart';
+import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/join_plan_page.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
@@ -13,6 +14,7 @@ import 'package:tabitabi_app/spot_details_page.dart';
 import 'package:tabitabi_app/top_prefectures_spot_list_page.dart';
 
 import 'makeplan/makeplan_top_page.dart';
+import 'model/plan.dart';
 
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
@@ -22,8 +24,8 @@ class TopPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final double popularPlanItemHeight = (size.width - pagePadding*2) / 2 * 2/3;
-    final double popularPlanItemWidth = (size.width - pagePadding*2) / 2;
+    final double popularPlanItemHeight = (size.width - pagePadding*2) * 2/5 * 4/5;
+    final double popularPlanItemWidth = (size.width - pagePadding*2) * 2/5;
     final double popularSpotItemSize = (size.width - pagePadding*2) / 3;
 
     return FutureBuilder(
@@ -31,9 +33,13 @@ class TopPage extends StatelessWidget {
       builder: (context, snapshot) {
         if(snapshot.hasData){
           final List<dynamic> todayPlans = snapshot.data["today_plans"] ?? []; //今日のプラン
-          final List<dynamic> popularPlans = snapshot.data["popular_plans"] ?? []; //人気のプラン
+          final List<dynamic> popularPlansTmp = snapshot.data["popular_plans"] ?? []; //人気のプラン
           final List<dynamic> popularSpots = snapshot.data["popular_spots"] ?? []; //人気のスポット
           final List<dynamic> prefecturesSpotsTmp = snapshot.data["prefectures_spots"] ?? [];
+          
+          final List<Plan> popularPlans = List.generate(
+              popularPlansTmp.length, (index) => Plan.fromJson(popularPlansTmp[index])
+          );
           
           final List<Prefecture> prefecturesSpots = List.generate(
               prefecturesSpotsTmp.length, (index) => Prefecture.fromJson(prefecturesSpotsTmp[index])
@@ -203,42 +209,10 @@ class TopPage extends StatelessWidget {
                               scrollDirection: Axis.horizontal,
                               itemCount: popularPlans.length,
                               itemBuilder: (BuildContext context, int index){
-                                return GestureDetector(
-                                  onTap: (){
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) {
-                                          return MakePlanTop(planId: popularPlans[index]["id"]);
-                                        },
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    width: popularPlanItemWidth,
-                                    padding: EdgeInsets.all(2.0),
-                                    child: Column(
-                                      children: [
-                                        Expanded(
-                                          flex: 4,
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(6.0),
-                                            child: Container(
-                                              width: popularPlanItemWidth,
-                                              child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                            child: Text(
-                                              popularPlans[index]["title"],
-                                              overflow: TextOverflow.ellipsis,
-                                            )
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                return PlanItem(
+                                  plan: popularPlans[index],
+                                  width: popularPlanItemWidth,
+                                  height: popularPlanItemHeight,
                                 );
                               }
                           ),
