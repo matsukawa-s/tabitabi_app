@@ -10,6 +10,7 @@ import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/join_plan_page.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
+import 'package:tabitabi_app/network_utils/google_map.dart';
 import 'package:tabitabi_app/spot_details_page.dart';
 import 'package:tabitabi_app/top_prefectures_spot_list_page.dart';
 
@@ -209,10 +210,13 @@ class TopPage extends StatelessWidget {
                               scrollDirection: Axis.horizontal,
                               itemCount: popularPlans.length,
                               itemBuilder: (BuildContext context, int index){
-                                return PlanItem(
-                                  plan: popularPlans[index],
-                                  width: popularPlanItemWidth,
-                                  height: popularPlanItemHeight,
+                                return Container(
+                                  margin: EdgeInsets.only(right: 4.0),
+                                  child: PlanItem(
+                                    plan: popularPlans[index],
+                                    width: popularPlanItemWidth,
+                                    height: popularPlanItemHeight,
+                                  ),
                                 );
                               }
                           ),
@@ -285,9 +289,7 @@ class TopPage extends StatelessWidget {
                                           borderRadius: BorderRadius.circular(6.0),
                                           clipBehavior: Clip.antiAlias,
                                           child: Image.network(
-                                            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
-                                                '&photoreference=${popularSpots[index]["image_url"]}'
-                                                '&key=${_kGoogleApiKey}',
+                                            GoogleMapApi().fullPhotoPath(popularSpots[index]["image_url"]),
                                             fit: BoxFit.fill,
                                             width: popularSpotItemSize,
                                           ),

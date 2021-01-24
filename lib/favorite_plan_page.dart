@@ -24,26 +24,31 @@ class FavoritePlanPage extends StatelessWidget {
           }
 
           if(snapshot.hasError){
+            print(snapshot.error);
             return Center(
               child: Text("error"),
             );
           }
 
           return Consumer<PlanProvider>(
-            builder: (context, plans, child) => Container(
+            builder: (context, plan, child) => Container(
               padding: EdgeInsets.all(contentsPadding),
-              child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 6,
-                    crossAxisSpacing: 6,
-                    childAspectRatio: itemWidth / itemHeight
+              child: plan.plans.isEmpty
+                  ? Center(
+                      child: Text("お気に入りにしているプランはありません"),
+                    )
+                  : GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 6,
+                        crossAxisSpacing: 6,
+                        childAspectRatio: itemWidth / itemHeight
+                      ),
+                      itemCount: plan.plans.length,
+                      itemBuilder: (BuildContext context,int index){
+                        return _buildPlanItem(plan.plans[index]);
+                      }
                   ),
-                  itemCount: plans.plans.length,
-                  itemBuilder: (BuildContext context,int index){
-                    return _buildPlanItem(plans.plans[index]);
-                  }
-              ),
             ),
           );
         }

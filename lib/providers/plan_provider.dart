@@ -18,10 +18,11 @@ class PlanProvider extends ChangeNotifier{
     if(res.statusCode == 200){
       print("statusCode : ${res.statusCode}");
       List tmp = jsonDecode(res.body);
-      _plans = List.generate(
-          tmp.length, (index) => Plan.fromJson(tmp[index])
-      );
-      print(_plans[0].title);
+      if(tmp.isNotEmpty){
+        _plans = List.generate(
+            tmp.length, (index) => Plan.fromJson(tmp[index])
+        );
+      }
     }else{
       print("statusCode : ${res.statusCode}");
     }

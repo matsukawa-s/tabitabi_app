@@ -10,6 +10,8 @@ import 'package:http/http.dart' as http;
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 import 'package:smart_select/smart_select.dart';
+import 'package:tabitabi_app/network_utils/google_map.dart';
+import 'package:tabitabi_app/spot_details_page.dart';
 
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
@@ -46,7 +48,6 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
 
   @override
   void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
     super.didChangeDependencies();
     size = MediaQuery.of(context).size;
   }
@@ -141,9 +142,7 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
               child: Image.network(
-                'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
-                    '&photoreference=${spot.imageUrl}'
-                    '&key=${_kGoogleApiKey}',
+                GoogleMapApi().fullPhotoPath(spot.imageUrl),
                 fit: BoxFit.fill,
               ),
             ),
@@ -165,66 +164,72 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
     final dialogWidth = size.width - 30;
     final dialogHeight = size.height - 30;
 
-    if(Platform.isAndroid){
-
-    }else if(Platform.isIOS){
-
-    }
-
     return GestureDetector(
-      onTap: (){
-        showDialog(
-          context: context,
-          builder: (context) {
-            return SimpleDialog(
-                contentPadding: EdgeInsets.zero,
-                children: [
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Stack(
-                          children: [
-                            AspectRatio(
-                              aspectRatio: 3 / 2, //アスペクト比 3:2
-                              child: Image.network(
-                                'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
-                                    '&photoreference=${spot.imageUrl}'
-                                    '&key=${_kGoogleApiKey}',
-                                fit: BoxFit.fill,
-                              ),
-                            ),
-                            IconButton(
-                              color: Colors.white,
-                                icon: Icon(Icons.cancel),
-                                onPressed: (){
-                                  Navigator.pop(context);
-                                }
-                            ),
-                          ],
-                        ),
-
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: [
-                              Text(spot.spotName),
-                            ],
-                          ),
-                        ),
-                        RaisedButton(
-                            child: Text("このスポットを削除する"),
-                            onPressed: (){
-                              model.unlikeSpot(spot);
-                              Navigator.pop(context);
-                            }
-                        )
-                      ],
-                    ),
-                  )
-                ],
-            );
-          },
+      onTap: () async{
+        final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SpotDetailsPage(
+                  spotId: spot.spotId,
+                  placeId: spot.placeId,
+                )
+            )
         );
+        if(result){
+          setState(() { });
+        }
+//        showDialog(
+//          context: context,
+//          builder: (context) {
+//            return SimpleDialog(
+//                contentPadding: EdgeInsets.zero,
+//                children: [
+//                  SingleChildScrollView(
+//                    child: Column(
+//                      children: [
+//                        Stack(
+//                          children: [
+//                            AspectRatio(
+//                              aspectRatio: 3 / 2, //アスペクト比 3:2
+//                              child: Image.network(
+//                                'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
+//                                    '&photoreference=${spot.imageUrl}'
+//                                    '&key=${_kGoogleApiKey}',
+//                                fit: BoxFit.fill,
+//                              ),
+//                            ),
+//                            IconButton(
+//                              color: Colors.white,
+//                                icon: Icon(Icons.cancel),
+//                                onPressed: (){
+//                                  Navigator.pop(context);
+//                                }
+//                            ),
+//                          ],
+//                        ),
+//
+//                        Padding(
+//                          padding: const EdgeInsets.all(8.0),
+//                          child: Column(
+//                            children: [
+//                              Text(spot.spotName),
+//                            ],
+//                          ),
+//                        ),
+//                        RaisedButton(
+//                            child: Text("このスポットを削除する"),
+//                            onPressed: (){
+//                              model.unlikeSpot(spot);
+//                              Navigator.pop(context);
+//                            }
+//                        )
+//                      ],
+//                    ),
+//                  )
+//                ],
+//            );
+//          },
+//        );
       },
       child: _buildSpotItem(spot),
     );
