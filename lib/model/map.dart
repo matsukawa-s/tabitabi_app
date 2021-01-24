@@ -15,11 +15,6 @@ class MapViewModel extends ChangeNotifier{
   }
 }
 
-// Google Map & Places Api Util Class
-//class Map {
-//  final photoUrl = "https://maps.googleapis.com/maps/api/place/photo";
-//}
-
 class Place {
   var spotId; //nullならスポットテーブルに未登録
   final String placeId;

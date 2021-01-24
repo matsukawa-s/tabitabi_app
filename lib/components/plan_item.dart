@@ -34,19 +34,22 @@ class PlanItem extends StatelessWidget {
                 child: Image.asset("images/osakajo.jpg",height: height,fit: BoxFit.fill,)
             ),
             Positioned(
-              bottom: 0,
+              bottom: 2.0,
               child: Container(
                 width: width,
                 height: height * 1/6,
+//                margin: EdgeInsets.only(bottom: 4.0),
                 padding: EdgeInsets.only(left: 4.0),
-//                color: Colors.white60,
+                color: Colors.black38,
                 child: Text(
                     plan.title,
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                    overflow: TextOverflow.ellipsis
+                    textAlign: TextAlign.left,
+                    overflow: TextOverflow.ellipsis,
                 ),
               ),
             )

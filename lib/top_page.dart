@@ -26,7 +26,7 @@ class TopPage extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     final double popularPlanItemHeight = (size.width - pagePadding*2) * 2/5 * 4/5;
     final double popularPlanItemWidth = (size.width - pagePadding*2) * 2/5;
-    final double popularSpotItemSize = (size.width - pagePadding*2) / 3;
+    final double popularSpotItemSize = (size.width - pagePadding*2) * 2/7;
 
     return FutureBuilder(
       future: getInitialTopData(),

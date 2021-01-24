@@ -22,6 +22,7 @@ import 'package:tabitabi_app/model/map.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:tabitabi_app/model/spot_model.dart';
+import 'package:tabitabi_app/network_utils/google_map.dart';
 
 import 'network_utils/api.dart';
 
@@ -48,6 +49,7 @@ class _MapPageState extends State<MapPage> {
   List<PlacesSearchResult> places = []; //現在地周辺スポット
   TextEditingController _searchKeywordController; //検索キーワード用コントローラー
   var planContainingSpots = []; //対象スポットが入っているプラン
+  var nearBySpots = []; //対象スポットの近くのスポット
 
   var lat; // 緯度
   var lng; // 経度
@@ -99,8 +101,6 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
-    final titleTextStyle = Theme.of(context).textTheme.title;
-
     return FutureBuilder(
       future: initGetCurrentLocation(),
       builder: (BuildContext context,AsyncSnapshot snapshot) {
@@ -119,7 +119,7 @@ class _MapPageState extends State<MapPage> {
                       _markers.add(
                           Marker(
                               markerId: MarkerId("now point"),
-                              position: LatLng(lat, lng)
+                              position: LatLng(lat, lng),
                           )
                       );
                     });
@@ -184,19 +184,27 @@ class _MapPageState extends State<MapPage> {
   Future<void> movePoint(placeId) async{
     GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: _kGoogleApiKey);
     PlacesDetailsResponse placesDetailsResponse =
-        await _places.getDetailsByPlaceId(
-          placeId,
+        await _places.getDetailsByPlaceId( placeId, language: "ja", );
+
+    //近くのスポットを取得する
+    PlacesSearchResponse nearBySpotsResponse
+      = await _places.searchNearbyWithRadius(
+          Location(
+              placesDetailsResponse.result.geometry.location.lat,
+              placesDetailsResponse.result.geometry.location.lng,
+          ),
+          1000, //半径(m)
           language: "ja",
-//          取得するデータを絞りたいけど上手く取れない
-//          fields: ["name","formattedAddress","formattedPhoneNumber","photoReference","location","photos"],
-        );
+          type: "tourist_attraction",
+      );
+
+    if(nearBySpotsResponse.status == 'OK'){
+      nearBySpots = nearBySpotsResponse.results;
+    }
 
     String jsonString = await rootBundle.loadString('json/prefectures.json');
     Map<String,dynamic> prefectures = json.decode(jsonString);
 
-    var data = placesDetailsResponse.result;
-
-    var location = placesDetailsResponse.result.geometry.location;
     //座標を変更する
     setState(() {
       lat = placesDetailsResponse.result.geometry.location.lat;
@@ -260,7 +268,7 @@ class _MapPageState extends State<MapPage> {
 
     planContainingSpots = body["plan_containing_spots"];
 
-    //検索履歴を保存する
+    //過去に見たスポット保存する
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     var history = {};
     if (prefs.containsKey('history')) {
@@ -285,7 +293,7 @@ class _MapPageState extends State<MapPage> {
       _markers.clear();
       _markers.add(
           Marker(
-              markerId: MarkerId("now point"),
+              markerId: MarkerId(place.name),
               position: LatLng(lat, lng)
           )
       );
@@ -347,9 +355,7 @@ class _MapPageState extends State<MapPage> {
                           width: MediaQuery.of(context).size.width / 3,
 //                          margin: EdgeInsets.only(right: 4.0),
                           child: Image.network(
-                              'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
-                              '&photoreference=${place.photos[index]}'
-                              '&key=${_kGoogleApiKey}',
+                            GoogleMapApi().fullPhotoPath(place.photos[index]),
                             fit: BoxFit.fill,
                           ),
                         );
@@ -415,7 +421,7 @@ class _MapPageState extends State<MapPage> {
                 Container(
                   height: 20,
                   margin: EdgeInsets.all(2.0),
-                  child: Text("この地域のスポット")
+                  child: Text("この地域のスポット",style: TextStyle(fontWeight: FontWeight.bold),)
                 ),
                 if(places.isNotEmpty)
                 Container(
@@ -447,9 +453,7 @@ class _MapPageState extends State<MapPage> {
                                             child: Center(child: Text("no image")),
                                           )
                                           : Image.network(
-                                            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=300'
-                                                '&photoreference=${places[index].photos[0].photoReference}'
-                                                '&key=${_kGoogleApiKey}',
+                                            GoogleMapApi().fullPhotoPath(places[index].photos[0].photoReference),
                                             fit:BoxFit.fill,
                                           ),
                                     ),
@@ -574,6 +578,34 @@ class _MapPageState extends State<MapPage> {
                           ],
                         ),
                       ),
+                    if(nearBySpots.isNotEmpty)
+                      Padding(
+                          padding: EdgeInsets.only(left: 8.0,right: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                  margin: EdgeInsets.all(4.0),
+                                  child: Text("周辺のスポット")
+                              ),
+                              SizedBox(
+                                height: 90,
+                                child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: nearBySpots.length > 5 ? 5 : nearBySpots.length,
+                                    itemBuilder: (BuildContext context,int index){
+                                      return Container(
+                                        margin: EdgeInsets.only(right: 4.0),
+                                        width: 120,
+                                        color: Colors.black12,
+                                        child: Text(nearBySpots[index].name),
+                                      );
+                                    }
+                                ),
+                              )
+                            ],
+                          ),
+                      ),
                     if(place.reviews != null)
                       Padding(
                         padding: EdgeInsets.only(left: 8.0,right: 8.0),
@@ -689,13 +721,10 @@ class _MapPageState extends State<MapPage> {
   //スポットをお気に入り登録ボタンを押したとき
   Future<bool> onLikeButtonTapped(bool isLiked) async{
     var data = place.toJson();
-    print(data);
 
     http.Response res = await Network().postData(data, 'postFavoriteSpot');
 
     var body = json.decode(res.body);
-    print(res.statusCode);
-    print(res.body);
 
     if(res.statusCode == 200){
       place.isFavorite = !place.isFavorite;
