@@ -16,6 +16,10 @@ class SpotItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final defaultWidth = size.width / 3;
+    final defaultHeight = size.width / 3;
+
     return GestureDetector(
       onTap: () => Navigator.push(
           context,
@@ -26,29 +30,33 @@ class SpotItem extends StatelessWidget {
               )
           )
       ),
-      child: Column(
-        children: [
-          Expanded(
-            flex: 4,
-            child: Container(
-              width: double.infinity,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
-                child: Image.network(
-                  GoogleMapApi().fullPhotoPath(spot.imageUrl),
-                  fit: BoxFit.fill,
+      child: Container(
+        width: width ?? defaultWidth,
+        height: height ?? defaultHeight,
+        child: Column(
+          children: [
+            Expanded(
+              flex: 4,
+              child: Container(
+                width: double.infinity,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: Image.network(
+                    GoogleMapApi().fullPhotoPath(spot.imageUrl),
+                    fit: BoxFit.fill,
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Text(
-              spot.spotName,
-              overflow: TextOverflow.ellipsis,
-            ),
-          )
-        ],
+            Expanded(
+              flex: 1,
+              child: Text(
+                spot.spotName,
+                overflow: TextOverflow.ellipsis,
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

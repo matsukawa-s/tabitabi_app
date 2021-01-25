@@ -34,11 +34,15 @@ class TopPage extends StatelessWidget {
       future: getInitialTopData(),
       builder: (context, snapshot) {
         if(snapshot.hasData){
-          final List<dynamic> todayPlans = snapshot.data["today_plans"] ?? []; //今日のプラン
+          final List<dynamic> todayPlansTmp = snapshot.data["today_plans"] ?? []; //今日のプラン
           final List<dynamic> popularPlansTmp = snapshot.data["popular_plans"] ?? []; //人気のプラン
           final List<dynamic> popularSpots = snapshot.data["popular_spots"] ?? []; //人気のスポット
           final List<dynamic> prefecturesSpotsTmp = snapshot.data["prefectures_spots"] ?? [];
           
+          final List<Plan> todayPlans = List.generate(
+              todayPlansTmp.length, (index) => Plan.fromJson(todayPlansTmp[index])
+          );
+
           final List<Plan> popularPlans = List.generate(
               popularPlansTmp.length, (index) => Plan.fromJson(popularPlansTmp[index])
           );
@@ -151,48 +155,62 @@ class TopPage extends StatelessWidget {
                             scrollDirection: Axis.horizontal,
                             itemCount: todayPlans.length,
                             itemBuilder: (BuildContext context, int index){
-                              return GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) {
-                                      return MakePlanTop(planId: todayPlans[index]["id"]);
-                                    },
+                              return Stack(
+                                children: [
+                                  PlanItem(
+                                    plan: todayPlans[index],
+                                    width: size.width - pagePadding*2,
+                                    height: (size.width - pagePadding*2) * 2/5,
                                   ),
-                                ),
-                                child: Container(
-//                                margin: EdgeInsets.all(4.0),
-                                  padding: EdgeInsets.all(2.0),
-                                  width: size.width - pagePadding*2,
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                          flex: 4,
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(6.0),
-                                            child: Container(
-                                              child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
-                                              width: size.width - pagePadding*2,
-                                            ),
-                                          )
-                                      ),
-                                      Expanded(
-                                        flex: 1,
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              todayPlans[index]["title"],
-//                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                            ),
-                                            Text(todayPlans[index]["start_day"] + ' ~ ' + todayPlans[index]["end_day"])
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                  Positioned(
+                                    top: 5.0,
+                                    right: 5.0,
+                                    child: Text("${todayPlans[index].startDay} ~ ${todayPlans[index].endDay}"),
+                                  )
+                                ],
                               );
+//                              return GestureDetector(
+//                                onTap: () => Navigator.push(
+//                                  context,
+//                                  MaterialPageRoute(
+//                                    builder: (context) {
+//                                      return MakePlanTop(planId: todayPlans[index]["id"]);
+//                                    },
+//                                  ),
+//                                ),
+//                                child: Container(
+////                                margin: EdgeInsets.all(4.0),
+//                                  padding: EdgeInsets.all(2.0),
+//                                  width: size.width - pagePadding*2,
+//                                  child: Column(
+//                                    children: [
+//                                      Expanded(
+//                                          flex: 4,
+//                                          child: ClipRRect(
+//                                            borderRadius: BorderRadius.circular(6.0),
+//                                            child: Container(
+//                                              child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
+//                                              width: size.width - pagePadding*2,
+//                                            ),
+//                                          )
+//                                      ),
+//                                      Expanded(
+//                                        flex: 1,
+//                                        child: Row(
+//                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                                          children: [
+//                                            Text(
+//                                              todayPlans[index]["title"],
+////                                          style: TextStyle(fontWeight: FontWeight.bold),
+//                                            ),
+//                                            Text(todayPlans[index]["start_day"] + ' ~ ' + todayPlans[index]["end_day"])
+//                                          ],
+//                                        ),
+//                                      ),
+//                                    ],
+//                                  ),
+//                                ),
+//                              );
                             }
                         ),
                       ),

@@ -30,19 +30,30 @@ class PlanItem extends StatelessWidget {
       ),
       child: Container(
         width: width ?? defaultWidth,
+        height: height ?? defaultHeight,
 //        padding: EdgeInsets.all(2.0),
         child: Stack(
           children: [
             ClipRRect(
                 borderRadius: BorderRadius.circular(10.0),
-                child: Image.asset("images/osakajo.jpg",height: height ?? defaultHeight,fit: BoxFit.fill,)
+                child: plan.imageUrl == null
+                    ? Image.asset(
+                        "images/osakajo.jpg",
+                        width: width ?? defaultWidth,
+                        height: height ?? defaultHeight,
+                        fit: BoxFit.fill,
+                      )
+                    : Image.network(
+                        plan.imageUrl,
+                        width: width ?? defaultWidth,
+                        height: height ?? defaultHeight,
+                        fit: BoxFit.fill,
+                      )
             ),
             Positioned(
               bottom: 0,
-              width: width,
+              width: width ?? defaultWidth,
               child: Container(
-//                width: width - 2.0 ?? defaultWidth - 2.0,
-                width: double.infinity,
                 padding: EdgeInsets.only(left: 2.0, bottom: 2.0),
                 height: (height ?? defaultHeight) * 1/5,
                 decoration: BoxDecoration(

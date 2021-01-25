@@ -11,12 +11,11 @@ class PrefecturesSpotsListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-//    final Size size = MediaQuery.of(context).size;
-//    final itemWidth = size.width
-
     return Scaffold(
       appBar: AppBar(
         title: Text("${prefecture.name}のスポット"),
+        centerTitle: true,
+        backgroundColor: Colors.white,
       ),
       body: Container(
         child: GridView.builder(

@@ -14,6 +14,7 @@ class PlanProvider with ChangeNotifier{
 
   //お気に入り登録しているプランを取得
   getFavoritePlans() async{
+    _plans.clear();
     http.Response res = await Network().getData('plan/favorite/get');
     if(res.statusCode == 200){
       print("statusCode : ${res.statusCode}");

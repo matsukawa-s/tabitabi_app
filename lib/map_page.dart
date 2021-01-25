@@ -15,6 +15,7 @@ import 'package:google_maps_webservice/places.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
+import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/makeplan/makeplan_top_page.dart';
 import 'package:tabitabi_app/map_search_page.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -23,7 +24,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/google_map.dart';
+import 'package:tabitabi_app/spot_details_page.dart';
 
+import 'model/plan.dart';
 import 'network_utils/api.dart';
 
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
@@ -50,7 +53,7 @@ class _MapPageState extends State<MapPage> {
   List<PlacesSearchResult> places = []; //現在地周辺スポット
   TextEditingController _searchKeywordController; //検索キーワード用コントローラー
   var planContainingSpots = []; //対象スポットが入っているプラン
-  var nearBySpots = []; //対象スポットの近くのスポット
+  List<PlacesSearchResult> nearBySpots = []; //対象スポットの近くのスポット
 
   var lat; // 緯度
   var lng; // 経度
@@ -112,6 +115,7 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+
     return FutureBuilder(
       future: initGetCurrentLocation(),
       builder: (BuildContext context,AsyncSnapshot snapshot) {
@@ -277,7 +281,10 @@ class _MapPageState extends State<MapPage> {
     place.isFavorite = body["isFavorite"];
     place.spotId = body["spot_id"];
 
-    planContainingSpots = body["plan_containing_spots"];
+    final List planContainingSpotsTmp = body["plan_containing_spots"];
+    planContainingSpots = List.generate(
+        planContainingSpotsTmp.length, (index) => Plan.fromJson(planContainingSpotsTmp[index])
+    );
 
     //過去に見たスポット保存する
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -510,6 +517,10 @@ class _MapPageState extends State<MapPage> {
         }
       },
       builder: (context, state) {
+        final size = MediaQuery.of(context).size;
+        final double planContainingSpotsWidth = (size.width) * 2/5 * 4/5;
+        final double planContainingSpotsHeight = (size.width) * 2/5;
+
         if(bottomSheetSwitchFlag){
           return Container(
               height: 800,
@@ -581,25 +592,17 @@ class _MapPageState extends State<MapPage> {
                                 child: Text("このスポットが入っているプラン")
                             ),
                             SizedBox(
-                              height: 90,
+                              height: planContainingSpotsHeight,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: planContainingSpots.length,
                                 itemBuilder: (BuildContext context,int index){
-                                  return GestureDetector(
-                                    onTap: () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => MakePlanTop(planId: planContainingSpots[index]["id"],)
-                                        )
-                                    ),
-                                    child: Container(
-                                      margin: EdgeInsets.only(right: 4.0),
-                                      width: 120,
-                                      color: Colors.black12,
-                                      child: Text(planContainingSpots[index]["title"]),
-                                    ),
+                                  return PlanItem(
+                                    plan: planContainingSpots[index],
+                                    width: planContainingSpotsWidth,
+                                    height: planContainingSpotsHeight,
                                   );
+//                                  return GestureDetector(
                                 },
                               ),
                             ),
@@ -617,16 +620,48 @@ class _MapPageState extends State<MapPage> {
                                   child: Text("周辺のスポット")
                               ),
                               SizedBox(
-                                height: 90,
+                                height: 100,
                                 child: ListView.builder(
                                     scrollDirection: Axis.horizontal,
                                     itemCount: nearBySpots.length > 5 ? 5 : nearBySpots.length,
                                     itemBuilder: (BuildContext context,int index){
-                                      return Container(
-                                        margin: EdgeInsets.only(right: 4.0),
-                                        width: 120,
-                                        color: Colors.black12,
-                                        child: Text(nearBySpots[index].name),
+                                      return GestureDetector(
+                                        onTap: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => SpotDetailsPage(
+                                                placeId: nearBySpots[index].placeId
+                                              ),
+                                            )
+                                        ),
+                                          child: Container(
+                                            width: 100,
+                                            margin: EdgeInsets.only(right: 4.0),
+                                            child: Column(
+                                              children: [
+                                                Expanded(
+                                                  flex: 4,
+                                                  child: ClipRRect(
+                                                    borderRadius: BorderRadius.circular(6.0),
+                                                    clipBehavior: Clip.antiAlias,
+                                                    child: Image.network(
+                                                      GoogleMapApi().fullPhotoPath(nearBySpots[index].photos[0].photoReference ?? ''),
+                                                      fit: BoxFit.fill,
+                                                      width: 100,
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 1,
+                                                  child: Text(
+                                                    nearBySpots[index].name,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                )
+                                              ],
+                                            ),
+                                          )
                                       );
                                     }
                                 ),

@@ -9,8 +9,8 @@ import 'package:http/http.dart' as http;
 
 // スポットのお気に入りページのProvider
 class FavoriteSpotViewModel extends ChangeNotifier{
-  List<Spot> spots; //お気に入りしているスポット
-  List<Spot> showSpots; //表示するスポット
+  List<Spot> spots = []; //お気に入りしているスポット
+  List<Spot> showSpots = []; //表示するスポット
   List<S2Choice<int>> prefectures; //都道府県の選択Widgetリスト
   List<S2Choice<int>> types; //場所タイプの選択Widgetリスト
   List<Spot> selectedSpots = []; //選択モード時の選択しているスポット
@@ -81,6 +81,8 @@ class FavoriteSpotViewModel extends ChangeNotifier{
   }
 
   getFavoriteSpots() async{
+    spots.clear();
+    showSpots.clear();
     //都道府県データをjsonから取得する
     String jsonString = await rootBundle.loadString('json/prefectures.json');
     List prefecturesMap = json.decode(jsonString)["prefectures"];

@@ -161,9 +161,6 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
 
   // お気に入りスポット画面のアイテム（タップ時に詳細ダイアログ開く）
   Widget _buildShowDetailsSpotItem(spot,model){
-    final dialogWidth = size.width - 30;
-    final dialogHeight = size.height - 30;
-
     return GestureDetector(
       onTap: () async{
         final result = await Navigator.push(
@@ -175,61 +172,7 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
                 )
             )
         );
-        if(result){
-          setState(() { });
-        }
-//        showDialog(
-//          context: context,
-//          builder: (context) {
-//            return SimpleDialog(
-//                contentPadding: EdgeInsets.zero,
-//                children: [
-//                  SingleChildScrollView(
-//                    child: Column(
-//                      children: [
-//                        Stack(
-//                          children: [
-//                            AspectRatio(
-//                              aspectRatio: 3 / 2, //アスペクト比 3:2
-//                              child: Image.network(
-//                                'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
-//                                    '&photoreference=${spot.imageUrl}'
-//                                    '&key=${_kGoogleApiKey}',
-//                                fit: BoxFit.fill,
-//                              ),
-//                            ),
-//                            IconButton(
-//                              color: Colors.white,
-//                                icon: Icon(Icons.cancel),
-//                                onPressed: (){
-//                                  Navigator.pop(context);
-//                                }
-//                            ),
-//                          ],
-//                        ),
-//
-//                        Padding(
-//                          padding: const EdgeInsets.all(8.0),
-//                          child: Column(
-//                            children: [
-//                              Text(spot.spotName),
-//                            ],
-//                          ),
-//                        ),
-//                        RaisedButton(
-//                            child: Text("このスポットを削除する"),
-//                            onPressed: (){
-//                              model.unlikeSpot(spot);
-//                              Navigator.pop(context);
-//                            }
-//                        )
-//                      ],
-//                    ),
-//                  )
-//                ],
-//            );
-//          },
-//        );
+        model.getFavoriteSpots();
       },
       child: _buildSpotItem(spot),
     );

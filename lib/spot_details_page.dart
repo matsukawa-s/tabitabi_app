@@ -169,44 +169,25 @@ class _SpotDetailsPageState extends State<SpotDetailsPage> {
                               scrollDirection: Axis.horizontal,
                               itemBuilder: (BuildContext context,int index){
                                 return PlanItem(plan: planContainingSpots[index]);
-//                                return Container(
-//                                  margin: EdgeInsets.only(right: 6.0),
-//                                  width: planContainingSpotsItemWidth,
-//                                  child: Column(
-//                                    children: [
-//                                      Expanded(
-//                                        flex: 4,
-//                                        child: Container(
-//                                          width: planContainingSpotsItemWidth,
-//                                          child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
-//                                        ),
-//                                      ),
-//                                      Expanded(
-//                                          flex: 1,
-//                                          child: Text(planContainingSpots[index]["title"])
-//                                      ),
-//                                    ],
-//                                  ),
-//                                );
                               }
                           ),
                         ),
                       ),
-                    Center(
-                      child: Container(
-                        margin: EdgeInsets.only(top: 20),
-                        width: size.width - planContainingSpotsViewPadding - 30,
-                        child: FlatButton(
-                            onPressed: (){
-
-                            },
-                            shape: const StadiumBorder(
-                              side: BorderSide(color: Colors.orange),
-                            ),
-                            child: const Text("マップで表示する(未実装)")
-                        ),
-                      ),
-                    ),
+//                    Center(
+//                      child: Container(
+//                        margin: EdgeInsets.only(top: 20),
+//                        width: size.width - planContainingSpotsViewPadding - 30,
+//                        child: FlatButton(
+//                            onPressed: (){
+//
+//                            },
+//                            shape: const StadiumBorder(
+//                              side: BorderSide(color: Colors.orange),
+//                            ),
+//                            child: const Text("マップで表示する(未実装)")
+//                        ),
+//                      ),
+//                    ),
                   ],
                 ),
               ),
