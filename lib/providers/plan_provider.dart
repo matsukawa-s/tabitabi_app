@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:tabitabi_app/model/plan.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 
-class PlanProvider extends ChangeNotifier{
+class PlanProvider with ChangeNotifier{
   List<Plan> _plans = [];
 
   get plans => _plans;
@@ -35,9 +35,12 @@ class PlanProvider extends ChangeNotifier{
       'plan_id' : plan.id
     };
     http.Response res = await Network().postData(data, 'plan/favorite/delete');
+    print(res.body);
     if(res.statusCode == 200){
-
+      print(res.statusCode);
+      getFavoritePlans();
     }
+      notifyListeners();
   }
 
   // プランのお気に入り登録

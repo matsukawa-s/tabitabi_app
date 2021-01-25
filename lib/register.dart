@@ -174,9 +174,12 @@ class _RegisterPageState extends State<RegisterPage> {
       localStorage.setString('token', json.encode(body['token']));
       localStorage.setString('user', json.encode(body['user']));
 
-      Navigator.pushReplacement(context, MaterialPageRoute(
+      Navigator.pushAndRemoveUntil(context,MaterialPageRoute(
           builder: (context) => MyHomePage()
-      ));
+      ), (route)=>false);
+//      Navigator.pushReplacement(context, MaterialPageRoute(
+//          builder: (context) => MyHomePage()
+//      ));
     }else{
       //登録失敗（バリデーションエラー）
         Map<String,dynamic> messages = body["message"];

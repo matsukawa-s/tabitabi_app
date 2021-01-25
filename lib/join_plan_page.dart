@@ -36,6 +36,7 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
       appBar: AppBar(
         title: Text("プランを探す"),
         centerTitle: true,
+        backgroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -125,6 +126,7 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
 
     if(body["is_exist"]){
       setState(() {
+        message = '';
         plan = Plan.fromJson(body["plan"]);
         isSearch = true;
       });
@@ -189,7 +191,7 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
                         fontWeight: FontWeight.bold
                       ),
                   ),
-                  Text(plan.description),
+//                  Text(plan.description),
                 ],
               ),
             ],
