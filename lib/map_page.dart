@@ -30,7 +30,8 @@ final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
 class MapPage extends StatefulWidget {
   final String title;
-  MapPage({@required this.title});
+  final bool addFlag;
+  MapPage({@required this.title, this.addFlag});
 
   @override
   _MapPageState createState() => _MapPageState();
@@ -53,6 +54,16 @@ class _MapPageState extends State<MapPage> {
 
   var lat; // 緯度
   var lng; // 経度
+
+  bool addFlag = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if(widget.addFlag != null){
+      addFlag = widget.addFlag;
+    }
+  }
 
   ///位置情報権限の許可を求める
   ///現在地周辺のスポット取得する
@@ -372,10 +383,12 @@ class _MapPageState extends State<MapPage> {
                         children: [
                           Container(
 //                          height: 40,
-                              child: Text(
-                                place.name ?? '',
-                                style: TextStyle(fontSize: 20),
-                              )
+                            width: MediaQuery.of(context).size.width - 60,
+                            child: Text(
+                              place.name ?? '',
+                              style: TextStyle(fontSize: 20,) ,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           if(place.rating != null)
                             Row(
@@ -397,14 +410,29 @@ class _MapPageState extends State<MapPage> {
                             ),
                         ],
                       ),
-                      Container(
+                      if(!addFlag)
+                        Container(
                           margin: EdgeInsets.only(top: 4.0,right: 4.0),
                           child: LikeButton(
                             size: 36,
                             onTap: onLikeButtonTapped,
                             isLiked: place.isFavorite,
                           )
-                      )
+                        ),
+                      if(addFlag)
+                        Padding(
+                          padding: EdgeInsets.only(top: 4.0,right: 4.0),
+                          child: GestureDetector(
+                            child: Icon(
+                              Icons.add_circle_sharp,
+                              size: 45.0 ,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            onTap: (){
+                              _addSpot();
+                            },
+                          ),
+                        )
                     ],
                   ),
                 ),
@@ -733,6 +761,31 @@ class _MapPageState extends State<MapPage> {
     }
 
     return place.isFavorite;
+
+  }
+
+  Future<void> _addSpot() async{
+    var data = place.toJson();
+    print(data);
+    http.Response res = await Network().postData(data, 'spot/store/if');
+    print("tst" + res.body.toString());
+
+    List<Spot> returnValue = [];
+    returnValue.add(
+      Spot(
+        spotId: int.parse(res.body),
+        placeId: data["place_id"],
+        spotName: data["name"],
+        lat: data["lat"],
+        lng: data["lng"],
+        imageUrl: data["photo"],
+        types: data["types"],
+        prefectureId: 1,
+        isLike: 0,
+      )
+    );
+
+    Navigator.of(context).pop(returnValue);
 
   }
 }

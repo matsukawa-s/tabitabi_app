@@ -199,7 +199,7 @@ class MyHomePage extends StatelessWidget {
           border: InputBorder.none,
           filled: true,
           hintStyle: TextStyle(color: Colors.grey[500]),
-          hintText: "Type in your text",
+          hintText: "検索したい文字やタグを入力",
 //              fillColor: Colors.grey[100],
         ),
       ),

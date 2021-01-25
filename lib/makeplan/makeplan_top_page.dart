@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:tabitabi_app/makeplan/invite_plan_page.dart';
@@ -17,6 +18,12 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'dart:typed_data';
 import 'package:tabitabi_app/makeplan/plan_info_edit_page.dart';
 import 'package:tabitabi_app/data/tag_data.dart';
+import 'package:tabitabi_app/data/comment_data.dart';
+import 'package:bubble/bubble.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'share_provider.dart';
+import 'impressions_add_page.dart';
+import 'package:tabitabi_app/data/review_data.dart';
 import 'dart:io';
 
 enum WhyFarther { EditPlan, OpenPlan, JoinPlan, DeletePlan }
@@ -35,6 +42,18 @@ class MakePlanTop extends StatefulWidget {
 }
 
 class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin{
+  final _commentFormKey = GlobalKey<FormState>();
+  final _getImageKey = GlobalKey<FormState>();
+
+  List<Widget> _tabs = [
+    Text("プラン", style: TextStyle(fontSize: 18.0, color: Colors.white)),
+    Text("共有", style: TextStyle(fontSize: 18.0, color: Colors.white)),
+    Text("感想", style: TextStyle(fontSize: 18.0, color: Colors.white)),
+    Text("コメント", style: TextStyle(fontSize: 15.0, color: Colors.white))
+  ];
+
+  List<String> _tabsString = ["プラン", "共有", "公開", "感想"];
+  
   var plans;
 
   String _planName = "";
@@ -47,10 +66,13 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   List<TagData> _tags = [];
   String _tagText = "";
   int _isOpen = 0;
+  int _cost = 0;
 
   int userFlag = 0;
 
+  TabController _pageTabController;
   TabController _controller;
+  TabController _reviewController;
 
   //行程のリスト
   List<ItineraryData> _itineraries = [];
@@ -60,11 +82,18 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   List<MemoItineraryData> _memoItineraries = [];
   //行程交通機関のリスト
   List<TrafficItineraryData> _trafficItineraries = [];
-
-  List<Asset> _images = [];
-
   //アルバムの画像リスト
   List<Widget> _albumImages = [];
+  //レビュー
+  ReviewData _review;
+
+
+  //コメントのリスト
+  List<CommentData> _commentLists = [];
+  //ユーザのデータいれる
+  var userData;
+  //コメントしてるかどうかのフラグ
+  bool commentFlag = false;
 
   //アップロードフラグ
   bool isFileUploading = false;
@@ -76,13 +105,22 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     _getPlan();
     _getItiData();
 
+    _pageTabController = TabController(length: 4, vsync: this);
     _controller = TabController(length: 1, vsync: this);
+    _reviewController = TabController(length: 1, vsync: this);
     _getPhoto();
+    _getReviewData();
+
   }
 
   Future<int> _getPlan() async{
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    print(prefs.getString('user') ?? '');
+    
+    userData = json.decode(prefs.getString('user') ?? '');
+
     http.Response response = await Network().getData("plan/get/" + widget.planId.toString());
-    //print(response.body);
+    print(response.body);
     var list = json.decode(response.body);
     print(list);
     plans = list[0];
@@ -99,12 +137,31 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     _userName = list[0]["user_name"];
     _userIconPath = list[0]["user_icon_path"];
     _isOpen = list[0]["is_open"];
+    _cost = list[0]["cost"];
     for(int i=0; i<list[0]["tags"].length; i++){
       _tags.add(TagData(list[0]["tag_id"][i], list[0]["tags"][i]));
       _tagText += "#" + list[0]["tags"][i] + " ";
     }
     userFlag = list[0]["user_flag"];
     print("userFlg:" + userFlag.toString());
+
+    http.Response response2 = await Network().getData("comment/get/" + widget.planId.toString());
+    var list2 = json.decode(response2.body);
+    print(response2.body);
+    for(int i=0; i<list2.length; i++){
+      if(list2[i]["email"] == userData["email"]){
+        commentFlag = true;
+      }
+      _commentLists.add(
+        CommentData(list2[i]["user_id"], list2[i]["name"], list2[i]["icon_path"], list2[i]["c_contents"])
+      );
+    }
+
+    if(userFlag == 0){
+      _tabsString.removeAt(1);
+      _tabs.removeAt(1);
+      _pageTabController = _createNewTabController(_tabsString.length);
+    }
 
     setState(() {
       _planDates = _getDateTimeList(_dateTimeFunc(_startDateTime), _dateTimeFunc(_endDateTime));
@@ -113,15 +170,14 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     print(_planDates.length);
 
     setState(() {
-      _controller = _createNewTabController();
+      _controller = _createNewTabController(_planDates.length);
     });
     return _planDates.length;
-
   }
 
-  TabController _createNewTabController() => TabController(
+  TabController _createNewTabController(int num) => TabController(
     vsync: this,
-    length: _planDates.length,
+    length: num,
   );
 
   void _getItiData() async{
@@ -174,6 +230,28 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     });
   }
 
+  Future _getReviewData() async{
+    http.Response response = await Network().getData("review/get/" + widget.planId.toString());
+    print("test" + response.body);
+    var list = json.decode(response.body);
+    if(response.body == "[]"){
+      return null;
+    }
+    List<String> url = [];
+    for(int i=0; i<list[0]["photo_url"].length; i++){
+      url.add(list[0]["photo_url"][i]);
+    }
+
+    _review = ReviewData(list[0]["r_contents"].toString(), url);
+    print(_review.photoPaths);
+
+    _reviewController = _createNewTabController(_review.photoPaths.length);
+    setState(() {
+
+    });
+
+  }
+
   //日付のリストを作る
   List<DateTime> _getDateTimeList(DateTime startDate, DateTime endDate){
     List<DateTime> dateList = [];
@@ -196,7 +274,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     return dateList;
   }
 
-  //画像を取得
+  //アルバムを取得
   void _getPhoto() async{
     _albumImages.clear();
 
@@ -324,7 +402,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
         cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
         materialOptions: MaterialOptions(
           actionBarColor: "#abcdef",
-          actionBarTitle: "Example App",
+          actionBarTitle: "画像を選択",
           allViewTitle: "All Photos",
           useDetailsView: false,
           selectCircleStrokeColor: "#000000",
@@ -441,8 +519,10 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   //公開設定確認ダイアログ
   Future<void> _showOpenDialog() async{
     int openId = 0;
+    String open = "非公開に";
     if(_isOpen == 0){
       openId = 1;
+      open = "公開";
     }
     await showDialog(
         context: context,
@@ -457,7 +537,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                   children: [
                     Padding(
                         padding: EdgeInsets.only(bottom: 10.0),
-                        child: Text("プランを削除しますか?", style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),)
+                        child: Text("プランを" + open + "しますか", style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),)
                     ),
                     Container(
                       margin: EdgeInsets.only(bottom: 20.0),
@@ -731,12 +811,148 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     );
   }
 
+  //コメント追加
+  Future<void> _addComment() async{
+    String comment;
+    bool flg = false;
+    //文字入力
+    await showDialog(
+        context: context,
+        builder: (_){
+          return AlertDialog(
+              title: Text("コメントをする",style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              content: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Container(
+                      height: 100.0,
+                      child: Form(
+                        key: _commentFormKey,
+                        child: TextFormField(
+                          keyboardType: TextInputType.multiline,
+                          maxLines: 4,
+                          decoration: InputDecoration(
+                            labelStyle: TextStyle(color:Color(0xffACACAC),),
+                            focusColor: Theme.of(context).primaryColor,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(
+                                color: Color(0xffACACAC),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(
+                                color: Colors.redAccent,
+                              ),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(
+                                color: Colors.redAccent,
+                              ),
+                            ),
+                          ),
+                          style: TextStyle(color: Colors.black),
+                          validator: (value){
+                            if(value.isEmpty){
+                              return 'コメントを入力してください';
+                            }
+                            comment = value;
+                            return null;
+                          },
+                        ),
+                      ),
+                    ),
+                    Container(
+                      margin: EdgeInsets.only(top:20.0),
+                      height: 40,
+                      width: 250,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            child: Container(
+                              height: 40.0,
+                              width: 100.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30.0),
+                                color: Colors.grey,
+                              ),
+                              child: Center(
+                                child: Text("キャンセル", style: TextStyle(color: Colors.white),),
+                              ),
+                            ),
+                            onTap: (){
+                              Navigator.of(context, rootNavigator: true).pop(context);
+                            },
+                          ),
+                          GestureDetector(
+                            child: Container(
+                              margin: EdgeInsets.only(left: 10.0),
+                              height: 40.0,
+                              width: 100.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30.0),
+                                color: Colors.orange,
+                              ),
+                              child: Center(
+                                child: Text("確定", style: TextStyle(color: Colors.white),),
+                              ),
+                            ),
+                            onTap: (){
+                              flg = true;
+                              if(_commentFormKey.currentState.validate()){
+                                flg = true;
+                                Navigator.of(context, rootNavigator: true).pop(context);
+                              }
+
+                            },
+                          )
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(32.0)))
+          );
+        }
+    );
+
+    if(!flg){
+      return null;
+    }
+
+    final data = {
+      'plan_id' : widget.planId,
+      'c_contents' : comment,
+    };
+
+    http.Response res = await Network().postData(data, "comment/store");
+    print(res.body);
+    commentFlag = true;
+
+    setState(() {
+      _commentLists.add(
+          CommentData(1, userData["name"], userData["icon_path"], comment)
+      );
+    });
+
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text('トップ'),
-      // ),
       resizeToAvoidBottomInset : false,
       body: Stack(
         children: [
@@ -756,420 +972,210 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                 ),
               ],
             ),
-            child: CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  iconTheme: IconThemeData(
-                    color: Colors.white
-                  ),
-                  pinned: true,
-                  expandedHeight: 200.0,
-                  actions: [
-                    IconButton(
-                      icon: Icon(Icons.share, color: Colors.white,),
-                      onPressed: (){},
-                    ),
-//                IconButton(
-//                  icon: Icon(Icons.more_vert, color: Colors.white,),
-//                  onPressed: (){},
-//                ),
-                    if(userFlag == 1)
-                    PopupMenuButton(
-                        icon: Icon(Icons.more_vert, color: Colors.white,),
-                        onSelected: (WhyFarther result) {
-                          switch(result){
-                            case WhyFarther.EditPlan:
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) {
-                                    return PlanInfoEditPage(widget.planId, _planName, _tags, _startDateTime, _endDateTime, _imageUrl);
-                                  },
-                                ),
-                              ).then((value){
-                                _getPlan();
-                              });
-                              break;
-                            case WhyFarther.OpenPlan:
-                              _showOpenDialog();
-                              break;
-                            case WhyFarther.JoinPlan:
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) {
-                                    return InvitePlanPage(plans);
-                                  },
-                                ),
-                              );
-                              break;
-                            case WhyFarther.DeletePlan:
-                              _deletePlan();
-                              break;
-
-                          }
-                        },
-                        itemBuilder: (BuildContext context) => <PopupMenuEntry<WhyFarther>>[
-                          const PopupMenuItem<WhyFarther>(
-                            value: WhyFarther.EditPlan,
-                            child: Text('プラン情報の編集'),
-                          ),
-                          const PopupMenuItem<WhyFarther>(
-                            value: WhyFarther.OpenPlan,
-                            child: Text('プランの公開設定'),
-                          ),
-                          const PopupMenuItem<WhyFarther>(
-                            value: WhyFarther.JoinPlan,
-                            child: Text('プラン招待コード'),
-                          ),
-                          const PopupMenuItem<WhyFarther>(
-                            value: WhyFarther.DeletePlan,
-                            child: Text('プランを削除する'),
-                          ),
-                        ]
-                    ),
-                  ],
-                  flexibleSpace: Container(
-                    constraints: BoxConstraints.expand(height: 250.0),
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: _imageUrl == null ? AssetImage("images/2304099_m.jpg") : NetworkImage(_imageUrl),
-                        //image: NetworkImage("https://picsum.photos/1500/800"),
-                        colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),
-                        fit: BoxFit.cover,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          spreadRadius: 5,
-                          blurRadius: 7,
-                          offset: Offset(0, 3), // changes position of shadow
+            child: DefaultTabController(
+              length: _pageTabController.length,
+              child: NestedScrollView(
+                headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled){
+                  return [
+                    SliverOverlapAbsorber(
+                      handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                      sliver: SliverAppBar(
+                        iconTheme: IconThemeData(
+                            color: Colors.white
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if(userFlag == 0)
-                        Padding(
-                          padding: EdgeInsets.only(right: 10.0),
-                          child: Row(
+                        pinned: true,
+                        expandedHeight: 250.0,
+                        actions: [
+                          IconButton(
+                            icon: Icon(Icons.share, color: Colors.white,),
+                            onPressed: () async{
+                              _pageTabController.animateTo(0, duration: Duration(milliseconds: 1000));
+                              ShareProvider().shareImageAndText('アプリ #たびたび で旅行プランを作りました！', _getImageKey);
+                            },
+                          ),
+                          if(userFlag == 1)
+                            PopupMenuButton(
+                                icon: Icon(Icons.more_vert, color: Colors.white,),
+                                onSelected: (WhyFarther result) {
+                                  switch(result){
+                                    case WhyFarther.EditPlan:
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) {
+                                            return PlanInfoEditPage(widget.planId, _planName, _tags, _startDateTime, _endDateTime, _imageUrl);
+                                          },
+                                        ),
+                                      ).then((value){
+                                        _getPlan();
+                                      });
+                                      break;
+                                    case WhyFarther.OpenPlan:
+                                      _showOpenDialog();
+                                      break;
+                                    case WhyFarther.JoinPlan:
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) {
+                                            return InvitePlanPage(plans);
+                                          },
+                                        ),
+                                      );
+                                      break;
+                                    case WhyFarther.DeletePlan:
+                                      _deletePlan();
+                                      break;
+
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) => <PopupMenuEntry<WhyFarther>>[
+                                  const PopupMenuItem<WhyFarther>(
+                                    value: WhyFarther.EditPlan,
+                                    child: Text('プラン情報の編集'),
+                                  ),
+                                  const PopupMenuItem<WhyFarther>(
+                                    value: WhyFarther.OpenPlan,
+                                    child: Text('プランの公開設定'),
+                                  ),
+                                  const PopupMenuItem<WhyFarther>(
+                                    value: WhyFarther.JoinPlan,
+                                    child: Text('プラン招待コード'),
+                                  ),
+                                  const PopupMenuItem<WhyFarther>(
+                                    value: WhyFarther.DeletePlan,
+                                    child: Text('プランを削除する'),
+                                  ),
+                                ]
+                            ),
+                        ],
+                        flexibleSpace: Container(
+                          constraints: BoxConstraints.expand(height: 300.0),
+                          padding: EdgeInsets.only(bottom: 30.0),
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: _imageUrl == null ? AssetImage("images/2304099_m.jpg") : NetworkImage(_imageUrl),
+                              //image: NetworkImage("https://picsum.photos/1500/800"),
+                              colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),
+                              fit: BoxFit.cover,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                spreadRadius: 5,
+                                blurRadius: 7,
+                                offset: Offset(0, 3), // changes position of shadow
+                              ),
+                            ],
+                          ),
+                          child: Column(
                             mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              _buildIconImageInUserTop(_userIconPath),
-                              Padding(
-                                padding: EdgeInsets.only(left: 5.0),
-                                child: Text(
-                                  _userName,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16.0
+                              if(userFlag == 0)
+                                Padding(
+                                  padding: EdgeInsets.only(right: 10.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      _buildIconImageInUserTop(_userIconPath, 16.0),
+                                      Padding(
+                                        padding: EdgeInsets.only(left: 5.0),
+                                        child: Text(
+                                          _userName,
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16.0
+                                          ),
+                                        ),
+                                      )
+                                    ],
                                   ),
                                 ),
+                              if(userFlag == 1)
+                                Padding(
+                                  padding: EdgeInsets.only(right: 10.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Container(
+                                          height: 10.0,
+                                          width: 10.0,
+                                          decoration: BoxDecoration(
+                                              color: _isOpen == 0 ? Colors.grey : Colors.greenAccent,
+                                              shape: BoxShape.circle
+                                          )
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.only(left: 5.0),
+                                        child: Text(
+                                          _isOpen == 0 ? "非公開" : "公開中",
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14.0
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              Padding(
+                                padding: EdgeInsets.only(right: 10.0),
+                                child: Text(_planName, style: TextStyle(color: Colors.white, fontSize: 32.0)),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(right: 5.0, bottom: 3.0),
+                                child: Text(_tagText, style: TextStyle(color: Colors.white)),
                               )
                             ],
                           ),
                         ),
-                        if(userFlag == 1)
-                          Padding(
-                            padding: EdgeInsets.only(right: 10.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Container(
-                                  height: 10.0,
-                                  width: 10.0,
-                                  decoration: BoxDecoration(
-                                    color: _isOpen == 0 ? Colors.grey : Colors.greenAccent,
-                                    shape: BoxShape.circle
-                                  )
+                        bottom: PreferredSize(
+                          child: TabBar(
+                            tabs: _tabs,
+                          ),
+                          preferredSize: Size.fromHeight(110.0),
+                        ),
+                      ),
+                    )
+                  ];
+                },
+                body: TabBarView(
+                  children: [
+                    for(int i=0; i<_pageTabController.length; i++)
+                      SafeArea(
+                        top: false,
+                        bottom: false,
+                        child: Builder(
+                          builder: (BuildContext context){
+                            return CustomScrollView(
+                              key: PageStorageKey<String>(_tabsString[i]),
+                              slivers: [
+                                SliverOverlapInjector(
+                                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.only(left: 5.0),
-                                  child: Text(
-                                    _isOpen == 0 ? "非公開" : "公開中",
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14.0
+                                SliverPadding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  sliver: SliverFixedExtentList(
+                                    itemExtent: 600.0,
+                                    delegate: SliverChildBuilderDelegate(
+                                          (BuildContext context, int index) {
+                                        return _buildPage(i);
+                                      },
+                                      childCount: 1,
                                     ),
                                   ),
+
                                 )
                               ],
-                            ),
-                          ),
-                        Padding(
-                          padding: EdgeInsets.only(right: 10.0),
-                          child: Text(_planName, style: TextStyle(color: Colors.white, fontSize: 32.0)),
+                            );
+                          },
                         ),
-                        Padding(
-                          padding: EdgeInsets.only(right: 5.0, bottom: 3.0),
-                          child: Text(_tagText, style: TextStyle(color: Colors.white)),
-                        )
-                      ],
-                    ),
-                  ),
-                  bottom: PreferredSize(child: Text("", style: TextStyle(color: Colors.white)), preferredSize: Size.fromHeight(75.0),),
+                      )
+                  ],
                 ),
-                SliverList(
-                  delegate: SliverChildListDelegate([
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        //スケジュール
-                        Card(
-                          margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.0),
-                          ),
-                          child: Container(
-                            constraints: BoxConstraints.expand(height: 500),
-                            child: Stack(
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      child: Stack(
-                                        children: [
-                                          Container(
-                                            margin: EdgeInsets.only(top: 10.0),
-                                            height: 400,
-                                            width: 500,
-                                            child: TabBarView(
-                                              controller: _controller,
-                                              children: [
-                                                for(int i=0; i<_planDates.length; i++)
-                                                  SingleChildScrollView(
-                                                    child: _buildSchedule("1", _planDates[i]),
-                                                  )
-                                              ],
-                                            ),
-                                          ),
-                                          Positioned(
-                                              bottom: 0.0,
-                                              left: 0.0,
-                                              right: 0.0,
-                                              child: Align(
-                                                alignment: Alignment.center,
-                                                child: TabPageSelector(
-                                                  controller: _controller,
-                                                ),
-                                              )
-                                          ),
-                                          Positioned(
-                                            top: 0.0,
-                                            bottom: 0.0,
-                                            left: -30.0,
-                                            child: IconButton(
-                                              icon: Icon(Icons.chevron_left),
-                                              iconSize: 80.0,
-                                              color: Colors.orange,
-                                              onPressed: (){
-                                                if(!(_controller.index == 0)){
-                                                  _controller.animateTo(_controller.index - 1);
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: 0.0,
-                                            bottom: 0.0,
-                                            right: -30,
-                                            child: IconButton(
-                                              icon: Icon(Icons.chevron_right),
-                                              iconSize: 80.0,
-                                              color: Colors.orange,
-                                              onPressed: (){
-                                                if(!(_controller.index == _planDates.length)){
-                                                  _controller.animateTo(_controller.index + 1);
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    if(userFlag == 1)
-                                    Container(
-                                      alignment: Alignment.bottomRight,
-                                      margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
-                                      child: FloatingActionButton(
-                                        heroTag: 'planEdit',
-                                        backgroundColor: Colors.orange,
-                                        child: Icon(Icons.edit, color: Colors.white,),
-                                        onPressed: (){
-                                          Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (context) => MakePlanEdit(planId: widget.planId, startDateTime: _dateTimeFunc(_startDateTime), endDateTime: _dateTimeFunc(_endDateTime),),
-                                              )
-                                          ).then((value){
-                                            setState(() {
-                                              _getPlan();
-                                              _getItiData();
-                                            });
-                                            if(_isOpen==0){
-                                              _showDialog();
-                                            }
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                    if(userFlag == 0)
-                                    GestureDetector(
-                                      child: Container(
-                                        margin: EdgeInsets.only(top: 8.0, bottom: 8.0),
-                                        width: 300.0,
-                                        height: 40.0,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(20.0),
-                                          color: Colors.orange
-                                        ),
-                                        child: Center(
-                                          child: Text("このプランをコピーする", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
-                                        ),
-                                      ),
-                                      onTap: (){
-                                        _planCopy();
-                                      },
-                                    )
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        //メンバー
-                        if(userFlag == 1)
-                        Card(
-                          margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.0),
-                          ),
-                          child: Container(
-                            constraints: BoxConstraints.expand(height: 200),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                _buildTitle("メンバー"),
-                                Row(
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsets.all(10.0),
-                                      child: Icon(Icons.account_circle, size: 64.0),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.all(10.0),
-                                      child: Icon(Icons.account_circle, size: 64.0),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.all(10.0),
-                                      child: Icon(Icons.account_circle, size: 64.0),
-                                    ),
-                                  ],
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    alignment: Alignment.bottomRight,
-                                    margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
-                                    child: FloatingActionButton(
-                                      heroTag: 'memberAdd',
-                                      backgroundColor: Colors.orange,
-                                      child: Icon(Icons.add, color: Colors.white,),
-                                      onPressed: (){},
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        //アルバム
-                        if(userFlag == 1)
-                        Card(
-                          margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0, bottom: 30.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.0),
-                          ),
-                          child: Container(
-                            constraints: BoxConstraints.expand(height: 350),
-                            child: Stack(
-                              children: [
-                                Container(
-                                  height: 50.0,
-                                  width: MediaQuery.of(context).size.width,
-                                  child: Center(
-                                    child: _buildTitle("アルバム"),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 50.0,
-                                  left: 0,
-                                  height: 280.0,
-                                  width: MediaQuery.of(context).size.width - 24.0,
-                                  child: _albumImages.length == 0 ?
-                                      Container(
-                                        margin: EdgeInsets.only(left: 24.0, right: 24.0),
-                                        color: Colors.black.withOpacity(0.2),
-                                        child: Center(
-                                          child: Text("まだ写真はありません！"),
-                                        ),
-                                      )
-                                      : Container(
-                                        child: GridView.builder(
-                                          gridDelegate:  SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 3,
-                                          ),
-                                          itemCount: _albumImages.length,
-                                          itemBuilder: (context, index){
-                                            return _albumImages[index];
-                                          }
-                                        )
-                                      ),
-                                ),
-                                Container(
-                                  alignment: Alignment.bottomRight,
-                                  margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
-                                  child: FloatingActionButton(
-                                    heroTag: 'albumAdd',  //これを指定しないと複数FloatingActionButtonが使えない
-                                    backgroundColor: Colors.orange,
-                                    child: Icon(Icons.add, color: Colors.white,),
-                                    onPressed: () async{
-                                      _addAlbum();
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        if(userFlag == 0)
-                          //コメント
-                          Card(
-                            margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20.0),
-                            ),
-                            child: Container(
-                              constraints: BoxConstraints.expand(height: 200),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  _buildTitle("コメント"),
-
-                                ],
-                              ),
-                            ),
-                          ),
-                        Container(
-                          height: 100,
-                        )
-                      ],
-                    ),
-                  ]),
-                ),
-              ],
-            ),
+              ),
+            )
           ),
           if(isFileUploading == true)
             Container(
@@ -1205,6 +1211,448 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     );
   }
 
+  Widget _buildPage(int index){
+    Widget page = Container(
+      child: Center(child: Text(index.toString()),),
+    );
+    if(index == 0){
+      page = _buildPlan();
+    }
+    if(index == 1 && userFlag == 1){
+      page = _buildMember();
+    }
+    if(index == 2 || (index == 1 && userFlag == 0)){
+      page = _buildImp();
+    }
+    if(index == 3 || (index == 2 && userFlag == 0)){
+      page = _buildComment();
+    }
+    return page;
+  }
+
+  //行程表示
+  Widget _buildPlan(){
+    return Card(
+      margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      child: Container(
+        //constraints: BoxConstraints.expand(height: 500),
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      RepaintBoundary(
+                        key: _getImageKey,
+                        child: Container(
+                          margin: EdgeInsets.only(top: 10.0),
+                          height: 600,
+                          width: 500,
+                          child: TabBarView(
+                            controller: _controller,
+                            children: [
+                              for(int i=0; i<_planDates.length; i++)
+                                SingleChildScrollView(
+                                  child: _buildSchedule("1", _planDates[i]),
+                                )
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                          bottom: 0.0,
+                          left: 0.0,
+                          right: 0.0,
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: TabPageSelector(
+                              controller: _controller,
+                            ),
+                          )
+                      ),
+                      Positioned(
+                        top: 0.0,
+                        bottom: 0.0,
+                        left: -30.0,
+                        child: IconButton(
+                          icon: Icon(Icons.chevron_left),
+                          iconSize: 80.0,
+                          color: Colors.orange,
+                          onPressed: (){
+                            if(!(_controller.index == 0)){
+                              _controller.animateTo(_controller.index - 1);
+                            }
+                          },
+                        ),
+                      ),
+                      Positioned(
+                        top: 0.0,
+                        bottom: 0.0,
+                        right: -30,
+                        child: IconButton(
+                          icon: Icon(Icons.chevron_right),
+                          iconSize: 80.0,
+                          color: Colors.orange,
+                          onPressed: (){
+                            if(!(_controller.index == _planDates.length)){
+                              _controller.animateTo(_controller.index + 1);
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if(userFlag == 1)
+                  Container(
+                    alignment: Alignment.bottomRight,
+                    margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
+                    child: FloatingActionButton(
+                      heroTag: 'planEdit',
+                      backgroundColor: Colors.orange,
+                      child: Icon(Icons.edit, color: Colors.white,),
+                      onPressed: (){
+                        Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => MakePlanEdit(planId: widget.planId, startDateTime: _dateTimeFunc(_startDateTime), endDateTime: _dateTimeFunc(_endDateTime),),
+                            )
+                        ).then((value){
+                          setState(() {
+                            _getPlan();
+                            _getItiData();
+                          });
+                          if(_isOpen==0){
+                            _showDialog();
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                if(userFlag == 0)
+                  GestureDetector(
+                    child: Container(
+                      margin: EdgeInsets.only(top: 8.0, bottom: 15.0),
+                      width: 300.0,
+                      height: 40.0,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.0),
+                          color: Colors.orange
+                      ),
+                      child: Center(
+                        child: Text("このプランをコピーする", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                      ),
+                    ),
+                    onTap: (){
+                      _planCopy();
+                    },
+                  )
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  //共有表示(メンバー&アルバム)
+  Widget _buildMember(){
+    return Column(
+      children: [
+        Card(
+          margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Container(
+            height: 200.0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildTitle("メンバー"),
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: Icon(Icons.account_circle, size: 64.0),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: Icon(Icons.account_circle, size: 64.0),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: Icon(Icons.account_circle, size: 64.0),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: Container(
+                    alignment: Alignment.bottomRight,
+                    margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
+                    child: FloatingActionButton(
+                      heroTag: 'memberAdd',
+                      backgroundColor: Colors.orange,
+                      child: Icon(Icons.add, color: Colors.white,),
+                      onPressed: (){},
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Container(
+            constraints: BoxConstraints.expand(height: 350),
+            child: Stack(
+              children: [
+                Container(
+                  height: 50.0,
+                  width: MediaQuery.of(context).size.width,
+                  child: Center(
+                    child: _buildTitle("アルバム"),
+                  ),
+                ),
+                Positioned(
+                  top: 50.0,
+                  left: 0,
+                  height: 240.0,
+                  width: MediaQuery.of(context).size.width - 24.0,
+                  child: _albumImages.length == 0 ?
+                  Container(
+                    margin: EdgeInsets.only(left: 24.0, right: 36.0),
+                    //color: Colors.black.withOpacity(0.2),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset("images/scrapb.png",
+                          height: 180,
+                          width: 180,
+                        ),
+                        Text("まだ写真はありません！")
+                      ],
+                    ),
+                  )
+                      : Container(
+                      child: GridView.builder(
+                          gridDelegate:  SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                          ),
+                          itemCount: _albumImages.length,
+                          itemBuilder: (context, index){
+                            return _albumImages[index];
+                          }
+                      )
+                  ),
+                ),
+                Container(
+                  alignment: Alignment.bottomRight,
+                  margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
+                  child: FloatingActionButton(
+                    heroTag: 'albumAdd',  //これを指定しないと複数FloatingActionButtonが使えない
+                    backgroundColor: Colors.orange,
+                    child: Icon(Icons.add, color: Colors.white,),
+                    onPressed: () async{
+                      _addAlbum();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  //感想表示
+  Widget _buildImp(){
+    return Column(
+      children: [
+        Card(
+            margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            child: Container(
+              padding: EdgeInsets.only(left: 20.0,),
+              child: Stack(
+                children: [
+                  //if(_review != null)
+                  Container(
+                    margin: EdgeInsets.only(right: 20.0),
+                    width: MediaQuery.of(context).size.width - 24,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _review == null ?
+                        Container(
+                          margin: EdgeInsets.only(top: 20.0, bottom: 20.0),
+                          height: 400,
+                          width: MediaQuery.of(context).size.width - 64,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                "images/travel06.png",
+                                height: 150,
+                                width: 150,
+                              ),
+                              Text("まだ感想はありません！")
+                            ],
+                          ),
+                        ):
+                        Stack(
+                          children: [
+                            Container(
+                              margin: EdgeInsets.only(top: 20.0),
+                              height: 300,
+                              //color: Colors.black.withOpacity(0.6),
+                              child: TabBarView(
+                                controller: _reviewController,
+                                children: [
+                                  for(int i=0; i<_reviewController.length;i++)
+                                    Image.network(
+                                      _review.photoPaths[i],
+                                      fit: BoxFit.fitWidth,
+                                    ),
+                                ],
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 10.0,
+                              left: 0.0,
+                              height: 50.0,
+                              width: MediaQuery.of(context).size.width - 64,
+                              child: Center(
+                                child: TabPageSelector(
+                                  controller: _reviewController,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                        if(_review != null)
+                        Container(
+                          margin: EdgeInsets.only(top: 10.0),
+                          height: 100,
+                          child: Text(
+                            _review.content,
+                            style: TextStyle(fontSize: 18.0),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if(userFlag == 1 && _review == null)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      alignment: Alignment.bottomRight,
+                      margin: EdgeInsets.only(bottom: 10.0, right: 10.0),
+                      child: FloatingActionButton(
+                        heroTag: 'memoryAdd',  //これを指定しないと複数FloatingActionButtonが使えない
+                        backgroundColor: Colors.orange,
+                        child: Icon(Icons.edit, color: Colors.white,),
+                        onPressed: () async{
+                          Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ImpressionsAddPage(widget.planId),
+                              )
+                          ).then((value) => _getReviewData());
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+        ),
+      ],
+    );
+  }
+
+  //コメント表示
+  Widget _buildComment(){
+    return Column(
+      children: [
+        Card(
+          margin: EdgeInsets.only(left: 12.0, top: 20.0, right: 12.0,),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Container(
+            constraints: BoxConstraints.expand(height: userFlag == 0 ? 450 : 405),
+            padding: EdgeInsets.only(left: 20.0, right: 20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildTitle("コメント"),
+                Container(
+                    height: 320,
+                    width: MediaQuery.of(context).size.width,
+                    margin: EdgeInsets.only(top: 20.0),
+                    color: Colors.white,
+                    child: _commentLists.length == 0 ?
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          "images/bunbougu03.png",
+                          height: 150.0,
+                          width: 150.0,
+                        ),
+                        Text("まだコメントはありません"),
+                      ],
+                    ):
+                    SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          for(int i=0; i<_commentLists.length; i++)
+                            Padding(
+                              padding: EdgeInsets.only(bottom: 20.0),
+                              child: _buildCommentPart(_commentLists[i], MediaQuery.of(context).size.width - 90,),
+                            )
+                        ],
+                      ),
+                    )
+                ),
+                if(userFlag == 0)
+                  GestureDetector(
+                    child: Container(
+                      margin: EdgeInsets.only(top: 12.0, bottom: 8.0),
+                      width: 300.0,
+                      height: 40.0,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.0),
+                          color: commentFlag ? Colors.grey : Colors.orange
+                      ),
+                      child: Center(
+                        child: Text(commentFlag ? "コメントありがとうございました！" :"コメントをする", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                      ),
+                    ),
+                    onTap: (){
+                      _addComment();
+                    },
+                  )
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   //各項目のタイトル
   Widget _buildTitle(String title){
     return Padding(
@@ -1234,13 +1682,52 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
           if(_itineraries.length == 0 || _itineraries.indexWhere((element) => element.itineraryDateTime == date) == -1)
             Container(
               margin: EdgeInsets.only(left: 20.0, top: 20.0, right: 20.0, bottom: 20.0),
-              color: Colors.black.withOpacity(0.2),
+              //color: Colors.black.withOpacity(0.2),
               width: MediaQuery.of(context).size.width,
-              height: 350,
-              child: Center(
-                child: Text("まだ予定はありません！"),
+              height: 400,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    "images/illustrain02-travel04.png",
+                    width: 150,
+                    height: 150,
+                  ),
+                  Text("まだ予定はありません！"),
+                ],
               ),
             )
+        ],
+      ),
+    );
+  }
+
+  //コメントWidget
+  Widget _buildCommentPart(CommentData commentData, double width){
+    return Container(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildIconImageInUserTop(commentData.userPath, width/12),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(left: 30.0),
+                child: Text(commentData.userName),
+              ),
+              Container(
+                margin: EdgeInsets.only(left: 20.0),
+                width: width - width / 6 - 10,
+                child: Bubble(
+                  margin: BubbleEdges.only(top: 10),
+                  nip: BubbleNip.leftTop,
+                  child: Text(commentData.contents),
+                ),
+              )
+            ],
+          )
         ],
       ),
     );
@@ -1313,8 +1800,8 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     return part;
   }
 
-  Widget _buildIconImageInUserTop(String iconPath){
-    final double iconSize = 15.0;
+  Widget _buildIconImageInUserTop(String iconPath, double size){
+    final double iconSize = size;
     if(iconPath == null){
       return CircleAvatar(
         backgroundColor: Colors.grey,
@@ -1449,4 +1936,3 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     );
   }
 }
-

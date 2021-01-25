@@ -18,8 +18,7 @@ class NavigationBarProvider extends ChangeNotifier {
   static List<Widget> _pageList = [
     TopPage(),
     PlanSearchPage(),
-    MapPage(title: 'MAP'),
-//    MapPage(),
+    MapPage(title: 'MAP', addFlag: false,),
     FavoritePage(title: 'FAVORITE'),
     UserPage(),
   ];
