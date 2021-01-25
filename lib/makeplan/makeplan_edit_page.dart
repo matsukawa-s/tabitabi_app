@@ -95,6 +95,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
   //旅行の日程　とりあえず仮
   List<DateTime> _travelDateTime = [];
 
+
   //マーカー
   Set<Marker> _markers = Set();
 
@@ -250,7 +251,6 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
     };
 
     http.Response response = await Network().postData(data, "plan/update/date");
-    print(response.body);
 
     setState(() {
       _travelDateTime.add(_endDateTime);
@@ -272,32 +272,67 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           return StatefulBuilder(
               builder: (_, setState) {
                 return AlertDialog(
-                  title: Text("確認", style: TextStyle(fontSize: 18.0),
-                      textAlign: TextAlign.center),
                   content: SingleChildScrollView(
                     child: Container(
-                      child: Center(
-                        child: Text(_travelDateTime[_tabController.index].month.toString() + "/" +  _travelDateTime[_tabController.index].day.toString() + "の予定を削除してよろしいでしょうか？"),
-                      ),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top:10 ,bottom: 15.0),
+                            child: Text(_travelDateTime[_tabController.index].month.toString() + "/" +  _travelDateTime[_tabController.index].day.toString() + "の予定を削除してよろしいでしょうか？" ,style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 30.0),
+                              child: Text("※削除したプランは元に戻りません" ,style: TextStyle(color: Colors.red, fontSize: 13.0,fontWeight: FontWeight.bold),),
+                          ),
+                          Container(
+                            height: 40,
+                            width: 250,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                GestureDetector(
+                                  child: Container(
+                                    height: 40.0,
+                                    width: 100.0,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(30.0),
+                                      color: Colors.grey,
+                                    ),
+                                    child: Center(
+                                      child: Text("いいえ", style: TextStyle(color: Colors.white),),
+                                    ),
+                                  ),
+                                  onTap: (){
+                                    Navigator.of(context, rootNavigator: true).pop(context);
+                                  },
+                                ),
+                                GestureDetector(
+                                  child: Container(
+                                    margin: EdgeInsets.only(left: 10.0),
+                                    height: 40.0,
+                                    width: 100.0,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(30.0),
+                                      color: Colors.orange,
+                                    ),
+                                    child: Center(
+                                      child: Text("はい", style: TextStyle(color: Colors.white),),
+                                    ),
+                                  ),
+                                  onTap: (){
+                                    flg = true;
+                                    Navigator.of(context, rootNavigator: true).pop(context);
+                                  },
+                                )
+                              ],
+                            ),
+                          )
+                        ],
+                      )
                     )
                   ),
-                  actions: <Widget>[
-                    // ボタン領域
-                    FlatButton(
-                      child: Text("Cancel"),
-                      onPressed: () =>
-                          Navigator.of(context, rootNavigator: true).pop(
-                              context),
-                    ),
-                    FlatButton(
-                        child: Text("OK"),
-                        onPressed: () {
-                          flg = true;
-                          Navigator.of(context, rootNavigator: true).pop(
-                              context);
-                        }
-                    ),
-                  ],
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(32.0)))
                 );
               }
           );
@@ -674,121 +709,147 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           return StatefulBuilder(
               builder: (_, setState) {
                 return AlertDialog(
-                  title: Text("時間の設定", style: TextStyle(fontSize: 18.0),
+                  title: Text("時間の設定", style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center),
                   content: SingleChildScrollView(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          height: 40.0,
-                          width: 60.0,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10.0),
-                            border: Border.all(color: Colors.grey),
+                    child: Container(
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                height: 40.0,
+                                width: 60.0,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                  border: Border.all(color: Colors.grey),
+                                ),
+                                child: Center(
+                                  child: DropdownButton<String>(
+                                    value: hour,
+                                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                    onChanged: (String newValue) {
+                                      setState(() {
+                                        hour = newValue;
+                                      });
+                                    },
+                                    items: _hourList
+                                        .map<DropdownMenuItem<String>>((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(left: 5.0, right: 5.0),
+                                child: Text("時間"),
+                              ),
+                              Container(
+                                  height: 40.0,
+                                  width: 120.0,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    border: Border.all(color: Colors.grey),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      DropdownButton<String>(
+                                        value: minutes1,
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                        onChanged: (String newValue) {
+                                          setState(() {
+                                            minutes1 = newValue;
+                                          });
+                                        },
+                                        items: _minutesList
+                                            .map<DropdownMenuItem<String>>((String value) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
+                                          );
+                                        }).toList(),
+                                      ),
+                                      DropdownButton<String>(
+                                        value: minutes2,
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                        onChanged: (String newValue) {
+                                          setState(() {
+                                            minutes2 = newValue;
+                                          });
+                                        },
+                                        items: _minutesList
+                                            .map<DropdownMenuItem<String>>((String value) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ],
+                                  )
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(left: 5.0),
+                                child: Text("分"),
+                              )
+                            ],
                           ),
-                          child: Center(
-                            child: DropdownButton<String>(
-                              value: hour,
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                              onChanged: (String newValue) {
-                                setState(() {
-                                  hour = newValue;
-                                });
-                              },
-                              items: _hourList
-                                  .map<DropdownMenuItem<String>>((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(left: 5.0, right: 5.0),
-                          child: Text("時間"),
-                        ),
-                        Container(
-                            height: 40.0,
-                            width: 120.0,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10.0),
-                              border: Border.all(color: Colors.grey),
-                            ),
+                          Container(
+                            margin: EdgeInsets.only(top:20.0),
+                            height: 40,
+                            width: 250,
                             child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                DropdownButton<String>(
-                                  value: minutes1,
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                                  onChanged: (String newValue) {
-                                    setState(() {
-                                      minutes1 = newValue;
-                                    });
+                                GestureDetector(
+                                  child: Container(
+                                    height: 40.0,
+                                    width: 100.0,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(30.0),
+                                      color: Colors.grey,
+                                    ),
+                                    child: Center(
+                                      child: Text("キャンセル", style: TextStyle(color: Colors.white),),
+                                    ),
+                                  ),
+                                  onTap: (){
+                                    Navigator.of(context, rootNavigator: true).pop(context);
                                   },
-                                  items: _minutesList
-                                      .map<DropdownMenuItem<String>>((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
-                                    );
-                                  }).toList(),
                                 ),
-                                DropdownButton<String>(
-                                  value: minutes2,
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                                  onChanged: (String newValue) {
-                                    setState(() {
-                                      minutes2 = newValue;
-                                    });
+                                GestureDetector(
+                                  child: Container(
+                                    margin: EdgeInsets.only(left: 10.0),
+                                    height: 40.0,
+                                    width: 100.0,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(30.0),
+                                      color: Colors.orange,
+                                    ),
+                                    child: Center(
+                                      child: Text("確定", style: TextStyle(color: Colors.white),),
+                                    ),
+                                  ),
+                                  onTap: (){
+                                    Navigator.of(context, rootNavigator: true).pop(context);
                                   },
-                                  items: _minutesList
-                                      .map<DropdownMenuItem<String>>((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
-                                    );
-                                  }).toList(),
-                                ),
+                                )
                               ],
-                            )
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(left: 5.0),
-                          child: Text("分"),
-                        )
-                      ],
+                            ),
+                          )
+                        ],
+                      ),
                     ),
-                  ),
-                  actions: <Widget>[
-                    // ボタン領域
-                    FlatButton(
-                      child: Text("Cancel"),
-                      onPressed: () =>
-                          Navigator.of(context, rootNavigator: true).pop(
-                              context),
-                    ),
-                    FlatButton(
-                        child: Text("OK"),
-                        onPressed: () {
-                          if(hour != "0"){
-                            time += hour + "時間";
-                          }
-                          if(minutes1 != "0"){
-                            time += minutes1;
-                          }
-                          time += minutes2 + "分";
 
-                          if(hour == "0" && minutes1 == "0" && minutes2 =="0"){
-                            time = "";
-                          }
-                          Navigator.of(context, rootNavigator: true).pop(
-                              context);
-                        }
-                    ),
-                  ],
+                  ),
+                   shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(32.0)))
                 );
               }
           );
@@ -856,7 +917,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
           context: context,
           builder: (_){
             return AlertDialog(
-              title: Text("メモの内容",style: TextStyle(fontSize: 18.0), textAlign: TextAlign.center),
+              title: Text("メモの内容",style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
               content: SingleChildScrollView(
                 child: Column(
                   children: [
@@ -896,21 +957,56 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                           memo = value;
                         },
                       ),
+                    ),
+                    Container(
+                      margin: EdgeInsets.only(top:20.0),
+                      height: 40,
+                      width: 250,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            child: Container(
+                              height: 40.0,
+                              width: 100.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30.0),
+                                color: Colors.grey,
+                              ),
+                              child: Center(
+                                child: Text("キャンセル", style: TextStyle(color: Colors.white),),
+                              ),
+                            ),
+                            onTap: (){
+                              Navigator.of(context, rootNavigator: true).pop(context);
+                            },
+                          ),
+                          GestureDetector(
+                            child: Container(
+                              margin: EdgeInsets.only(left: 10.0),
+                              height: 40.0,
+                              width: 100.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30.0),
+                                color: Colors.orange,
+                              ),
+                              child: Center(
+                                child: Text("確定", style: TextStyle(color: Colors.white),),
+                              ),
+                            ),
+                            onTap: (){
+                              Navigator.of(context, rootNavigator: true).pop(context);
+                            },
+                          )
+                        ],
+                      ),
                     )
                   ],
                 ),
               ),
-              actions: <Widget>[
-                // ボタン領域
-                FlatButton(
-                  child: Text("Cancel"),
-                  onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
-                ),
-                FlatButton(
-                  child: Text("OK"),
-                  onPressed: () => Navigator.of(context, rootNavigator: true).pop(context),
-                ),
-              ],
+              shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(32.0)))
             );
           }
       );

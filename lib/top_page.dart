@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:page_transition/page_transition.dart';
 import 'package:tabitabi_app/join_plan_page.dart';
+import 'package:tabitabi_app/makeplan/makeplan_initial_page.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 import 'package:tabitabi_app/spot_details_page.dart';
@@ -44,39 +45,67 @@ class TopPage extends StatelessWidget {
               padding: EdgeInsets.all(pagePadding),
               child: Column(
                 children: [
+                  if(todayPlans.isNotEmpty)
+                    _buildJoinPlan(context),
+                  //今日のプランを表示する
+                  todayPlans.isEmpty ?
                   Container(
-                    margin: EdgeInsets.only(bottom: 8.0),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: RaisedButton(
-                          child: Text(
-                            "プランに参加する",
-                            style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold
+                    margin: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
+                    height: 230,
+                    width: MediaQuery.of(context).size.width,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10.0),
+                      color: Color(0xffFCF0C6),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 100,
+                          width: 100,
+                          child: Image.asset(
+                            "images/illustrain02-travel04.png",
+                            fit: BoxFit.fitWidth,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(),
+                          child: Text("さあ プランを作りましょう！", style: TextStyle(fontWeight: FontWeight.bold),),
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(bottom: 5.0, left: 30.0, right: 30.0),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: RaisedButton(
+                                child: Text(
+                                  "プランを作成する",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold
+                                  ),
+                                ),
+                                color: Colors.orange,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                onPressed: (){
+                                  Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => MakePlanInitial(),
+                                      )
+                                  );
+                                }
                             ),
                           ),
-                          color: Colors.orange,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          onPressed: (){
-                            Navigator.push(
-                              context,
-                              PageTransition(
-                                  type: PageTransitionType.fade,
-                                  child: JoinPlanPage(),
-                                  inheritTheme: true,
-                                  ctx: context
-                              ),
-                            );
-                          }
-                      ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 30.0, right: 30.0),
+                          child: _buildJoinPlan(context),
+                        ),
+                      ],
                     ),
-                  ),
-                  //今日のプランを表示する
-                  todayPlans.isEmpty ? Container() :
+                  ) :
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -438,6 +467,40 @@ class TopPage extends StatelessWidget {
           );
         }
       }
+    );
+  }
+
+  Widget _buildJoinPlan(context){
+    return Container(
+      margin: EdgeInsets.only(bottom: 8.0),
+      child: SizedBox(
+        width: double.infinity,
+        child: RaisedButton(
+            child: Text(
+              "プランに参加する",
+              style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold
+              ),
+            ),
+            color: Colors.orange,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            onPressed: (){
+              Navigator.push(
+                context,
+                PageTransition(
+                    type: PageTransitionType.fade,
+                    child: JoinPlanPage(),
+                    inheritTheme: true,
+                    ctx: context
+                ),
+              );
+            }
+        ),
+      ),
     );
   }
 
