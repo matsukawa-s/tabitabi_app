@@ -65,6 +65,7 @@ class _AddTagPageState extends State<AddTagPage> {
 
     var list = jsonDecode(res2.body);
 
+
     //プロバイダーに追加
     setState(() {
       context.read<TagDataProvider>().addTagData(TagData(list["id"], text));

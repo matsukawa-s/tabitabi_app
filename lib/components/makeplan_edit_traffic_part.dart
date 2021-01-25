@@ -191,121 +191,147 @@ class _TrafficPartState extends State<TrafficPart> {
           return StatefulBuilder(
               builder: (_, setState) {
                 return AlertDialog(
-                  title: Text("時間の設定", style: TextStyle(fontSize: 18.0),
+                  title: Text("時間の設定", style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center),
                   content: SingleChildScrollView(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                            height: 40.0,
-                            width: 60.0,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10.0),
-                              border: Border.all(color: Colors.grey),
-                            ),
-                            child: Center(
-                              child: DropdownButton<String>(
-                                value: hour,
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                                onChanged: (String newValue) {
-                                  setState(() {
-                                    hour = newValue;
-                                  });
-                                },
-                                items: _hourList
-                                    .map<DropdownMenuItem<String>>((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(left: 5.0, right: 5.0),
-                          child: Text("時間"),
-                        ),
-                        Container(
-                          height: 40.0,
-                          width: 120.0,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10.0),
-                            border: Border.all(color: Colors.grey),
-                          ),
-                          child: Row(
+                    child: Container(
+                      child: Column(
+                        children: [
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              DropdownButton<String>(
-                                value: minutes1,
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                                onChanged: (String newValue) {
-                                  setState(() {
-                                    minutes1 = newValue;
-                                  });
-                                },
-                                items: _minutesList
-                                    .map<DropdownMenuItem<String>>((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
-                                  );
-                                }).toList(),
+                              Container(
+                                height: 40.0,
+                                width: 60.0,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                  border: Border.all(color: Colors.grey),
+                                ),
+                                child: Center(
+                                  child: DropdownButton<String>(
+                                    value: hour,
+                                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                    onChanged: (String newValue) {
+                                      setState(() {
+                                        hour = newValue;
+                                      });
+                                    },
+                                    items: _hourList
+                                        .map<DropdownMenuItem<String>>((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
                               ),
-                              DropdownButton<String>(
-                                value: minutes2,
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                                onChanged: (String newValue) {
-                                  setState(() {
-                                    minutes2 = newValue;
-                                  });
-                                },
-                                items: _minutesList
-                                    .map<DropdownMenuItem<String>>((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
-                                  );
-                                }).toList(),
+                              Padding(
+                                padding: EdgeInsets.only(left: 5.0, right: 5.0),
+                                child: Text("時間"),
                               ),
+                              Container(
+                                  height: 40.0,
+                                  width: 120.0,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    border: Border.all(color: Colors.grey),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      DropdownButton<String>(
+                                        value: minutes1,
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                        onChanged: (String newValue) {
+                                          setState(() {
+                                            minutes1 = newValue;
+                                          });
+                                        },
+                                        items: _minutesList
+                                            .map<DropdownMenuItem<String>>((String value) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
+                                          );
+                                        }).toList(),
+                                      ),
+                                      DropdownButton<String>(
+                                        value: minutes2,
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                        onChanged: (String newValue) {
+                                          setState(() {
+                                            minutes2 = newValue;
+                                          });
+                                        },
+                                        items: _minutesList
+                                            .map<DropdownMenuItem<String>>((String value) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Text(value, style: TextStyle(fontWeight: FontWeight.normal),),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ],
+                                  )
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(left: 5.0),
+                                child: Text("分"),
+                              )
                             ],
+                          ),
+                          Container(
+                            margin: EdgeInsets.only(top:20.0),
+                            height: 40,
+                            width: 250,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                GestureDetector(
+                                  child: Container(
+                                    height: 40.0,
+                                    width: 100.0,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(30.0),
+                                      color: Colors.grey,
+                                    ),
+                                    child: Center(
+                                      child: Text("キャンセル", style: TextStyle(color: Colors.white),),
+                                    ),
+                                  ),
+                                  onTap: (){
+                                    Navigator.of(context, rootNavigator: true).pop(context);
+                                  },
+                                ),
+                                GestureDetector(
+                                  child: Container(
+                                    margin: EdgeInsets.only(left: 10.0),
+                                    height: 40.0,
+                                    width: 100.0,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(30.0),
+                                      color: Colors.orange,
+                                    ),
+                                    child: Center(
+                                      child: Text("確定", style: TextStyle(color: Colors.white),),
+                                    ),
+                                  ),
+                                  onTap: (){
+                                    Navigator.of(context, rootNavigator: true).pop(context);
+                                  },
+                                )
+                              ],
+                            ),
                           )
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(left: 5.0),
-                          child: Text("分"),
-                        )
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                  actions: <Widget>[
-                    // ボタン領域
-                    FlatButton(
-                      child: Text("Cancel"),
-                      onPressed: () =>
-                          Navigator.of(context, rootNavigator: true).pop(
-                              context),
-                    ),
-                    FlatButton(
-                      child: Text("OK"),
-                      onPressed: () {
-                        if(hour != "0"){
-                          time += hour + "時間";
-                        }
-                        if(minutes1 != "0"){
-                          time += minutes1;
-                        }
-                        time += minutes2 + "分";
 
-                        if(hour == "0" && minutes1 == "0" && minutes2 =="0"){
-                          time = "";
-                        }
-                        Navigator.of(context, rootNavigator: true).pop(
-                            context);
-                      }
-                    ),
-                  ],
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(32.0)))
                 );
               }
           );

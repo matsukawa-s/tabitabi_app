@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tabitabi_app/favorite_spot_page.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/makeplan/make_spot_page.dart';
+import 'package:tabitabi_app/map_page.dart';
 class AddSpotPage extends StatefulWidget {
   @override
   _AddSpotPageState createState() => _AddSpotPageState();
@@ -67,7 +68,7 @@ class _AddSpotPageState extends State<AddSpotPage> with SingleTickerProviderStat
                     child: FavoriteSpotPage(mode: true,callback: callback),
                   ),
                   Container(
-                    child: Text("2"),
+                    child: MapPage(title: 'MAP', addFlag: true,),
                   ),
                   Container(
                     child: MakeSpotPage(),
