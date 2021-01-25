@@ -34,7 +34,7 @@ class PlanItem extends StatelessWidget {
         child: Stack(
           children: [
             ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(10.0),
                 child: Image.asset("images/osakajo.jpg",height: height ?? defaultHeight,fit: BoxFit.fill,)
             ),
             Positioned(
@@ -48,8 +48,8 @@ class PlanItem extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: Colors.black38,
                     borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(8.0),
-                        bottomRight: Radius.circular(8.0)
+                        bottomLeft: Radius.circular(10.0),
+                        bottomRight: Radius.circular(10.0)
                     )
                 ),
                 alignment: Alignment.centerLeft,

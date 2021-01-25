@@ -17,6 +17,7 @@ class PlanProvider extends ChangeNotifier{
     http.Response res = await Network().getData('plan/favorite/get');
     if(res.statusCode == 200){
       print("statusCode : ${res.statusCode}");
+      print(res.body);
       List tmp = jsonDecode(res.body);
       if(tmp.isNotEmpty){
         _plans = List.generate(
@@ -29,7 +30,24 @@ class PlanProvider extends ChangeNotifier{
   }
 
   //プランのお気に入り解除
-  unLikePlan(){
+  deleteFavoritePlan(Plan plan) async{
+    final data = {
+      'plan_id' : plan.id
+    };
+    http.Response res = await Network().postData(data, 'plan/favorite/delete');
+    if(res.statusCode == 200){
 
+    }
+  }
+
+  // プランのお気に入り登録
+  storeFavoritePlan(Plan plan) async{
+    final data = {
+      'plan_id' : plan.id
+    };
+    http.Response res = await Network().postData(data, 'plan/favorite/store');
+    if(res.statusCode == 200){
+
+    }
   }
 }

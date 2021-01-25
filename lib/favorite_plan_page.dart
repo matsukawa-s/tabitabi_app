@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/model/plan.dart';
 import 'package:tabitabi_app/providers/plan_provider.dart';
 
@@ -40,53 +41,36 @@ class FavoritePlanPage extends StatelessWidget {
                   : GridView.builder(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        mainAxisSpacing: 6,
-                        crossAxisSpacing: 6,
+                        mainAxisSpacing: 4,
+                        crossAxisSpacing: 4,
                         childAspectRatio: itemWidth / itemHeight
                       ),
                       itemCount: plan.plans.length,
                       itemBuilder: (BuildContext context,int index){
-                        return _buildPlanItem(plan.plans[index]);
+                        return Stack(
+                          children: [
+                            PlanItem(
+                              plan: plan.plans[index],
+                              width: itemWidth,
+                              height: itemHeight,
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: IconButton(
+                                iconSize: 28,
+                                icon: Icon(Icons.favorite,color: Colors.pink[400],),
+                                onPressed: () => plan.deleteFavoritePlan(plan.plans[index])
+                              )
+                            )
+                          ],
+                        );
+//                        return _buildPlanItem(plan.plans[index]);
                       }
                   ),
             ),
           );
         }
-    );
-  }
-
-  Widget _buildPlanItem(Plan plan){
-    return GestureDetector(
-      child: Column(
-        children: [
-          Expanded(
-            flex: 4,
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: Image.asset(
-                    "images/osakajo.jpg",
-                    width: double.infinity,
-                    fit: BoxFit.fill,
-                  ),
-                ),
-                Positioned(
-                    top: 2,
-                    right: 2,
-                    child: Icon(Icons.favorite,color: Colors.pink,)
-                )
-              ],
-            )
-          ),
-          Expanded(
-            flex: 1,
-            child: Container(
-              child: Text(plan.title,overflow: TextOverflow.ellipsis,),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
