@@ -21,7 +21,7 @@ class PlanSearchModel with ChangeNotifier {
     notifyListeners();
   }
   // プランリスト
-  List _plans;
+  List<Plan> _plans;
   get plans => _plans;
   void setPlans(planList) {
     _plans = planList;
