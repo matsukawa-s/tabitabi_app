@@ -86,35 +86,128 @@ class PlanSearchPage extends StatelessWidget {
             // プランの画像表示
             Expanded(
               flex: 5,
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(model.plans[index].imageUrl ?? ''),
-                    fit: BoxFit.cover,
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(
+                            model.plans[index].imageUrl),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Container(
+                      margin: EdgeInsets.only(top: 30.0),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: FractionalOffset.bottomCenter,
+                          end: FractionalOffset.topCenter,
+                          colors: [
+                            const Color(0xff000000).withOpacity(0.5),
+                            const Color(0xff000000).withOpacity(0.0),
+                          ],
+                          stops: const [
+                            0.0,
+                            2.0,
+                          ],
+                        ),
+                      ),
+                    ),
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _buildIconImageInUserTop(model.plans[index].user["icon_path"], 16.0),
+                          Padding(
+                            padding: EdgeInsets.only(left: 5.0),
+                            child: Text(
+                              model.plans[index].user["name"],
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.0,
+                                //fontWeight: FontWeight.bold
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  Positioned(
+                    bottom: 0.0,
+                    right: 10.0,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          child: Text(
+                            _getDateTime(DateTime.parse(model.plans[index].startDay), DateTime.parse(model.plans[index].endDay)).toString() + "日程",
+                            style: TextStyle(
+                              color: Colors.white,
+                              //fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.right
+                          ),
+                        ),
+                        Container(
+                          child: Text(
+                            model.plans[index].title,
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              color: Colors.white,
+                              //fontWeight: FontWeight.bold,
+                              fontSize: 32,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if(model.plans[index].tags.toString() != "[]")
+                          Row(
+                            children: [
+                              for(int i=0; i<model.plans[index].tags.length; i++)
+                              Container(
+                                child: Text(
+                                    "#" + model.plans[index].tags[i]["tag_name"].toString(),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      //fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.right
+                                ),
+                              ),
+                            ],
+                          )
+                      ],
+                    ),
+                  )
+                ],
               ),
             ),
             // プランのタイトル表示
-            Expanded(
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      model.plans[index].title,
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // Expanded(
+            //   child: Container(
+            //     padding: EdgeInsets.symmetric(horizontal: 20),
+            //     child: Row(
+            //       mainAxisAlignment: MainAxisAlignment.start,
+            //       children: [
+            //         Text(
+            //           model.plans[index].title,
+            //           textAlign: TextAlign.left,
+            //           style: TextStyle(
+            //             fontWeight: FontWeight.bold,
+            //             fontSize: 20,
+            //           ),
+            //           overflow: TextOverflow.ellipsis,
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
             // プランのサブアイテム表示
             Expanded(
               child: Row(
@@ -123,6 +216,7 @@ class PlanSearchPage extends StatelessWidget {
                   Center(
                     child:
                     Container(
+                      padding: EdgeInsets.only(),
                       child: Row(children: [
                         IconButton(
                           icon: (model.plans[index].isFavorite)? Icon(Icons.favorite,color: Colors.pink): Icon(Icons.favorite_outline,color: iconColor,),
@@ -132,6 +226,7 @@ class PlanSearchPage extends StatelessWidget {
                             onPlanLikeButtonTapped(1, model.plans[index].id);
                             print(model.plans[index].favoriteCount);
                           },
+                          padding: EdgeInsets.only(bottom: 3.0),
                         ),
                         Text(
                           NumberFormat.compact().format(model.plans[index].favoriteCount),
@@ -145,7 +240,9 @@ class PlanSearchPage extends StatelessWidget {
 //                      model.plans[index].numberOfViews += 1;
                               print('閲覧数');
                               print(iconColor.toString());
-                            }),
+                            },
+                            padding: EdgeInsets.only(bottom: 3.0),
+                        ),
                         Text(
                           NumberFormat.compact().format(model.plans[index].numberOfViews),
                           style: TextStyle(
@@ -157,7 +254,9 @@ class PlanSearchPage extends StatelessWidget {
                             onPressed: (){
 
                               print('参考数');
-                            }),
+                            },
+                          padding: EdgeInsets.only(bottom: 3.0),
+                        ),
                         Text(
                           NumberFormat.compact().format(model.plans[index].referencedNumber),
                           style: TextStyle(
@@ -169,6 +268,7 @@ class PlanSearchPage extends StatelessWidget {
                   ),
                   IconButton(
                     icon: Icon(Icons.upload_rounded),
+                    padding: EdgeInsets.only(bottom: 3.0),
                   ),
                 ],
               ),
@@ -195,5 +295,43 @@ class PlanSearchPage extends StatelessWidget {
     };
     // データベースのお気に入りデータを更新
     await Network().postData(data, 'favoritePlan');
+  }
+
+  //日程を返す
+  int _getDateTime(DateTime startDate, DateTime endDate){
+    List<DateTime> dateList = [];
+    print("aa");
+
+    //1日だけのとき
+    if(startDate == endDate){
+      dateList.add(startDate);
+      return dateList.length;
+    }
+
+    //2日以上あるとき
+    DateTime date = startDate;
+    DateTime lastDate = DateTime(endDate.year, endDate.month, endDate.day+1);
+    while(date != lastDate){
+      dateList.add(date);
+      date = DateTime(date.year, date.month, date.day+1);
+    }
+
+    return dateList.length;
+  }
+
+  Widget _buildIconImageInUserTop(String iconPath, double size){
+    final double iconSize = size;
+    if(iconPath == null){
+      return CircleAvatar(
+        backgroundColor: Colors.grey,
+        radius: iconSize,
+      );
+    }else{
+      return CircleAvatar(
+        backgroundColor: Colors.black12,
+        radius: iconSize,
+        backgroundImage: NetworkImage(Network().imagesDirectory("user_icons") + iconPath),
+      );
+    }
   }
 }
