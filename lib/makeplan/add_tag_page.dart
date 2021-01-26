@@ -33,8 +33,9 @@ class _AddTagPageState extends State<AddTagPage> {
   }
 
   void _getTag() async{
-    http.Response res = await Network().getData("tag/get");
+    http.Response res = await Network().getData("tag/all/get");
     var list = jsonDecode(res.body);
+    print(res.body);
 
     setState(() {
       for(int i=0; i<list.length; i++){
