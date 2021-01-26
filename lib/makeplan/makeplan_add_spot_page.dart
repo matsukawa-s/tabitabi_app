@@ -37,6 +37,12 @@ class _AddSpotPageState extends State<AddSpotPage> with SingleTickerProviderStat
         appBar: AppBar(
           title: const Text('スポットの追加'),
           backgroundColor: Colors.white.withOpacity(0.7),
+          actions: [
+            FlatButton(
+                onPressed: () => Navigator.of(context).pop(_selectedSpots),
+                child: Text("決定")
+            )
+          ],
         ),
         body: Column(
           children: [
