@@ -89,8 +89,7 @@ class PlanSearchPage extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: NetworkImage(
-                        "https://www.osakacastle.net/wordpress/wp-content/themes/osakacastle-sp/sp_img/contents/top_img.jpg"),
+                    image: NetworkImage(model.plans[index].imageUrl ?? ''),
                     fit: BoxFit.cover,
                   ),
                 ),

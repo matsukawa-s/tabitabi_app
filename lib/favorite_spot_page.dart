@@ -76,7 +76,7 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
                 ),
                 choiceItems: model.prefectures,
                 choiceType: S2ChoiceType.chips,
-                modalType: S2ModalType.popupDialog,
+                modalType: Platform.isAndroid ? S2ModalType.popupDialog : S2ModalType.bottomSheet,
                 choiceLayout: S2ChoiceLayout.list,
                 tileBuilder: (context,state){
                   return S2Tile.fromState(
@@ -98,7 +98,7 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
                 ),
                 choiceItems: model.types,
                 choiceType: S2ChoiceType.checkboxes,
-                modalType: S2ModalType.popupDialog,
+                modalType: Platform.isAndroid ? S2ModalType.popupDialog : S2ModalType.bottomSheet,
                 choiceLayout: S2ChoiceLayout.list,
                 tileBuilder: (context,state){
                   return S2Tile.fromState(
