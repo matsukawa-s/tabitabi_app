@@ -136,8 +136,8 @@ class MyHomePage extends StatelessWidget {
               )
           );
         },
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+        //tooltip: 'Increment',
+        child: Icon(Icons.add, color: Colors.white, size: 32.0,),
       );
     }else{
       fab = null;

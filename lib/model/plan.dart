@@ -17,6 +17,7 @@ class Plan{
   var updateAt;
   var isFavorite;
   var user;
+  var tags;
 
   Plan(
       this.id,
@@ -34,7 +35,8 @@ class Plan{
       this.createdAt,
       this.updateAt,
       this.isFavorite,
-      this.user
+      this.user,
+      this.tags,
   );
 
   Plan.fromJson(Map<String, dynamic> json)
@@ -53,5 +55,6 @@ class Plan{
         createdAt = json['created_at'],
         updateAt   = json['update_at'],
         isFavorite = json['islike'],
-        user = json["user"];
+        user = json["user"],
+        tags = json["tag"];
 }

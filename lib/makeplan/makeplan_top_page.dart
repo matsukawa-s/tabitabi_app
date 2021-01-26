@@ -70,6 +70,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   int _cost = 0;
 
   int userFlag = 0;
+  bool favoriteFlag = false;
 
   TabController _pageTabController;
   TabController _controller;
@@ -173,6 +174,8 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
 
     print(_planDates.length);
 
+    _getFavorite();
+
     setState(() {
       _controller = _createNewTabController(_planDates.length);
     });
@@ -183,6 +186,19 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     vsync: this,
     length: num,
   );
+
+  void _getFavorite() async{
+    http.Response response = await Network().getData("plan/favorite/get");
+    print("testgaviri" + response.body);
+
+    var list = json.decode(response.body);
+    for(int i=0; i<list.length; i++){
+      if(list[i]["id"] == widget.planId){
+        favoriteFlag = true;
+      }
+    }
+
+  }
 
   void _getItiData() async{
     _itineraries.clear();
@@ -967,6 +983,18 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
 
   }
 
+  //お気に入り
+  Future<void> _updateFavorite() async{
+    var data = {
+      'plan_id' : widget.planId,
+    };
+    // データベースのお気に入りデータを更新
+    await Network().postData(data, 'plan/favorite/store');
+    setState(() {
+      favoriteFlag = !favoriteFlag;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1225,6 +1253,18 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
             )
         ],
       ),
+      floatingActionButton: userFlag == 0 ? FloatingActionButton(
+        onPressed: (){
+
+        },
+        child: GestureDetector(
+            child: Icon(
+              Icons.favorite, color: favoriteFlag ? Colors.pinkAccent : Colors.white, size: 36,
+            ),
+            onTap: (){_updateFavorite();},
+
+        ),
+      ) : Container(),
     );
   }
 
