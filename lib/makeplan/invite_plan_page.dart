@@ -1,10 +1,9 @@
-//import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'dart:io';
-//import 'dart:html';
 
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:share/share.dart';
 
 import 'package:qr_flutter/qr_flutter.dart';
@@ -30,12 +29,6 @@ class InvitePlanPage extends StatelessWidget {
                   final links = await _createDynamicLink();
                   Share.share(links.toString());
                 }
-//                if(Platform.isIOS){
-//                  final snackBar = SnackBar(
-//                    content: Text('お知らせ！'),
-//                  );
-//                  Scaffold.of(context).showSnackBar(snackBar);
-//                }
               }
           )
         ],
@@ -80,7 +73,7 @@ class InvitePlanPage extends StatelessWidget {
   clipboardCopy() async{
     final data = ClipboardData(text: plans["plan_code"]);
     await Clipboard.setData(data);
-    print("コピーしたよ");
+    Fluttertoast.showToast(msg: "コピーしました");
   }
 
   _createDynamicLink() async {
