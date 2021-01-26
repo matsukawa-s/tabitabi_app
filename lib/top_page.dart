@@ -6,14 +6,17 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:page_transition/page_transition.dart';
+import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/join_plan_page.dart';
 import 'package:tabitabi_app/makeplan/makeplan_initial_page.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
+import 'package:tabitabi_app/network_utils/google_map.dart';
 import 'package:tabitabi_app/spot_details_page.dart';
 import 'package:tabitabi_app/top_prefectures_spot_list_page.dart';
 
 import 'makeplan/makeplan_top_page.dart';
+import 'model/plan.dart';
 
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
@@ -23,18 +26,26 @@ class TopPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final double popularPlanItemHeight = (size.width - pagePadding*2) / 2 * 2/3;
-    final double popularPlanItemWidth = (size.width - pagePadding*2) / 2;
-    final double popularSpotItemSize = (size.width - pagePadding*2) / 3;
+    final double popularPlanItemHeight = (size.width - pagePadding*2) * 2/5 * 4/5;
+    final double popularPlanItemWidth = (size.width - pagePadding*2) * 2/5;
+    final double popularSpotItemSize = (size.width - pagePadding*2) * 2/7;
 
     return FutureBuilder(
       future: getInitialTopData(),
       builder: (context, snapshot) {
         if(snapshot.hasData){
-          final List<dynamic> todayPlans = snapshot.data["today_plans"] ?? []; //今日のプラン
-          final List<dynamic> popularPlans = snapshot.data["popular_plans"] ?? []; //人気のプラン
+          final List<dynamic> todayPlansTmp = snapshot.data["today_plans"] ?? []; //今日のプラン
+          final List<dynamic> popularPlansTmp = snapshot.data["popular_plans"] ?? []; //人気のプラン
           final List<dynamic> popularSpots = snapshot.data["popular_spots"] ?? []; //人気のスポット
           final List<dynamic> prefecturesSpotsTmp = snapshot.data["prefectures_spots"] ?? [];
+          
+          final List<Plan> todayPlans = List.generate(
+              todayPlansTmp.length, (index) => Plan.fromJson(todayPlansTmp[index])
+          );
+
+          final List<Plan> popularPlans = List.generate(
+              popularPlansTmp.length, (index) => Plan.fromJson(popularPlansTmp[index])
+          );
           
           final List<Prefecture> prefecturesSpots = List.generate(
               prefecturesSpotsTmp.length, (index) => Prefecture.fromJson(prefecturesSpotsTmp[index])
@@ -144,48 +155,62 @@ class TopPage extends StatelessWidget {
                             scrollDirection: Axis.horizontal,
                             itemCount: todayPlans.length,
                             itemBuilder: (BuildContext context, int index){
-                              return GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) {
-                                      return MakePlanTop(planId: todayPlans[index]["id"]);
-                                    },
+                              return Stack(
+                                children: [
+                                  PlanItem(
+                                    plan: todayPlans[index],
+                                    width: size.width - pagePadding*2,
+                                    height: (size.width - pagePadding*2) * 2/5,
                                   ),
-                                ),
-                                child: Container(
-//                                margin: EdgeInsets.all(4.0),
-                                  padding: EdgeInsets.all(2.0),
-                                  width: size.width - pagePadding*2,
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                          flex: 4,
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(6.0),
-                                            child: Container(
-                                              child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
-                                              width: size.width - pagePadding*2,
-                                            ),
-                                          )
-                                      ),
-                                      Expanded(
-                                        flex: 1,
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              todayPlans[index]["title"],
-//                                          style: TextStyle(fontWeight: FontWeight.bold),
-                                            ),
-                                            Text(todayPlans[index]["start_day"] + ' ~ ' + todayPlans[index]["end_day"])
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                  Positioned(
+                                    top: 5.0,
+                                    right: 5.0,
+                                    child: Text("${todayPlans[index].startDay} ~ ${todayPlans[index].endDay}"),
+                                  )
+                                ],
                               );
+//                              return GestureDetector(
+//                                onTap: () => Navigator.push(
+//                                  context,
+//                                  MaterialPageRoute(
+//                                    builder: (context) {
+//                                      return MakePlanTop(planId: todayPlans[index]["id"]);
+//                                    },
+//                                  ),
+//                                ),
+//                                child: Container(
+////                                margin: EdgeInsets.all(4.0),
+//                                  padding: EdgeInsets.all(2.0),
+//                                  width: size.width - pagePadding*2,
+//                                  child: Column(
+//                                    children: [
+//                                      Expanded(
+//                                          flex: 4,
+//                                          child: ClipRRect(
+//                                            borderRadius: BorderRadius.circular(6.0),
+//                                            child: Container(
+//                                              child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
+//                                              width: size.width - pagePadding*2,
+//                                            ),
+//                                          )
+//                                      ),
+//                                      Expanded(
+//                                        flex: 1,
+//                                        child: Row(
+//                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                                          children: [
+//                                            Text(
+//                                              todayPlans[index]["title"],
+////                                          style: TextStyle(fontWeight: FontWeight.bold),
+//                                            ),
+//                                            Text(todayPlans[index]["start_day"] + ' ~ ' + todayPlans[index]["end_day"])
+//                                          ],
+//                                        ),
+//                                      ),
+//                                    ],
+//                                  ),
+//                                ),
+//                              );
                             }
                         ),
                       ),
@@ -232,41 +257,12 @@ class TopPage extends StatelessWidget {
                               scrollDirection: Axis.horizontal,
                               itemCount: popularPlans.length,
                               itemBuilder: (BuildContext context, int index){
-                                return GestureDetector(
-                                  onTap: (){
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) {
-                                          return MakePlanTop(planId: popularPlans[index]["id"]);
-                                        },
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
+                                return Container(
+                                  margin: EdgeInsets.only(right: 4.0),
+                                  child: PlanItem(
+                                    plan: popularPlans[index],
                                     width: popularPlanItemWidth,
-                                    padding: EdgeInsets.all(2.0),
-                                    child: Column(
-                                      children: [
-                                        Expanded(
-                                          flex: 4,
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(6.0),
-                                            child: Container(
-                                              width: popularPlanItemWidth,
-                                              child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                            child: Text(
-                                              popularPlans[index]["title"],
-                                              overflow: TextOverflow.ellipsis,
-                                            )
-                                        ),
-                                      ],
-                                    ),
+                                    height: popularPlanItemHeight,
                                   ),
                                 );
                               }
@@ -340,9 +336,7 @@ class TopPage extends StatelessWidget {
                                           borderRadius: BorderRadius.circular(6.0),
                                           clipBehavior: Clip.antiAlias,
                                           child: Image.network(
-                                            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&maxheight=150'
-                                                '&photoreference=${popularSpots[index]["image_url"]}'
-                                                '&key=${_kGoogleApiKey}',
+                                            GoogleMapApi().fullPhotoPath(popularSpots[index]["image_url"]),
                                             fit: BoxFit.fill,
                                             width: popularSpotItemSize,
                                           ),

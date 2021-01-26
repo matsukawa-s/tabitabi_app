@@ -6,6 +6,7 @@ import 'package:tabitabi_app/makeplan/invite_plan_page.dart';
 import 'dart:convert';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:flutter_absolute_path/flutter_absolute_path.dart';
+import 'package:tabitabi_app/model/user.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 import 'makeplan_edit_page.dart';
 import 'package:tabitabi_app/data/itinerary_data.dart';
@@ -84,6 +85,8 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
   List<TrafficItineraryData> _trafficItineraries = [];
   //アルバムの画像リスト
   List<Widget> _albumImages = [];
+  //メンバーリスト
+  List members = [];
   //レビュー
   ReviewData _review;
 
@@ -109,6 +112,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     _controller = TabController(length: 1, vsync: this);
     _reviewController = TabController(length: 1, vsync: this);
     _getPhoto();
+    _getMembers();
     _getReviewData();
 
   }
@@ -287,7 +291,20 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
     setState(() {
 
     });
+  }
 
+  void _getMembers() async{
+    members.clear();
+    http.Response response = await Network().getData('plan/members/${widget.planId.toString()}');
+    print(response.body);
+    if(response.statusCode == 200){
+      final List tmp = json.decode(response.body);
+      members = List.generate(
+          tmp.length, (index) => User.fromJson(tmp[index])
+      );
+    }
+    print("members----------");
+    print(members);
   }
 
   DateTime _dateTimeFunc(DateTime date){
@@ -1369,39 +1386,65 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
             borderRadius: BorderRadius.circular(20.0),
           ),
           child: Container(
-            height: 200.0,
+            height: 150.0,
+            padding: EdgeInsets.all(10.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildTitle("メンバー"),
-                Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: Icon(Icons.account_circle, size: 64.0),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: Icon(Icons.account_circle, size: 64.0),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: Icon(Icons.account_circle, size: 64.0),
-                    ),
-                  ],
-                ),
                 Expanded(
-                  child: Container(
-                    alignment: Alignment.bottomRight,
-                    margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
-                    child: FloatingActionButton(
-                      heroTag: 'memberAdd',
-                      backgroundColor: Colors.orange,
-                      child: Icon(Icons.add, color: Colors.white,),
-                      onPressed: (){},
-                    ),
+                  child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: members.length,
+                      itemBuilder: (BuildContext context, int index){
+                          return Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Column(
+                                children: [
+                                  if(members[index].iconPath != null)
+                                    CircleAvatar(
+                                      backgroundColor: Colors.black12,
+                                      backgroundImage: NetworkImage(Network().imagesDirectory("user_icons") + members[index].iconPath),
+                                      radius: 24,
+                                    )
+                                  else
+                                    CircleAvatar(
+                                      radius: 24,
+                                      backgroundColor: Colors.black12,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(4.0),
+                                        child: LayoutBuilder(builder: (context, constraint) {
+                                          return Icon(
+                                            Icons.person,
+                                            color: Colors.white,
+                                            //                                    size: constraint.biggest.height
+                                          );
+                                        }),
+                                      ),
+                                    ),
+                                  Text(members[index].name,overflow: TextOverflow.ellipsis,)
+
+                                ]
+                            ),
+                          );
+//                        return Padding(
+//                          padding: EdgeInsets.all(10.0),
+//                          child: Icon(Icons.account_circle, size: 64.0),
+//                        );
+                      }
                   ),
                 ),
+//                Expanded(
+//                  child: Container(
+//                    alignment: Alignment.bottomRight,
+//                    margin: EdgeInsets.only(right: 10.0, bottom: 10.0),
+//                    child: FloatingActionButton(
+//                      heroTag: 'memberAdd',
+//                      backgroundColor: Colors.orange,
+//                      child: Icon(Icons.add, color: Colors.white,),
+//                      onPressed: (){},
+//                    ),
+//                  ),
+//                ),
               ],
             ),
           ),

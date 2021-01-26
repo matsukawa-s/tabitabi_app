@@ -133,6 +133,7 @@ class PlanSearchModel with ChangeNotifier {
       );
     }else{
       print(plansRes.statusCode);
+      print(plansRes.body);
     }
     setSugTagKeys(tags);
     notifyListeners();

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'network_utils/api.dart';
@@ -17,8 +18,8 @@ class UserProfileEditPage extends StatefulWidget {
 
 class _UserProfileEditPageState extends State<UserProfileEditPage> {
   File _image;
-  String _name;
   TextEditingController _userNameController;
+  bool isSubmit = false;
 
   final picker = ImagePicker();
 
@@ -29,6 +30,9 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
       if (pickedFile != null) {
         print(pickedFile.path);
         _image = File(pickedFile.path);
+        setState(() {
+          isSubmit = true;
+        });
       } else {
         print('No image selected.');
       }
@@ -45,40 +49,60 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("ユーザー情報を変更する"),
+        title: Text("プロフィールを編集"),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        actions: [
+          FlatButton(
+              onPressed: isSubmit ? saveProfile : null,
+              child: Text(
+                "保存",
+                style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16,),
+              )
+          )
+//          IconButton(icon: Icon(Icons.check), onPressed: (){})
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
-            padding: EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(16.0),
             child: Center(
               child: Column(
                 children: [
                   _buildIconImage(),
                   FlatButton(
                       onPressed: getImage,
-                      child: Text("画像を選択する")
+                      child: Text("写真を変更する",style: TextStyle(fontSize: 14,color: Colors.black87),)
                   ),
                   Padding(
                       padding: EdgeInsets.all(8.0),
-                      child: TextField(
+                      child: TextFormField(
                         controller: _userNameController,
-                        style: TextStyle(fontSize: 24),
+                        style: TextStyle(fontSize: 26),
                         decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                          labelText: 'ユーザー名',
+                          contentPadding: const EdgeInsets.symmetric(vertical: 4.0),
+                          labelText: 'ユーザーネーム',
+                          labelStyle: TextStyle(fontSize: 20)
                         ),
+                        onChanged: (input){
+                          setState(() {
+                            isSubmit = input == widget.userProfile["name"] ? false : true;
+                          });
+                        },
                       ),
                   ),
-                  Container(
-                    margin: EdgeInsets.only(top: 16.0),
-                    child: RaisedButton(
-                        onPressed: (){
-                          saveProfile();
-                        },
-                        child: Text("変更を保存する"),
-                    ),
-                  )
+//                  Builder(
+//                    builder: (BuildContext context){
+//                      return Container(
+//                        margin: EdgeInsets.only(top: 16.0),
+//                        child: RaisedButton(
+//                          onPressed: saveProfile,
+//                          child: Text("変更を保存する"),
+//                        ),
+//                      );
+//                    },
+//                  )
                 ],
               ),
             ),
@@ -88,13 +112,16 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
     );
   }
 
-  Future<void> saveProfile() {
+  Future<void> saveProfile() async{
     final data = {
       "name" : _userNameController.text.toString()
     };
 
-    var res = Network().postUploadImage(data, _image, 'user/profileSave');
-    print(res.body);
+    http.StreamedResponse res = await Network().postUploadImage(data, _image, 'user/profileSave');
+
+    if(res.statusCode == 200){
+      Fluttertoast.showToast(msg: "プロフィールを変更しました");
+    }
   }
 
   Widget _buildIconImage(){
@@ -113,8 +140,19 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
           );
     }else{
       return CircleAvatar(
-        backgroundColor: Colors.black12,
+        backgroundColor: Colors.black26,
         radius: iconSize,
+//        child: Icon(Icons.person_sharp,size: constraint.biggest.height,color: Colors.white,),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: LayoutBuilder(builder: (context, constraint) {
+            return Icon(
+                Icons.person,
+                color: Colors.white,
+                size: constraint.biggest.height
+            );
+          }),
+        ),
       );
     }
   }

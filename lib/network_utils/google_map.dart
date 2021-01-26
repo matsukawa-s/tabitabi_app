@@ -10,7 +10,7 @@ class GoogleMapApi{
     return _placePhotoBaseUrl + '&photoreference=${reference}' + '&key=${_kGoogleApiKey}';
   }
 
-  searchDetails(String placeId){
-//    place_id=ChIJN1t_tDeuEmsRUsoyG83frY4&fields=name,rating,formatted_phone_number&key=YOUR_API_KEY
+  nearBySearch(){
+
   }
 }

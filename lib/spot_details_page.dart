@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import "package:google_maps_webservice/places.dart";
 import 'package:http/http.dart' as http;
+import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
+import 'model/plan.dart';
 import 'network_utils/google_map.dart';
 
 class SpotDetailsPage extends StatefulWidget {
@@ -68,8 +70,11 @@ class _SpotDetailsPageState extends State<SpotDetailsPage> {
 
           final data = snapshot.data[0];
           final photoReference = data.photos[0].photoReference;
-          planContainingSpots = snapshot.data[1]["plan_containing_spots"];
+          final planContainingSpotsTmp = snapshot.data[1]["plan_containing_spots"];
           isFavorite = snapshot.data[1]["isFavorite"];
+          final List<Plan> planContainingSpots = List.generate(
+              planContainingSpotsTmp.length, (index) => Plan.fromJson(planContainingSpotsTmp[index])
+          );
 
           return Scaffold(
             appBar: PreferredSize(
@@ -163,44 +168,26 @@ class _SpotDetailsPageState extends State<SpotDetailsPage> {
                               itemCount: planContainingSpots.length,
                               scrollDirection: Axis.horizontal,
                               itemBuilder: (BuildContext context,int index){
-                                return Container(
-                                  margin: EdgeInsets.only(right: 6.0),
-                                  width: planContainingSpotsItemWidth,
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                        flex: 4,
-                                        child: Container(
-                                          width: planContainingSpotsItemWidth,
-                                          child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
-                                        ),
-                                      ),
-                                      Expanded(
-                                          flex: 1,
-                                          child: Text(planContainingSpots[index]["title"])
-                                      ),
-                                    ],
-                                  ),
-                                );
+                                return PlanItem(plan: planContainingSpots[index]);
                               }
                           ),
                         ),
                       ),
-                    Center(
-                      child: Container(
-                        margin: EdgeInsets.only(top: 20),
-                        width: size.width - planContainingSpotsViewPadding - 30,
-                        child: FlatButton(
-                            onPressed: (){
-
-                            },
-                            shape: const StadiumBorder(
-                              side: BorderSide(color: Colors.orange),
-                            ),
-                            child: const Text("マップで表示する(未実装)")
-                        ),
-                      ),
-                    ),
+//                    Center(
+//                      child: Container(
+//                        margin: EdgeInsets.only(top: 20),
+//                        width: size.width - planContainingSpotsViewPadding - 30,
+//                        child: FlatButton(
+//                            onPressed: (){
+//
+//                            },
+//                            shape: const StadiumBorder(
+//                              side: BorderSide(color: Colors.orange),
+//                            ),
+//                            child: const Text("マップで表示する(未実装)")
+//                        ),
+//                      ),
+//                    ),
                   ],
                 ),
               ),

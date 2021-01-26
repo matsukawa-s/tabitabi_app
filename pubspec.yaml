@@ -62,9 +62,11 @@ dependencies:
   image_gallery_saver: ^1.6.7
   firebase_dynamic_links: ^0.7.0+1
   share: ^0.6.5+4
+  fluttertoast: ^7.1.6
+  sliding_up_panel: ^1.0.2
   firebase_core: ^0.7.0
   firebase_auth: ^0.20.0+1
-  firebase_crashlytics: ^0.4.0+1
+#  firebase_crashlytics: ^0.4.0+1
   firebase_ml_vision: ^0.10.0
   firebase_analytics: ^7.0.1
   esys_flutter_share: ^1.0.2
