@@ -28,6 +28,7 @@ class PlanProvider with ChangeNotifier{
     }else{
       print("statusCode : ${res.statusCode}");
     }
+    notifyListeners();
   }
 
   //プランのお気に入り解除
@@ -36,12 +37,12 @@ class PlanProvider with ChangeNotifier{
       'plan_id' : plan.id
     };
     http.Response res = await Network().postData(data, 'plan/favorite/delete');
-    print(res.body);
+
     if(res.statusCode == 200){
       print(res.statusCode);
       getFavoritePlans();
-    }
       notifyListeners();
+    }
   }
 
   // プランのお気に入り登録
