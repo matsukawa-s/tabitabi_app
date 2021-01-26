@@ -1,18 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Network{
 //  final _baseUrl = 'http://10.0.2.2:8000/';
-  final _baseUrl = 'http://18.183.235.47/';
+
+  final _baseUrl = 'http://${DotEnv().env['API_ADDRESS']}/';
+
 
 // アンドロイドエミュレーターの場合10.0.2.2:8000を使用
   //final String _url = 'http://10.0.2.2:8000/api/';
 // IOSシミュレータの場合はlocalhostを使用
 
-  final String _url = 'http://127.0.0.1:8000/api/';
-  //final String _url = 'http://18.183.235.47/api/';
+  final String _url = 'http://${DotEnv().env['API_ADDRESS']}/api/';
+
 
   static var token;
 

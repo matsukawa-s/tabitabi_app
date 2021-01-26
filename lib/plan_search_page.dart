@@ -113,7 +113,6 @@ class PlanSearchPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ),
                   Positioned(
                     top: 10,
                     left: 10,
