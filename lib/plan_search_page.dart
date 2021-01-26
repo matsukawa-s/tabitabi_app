@@ -277,12 +277,13 @@ class PlanSearchPage extends StatelessWidget {
           ],
         ),
       ),
-      onTap: (){
-        Navigator.of(context).push(
+      onTap: () async{
+        await Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => MakePlanTop(planId: model.plans[index].id,),
             )
         );
+        model.fetchPostPlans();
       },
     );
   }
