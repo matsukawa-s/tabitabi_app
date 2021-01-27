@@ -118,6 +118,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
 
   }
 
+
   Future<int> _getPlan() async{
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     print(prefs.getString('user') ?? '');
@@ -200,7 +201,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
 
   }
 
-  void _getItiData() async{
+  Future<void> _getItiData() async{
     _itineraries.clear();
     _spotItineraries.clear();
     _trafficItineraries.clear();
@@ -1002,225 +1003,224 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
       body: Stack(
         children: [
           Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                  image: AssetImage("images/paper_00108.jpg"),
-                  //colorFilter: ColorFilter.mode(Colors.white.withOpacity(0.3), BlendMode.color),
-                  fit: BoxFit.cover
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  spreadRadius: 5,
-                  blurRadius: 7,
-                  offset: Offset(0, 3), // changes position of shadow
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                    image: AssetImage("images/paper_00108.jpg"),
+                    //colorFilter: ColorFilter.mode(Colors.white.withOpacity(0.3), BlendMode.color),
+                    fit: BoxFit.cover
                 ),
-              ],
-            ),
-            child: DefaultTabController(
-              length: _pageTabController.length,
-              child: NestedScrollView(
-                headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled){
-                  return [
-                    SliverOverlapAbsorber(
-                      handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                      sliver: SliverAppBar(
-                        iconTheme: IconThemeData(
-                            color: Colors.white
-                        ),
-                        pinned: true,
-                        expandedHeight: 250.0,
-                        actions: [
-                          IconButton(
-                            icon: Icon(Icons.share, color: Colors.white,),
-                            onPressed: () async{
-                              _pageTabController.animateTo(0, duration: Duration(milliseconds: 1000));
-                              ShareProvider().shareImageAndText('アプリ #たびたび で旅行プランを作りました！', _getImageKey);
-                            },
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    spreadRadius: 5,
+                    blurRadius: 7,
+                    offset: Offset(0, 3), // changes position of shadow
+                  ),
+                ],
+              ),
+              child: DefaultTabController(
+                length: _pageTabController.length,
+                child: NestedScrollView(
+                  headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled){
+                    return [
+                      SliverOverlapAbsorber(
+                        handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                        sliver: SliverAppBar(
+                          iconTheme: IconThemeData(
+                              color: Colors.white
                           ),
-                          if(userFlag == 1)
-                            PopupMenuButton(
-                                icon: Icon(Icons.more_vert, color: Colors.white,),
-                                onSelected: (WhyFarther result) {
-                                  switch(result){
-                                    case WhyFarther.EditPlan:
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) {
-                                            return PlanInfoEditPage(widget.planId, _planName, _tags, _startDateTime, _endDateTime, _imageUrl);
-                                          },
-                                        ),
-                                      ).then((value){
-                                        _getPlan();
-                                      });
-                                      break;
-                                    case WhyFarther.OpenPlan:
-                                      _showOpenDialog();
-                                      break;
-                                    case WhyFarther.JoinPlan:
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) {
-                                            return InvitePlanPage(plans);
-                                          },
-                                        ),
-                                      );
-                                      break;
-                                    case WhyFarther.DeletePlan:
-                                      _deletePlan();
-                                      break;
+                          pinned: true,
+                          expandedHeight: 250.0,
+                          actions: [
+                            IconButton(
+                              icon: Icon(Icons.share, color: Colors.white,),
+                              onPressed: () async{
+                                _pageTabController.animateTo(0, duration: Duration(milliseconds: 1000));
+                                ShareProvider().shareImageAndText('アプリ #たびたび で旅行プランを作りました！', _getImageKey);
+                              },
+                            ),
+                            if(userFlag == 1)
+                              PopupMenuButton(
+                                  icon: Icon(Icons.more_vert, color: Colors.white,),
+                                  onSelected: (WhyFarther result) {
+                                    switch(result){
+                                      case WhyFarther.EditPlan:
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) {
+                                              return PlanInfoEditPage(widget.planId, _planName, _tags, _startDateTime, _endDateTime, _imageUrl);
+                                            },
+                                          ),
+                                        ).then((value){
+                                          _getPlan();
+                                        });
+                                        break;
+                                      case WhyFarther.OpenPlan:
+                                        _showOpenDialog();
+                                        break;
+                                      case WhyFarther.JoinPlan:
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) {
+                                              return InvitePlanPage(plans);
+                                            },
+                                          ),
+                                        );
+                                        break;
+                                      case WhyFarther.DeletePlan:
+                                        _deletePlan();
+                                        break;
 
-                                  }
-                                },
-                                itemBuilder: (BuildContext context) => <PopupMenuEntry<WhyFarther>>[
-                                  const PopupMenuItem<WhyFarther>(
-                                    value: WhyFarther.EditPlan,
-                                    child: Text('プラン情報の編集'),
-                                  ),
-                                  const PopupMenuItem<WhyFarther>(
-                                    value: WhyFarther.OpenPlan,
-                                    child: Text('プランの公開設定'),
-                                  ),
-                                  const PopupMenuItem<WhyFarther>(
-                                    value: WhyFarther.JoinPlan,
-                                    child: Text('プラン招待コード'),
-                                  ),
-                                  const PopupMenuItem<WhyFarther>(
-                                    value: WhyFarther.DeletePlan,
-                                    child: Text('プランを削除する'),
-                                  ),
-                                ]
-                            ),
-                        ],
-                        flexibleSpace: Container(
-                          constraints: BoxConstraints.expand(height: 300.0),
-                          padding: EdgeInsets.only(bottom: 30.0),
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: _imageUrl == null ? AssetImage("images/2304099_m.jpg") : NetworkImage(_imageUrl),
-                              //image: NetworkImage("https://picsum.photos/1500/800"),
-                              colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),
-                              fit: BoxFit.cover,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                spreadRadius: 5,
-                                blurRadius: 7,
-                                offset: Offset(0, 3), // changes position of shadow
+                                    }
+                                  },
+                                  itemBuilder: (BuildContext context) => <PopupMenuEntry<WhyFarther>>[
+                                    const PopupMenuItem<WhyFarther>(
+                                      value: WhyFarther.EditPlan,
+                                      child: Text('プラン情報の編集'),
+                                    ),
+                                    const PopupMenuItem<WhyFarther>(
+                                      value: WhyFarther.OpenPlan,
+                                      child: Text('プランの公開設定'),
+                                    ),
+                                    const PopupMenuItem<WhyFarther>(
+                                      value: WhyFarther.JoinPlan,
+                                      child: Text('プラン招待コード'),
+                                    ),
+                                    const PopupMenuItem<WhyFarther>(
+                                      value: WhyFarther.DeletePlan,
+                                      child: Text('プランを削除する'),
+                                    ),
+                                  ]
                               ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              if(userFlag == 0)
-                                Padding(
-                                  padding: EdgeInsets.only(right: 10.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      _buildIconImageInUserTop(_userIconPath, 16.0),
-                                      Padding(
-                                        padding: EdgeInsets.only(left: 5.0),
-                                        child: Text(
-                                          _userName,
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16.0
-                                          ),
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              if(userFlag == 1)
-                                Padding(
-                                  padding: EdgeInsets.only(right: 10.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Container(
-                                          height: 10.0,
-                                          width: 10.0,
-                                          decoration: BoxDecoration(
-                                              color: _isOpen == 0 ? Colors.grey : Colors.greenAccent,
-                                              shape: BoxShape.circle
-                                          )
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.only(left: 5.0),
-                                        child: Text(
-                                          _isOpen == 0 ? "非公開" : "公開中",
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14.0
-                                          ),
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              Padding(
-                                padding: EdgeInsets.only(right: 10.0),
-                                child: Text(_planName, style: TextStyle(color: Colors.white, fontSize: 32.0)),
+                          ],
+                          flexibleSpace: Container(
+                            constraints: BoxConstraints.expand(height: 300.0),
+                            padding: EdgeInsets.only(bottom: 30.0),
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: _imageUrl == null ? AssetImage("images/2304099_m.jpg") : NetworkImage(_imageUrl),
+                                //image: NetworkImage("https://picsum.photos/1500/800"),
+                                colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),
+                                fit: BoxFit.cover,
                               ),
-                              Padding(
-                                padding: EdgeInsets.only(right: 5.0, bottom: 3.0),
-                                child: Text(_tagText, style: TextStyle(color: Colors.white)),
-                              )
-                            ],
-                          ),
-                        ),
-                        bottom: PreferredSize(
-                          child: TabBar(
-                            tabs: _tabs,
-                          ),
-                          preferredSize: Size.fromHeight(110.0),
-                        ),
-                      ),
-                    )
-                  ];
-                },
-                body: TabBarView(
-                  children: [
-                    for(int i=0; i<_pageTabController.length; i++)
-                      SafeArea(
-                        top: false,
-                        bottom: false,
-                        child: Builder(
-                          builder: (BuildContext context){
-                            return CustomScrollView(
-                              key: PageStorageKey<String>(_tabsString[i]),
-                              slivers: [
-                                SliverOverlapInjector(
-                                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  spreadRadius: 5,
+                                  blurRadius: 7,
+                                  offset: Offset(0, 3), // changes position of shadow
                                 ),
-                                SliverPadding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  sliver: SliverFixedExtentList(
-                                    itemExtent: 600.0,
-                                    delegate: SliverChildBuilderDelegate(
-                                          (BuildContext context, int index) {
-                                        return _buildPage(i);
-                                      },
-                                      childCount: 1,
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                if(userFlag == 0)
+                                  Padding(
+                                    padding: EdgeInsets.only(right: 10.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        _buildIconImageInUserTop(_userIconPath, 16.0),
+                                        Padding(
+                                          padding: EdgeInsets.only(left: 5.0),
+                                          child: Text(
+                                            _userName,
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16.0
+                                            ),
+                                          ),
+                                        )
+                                      ],
                                     ),
                                   ),
-
+                                if(userFlag == 1)
+                                  Padding(
+                                    padding: EdgeInsets.only(right: 10.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Container(
+                                            height: 10.0,
+                                            width: 10.0,
+                                            decoration: BoxDecoration(
+                                                color: _isOpen == 0 ? Colors.grey : Colors.greenAccent,
+                                                shape: BoxShape.circle
+                                            )
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.only(left: 5.0),
+                                          child: Text(
+                                            _isOpen == 0 ? "非公開" : "公開中",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14.0
+                                            ),
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: EdgeInsets.only(right: 10.0),
+                                  child: Text(_planName, style: TextStyle(color: Colors.white, fontSize: 32.0)),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(right: 5.0, bottom: 3.0),
+                                  child: Text(_tagText, style: TextStyle(color: Colors.white)),
                                 )
                               ],
-                            );
-                          },
+                            ),
+                          ),
+                          bottom: PreferredSize(
+                            child: TabBar(
+                              tabs: _tabs,
+                            ),
+                            preferredSize: Size.fromHeight(110.0),
+                          ),
                         ),
                       )
-                  ],
+                    ];
+                  },
+                  body: TabBarView(
+                    children: [
+                      for(int i=0; i<_pageTabController.length; i++)
+                        SafeArea(
+                          top: false,
+                          bottom: false,
+                          child: Builder(
+                            builder: (BuildContext context){
+                              return CustomScrollView(
+                                key: PageStorageKey<String>(_tabsString[i]),
+                                slivers: [
+                                  SliverOverlapInjector(
+                                    handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                                  ),
+                                  SliverPadding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    sliver: SliverFixedExtentList(
+                                      itemExtent: 600.0,
+                                      delegate: SliverChildBuilderDelegate(
+                                            (BuildContext context, int index) {
+                                          return _buildPage(i);
+                                        },
+                                        childCount: 1,
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              );
+                            },
+                          ),
+                        )
+                    ],
+                  ),
                 ),
-              ),
-            )
+              )
           ),
           if(isFileUploading == true)
             Container(
@@ -1309,7 +1309,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                         child: Container(
                           margin: EdgeInsets.only(top: 10.0),
                           height: 600,
-                          width: 500,
+                          //width: 500,
                           child: TabBarView(
                             controller: _controller,
                             children: [
