@@ -151,7 +151,7 @@ class MyHomePage extends StatelessWidget {
     int pageIndex = Provider.of<NavigationBarProvider>(context).selectedIndex;
 
     if(pageIndex == 0){                 // TopPageAppBar
-//      return topPageAppBar();
+      return topPageAppbar(context);
         return null;
     }else if(pageIndex == 1){           // SearchPageAppBar
       return searchPageAppBar(context);
@@ -162,6 +162,15 @@ class MyHomePage extends StatelessWidget {
     }else if(pageIndex == 4){           // UserPageAppBar
       return userPageAppbar(context);
     }
+  }
+
+  AppBar topPageAppbar(context){
+    return AppBar(
+      backgroundColor: Colors.white,
+      title: Container(
+          child: Image.asset('images/logo.png',fit: BoxFit.cover,height: AppBar().preferredSize.height,)
+      ),
+    );
   }
 
   // SearchPageAppBar

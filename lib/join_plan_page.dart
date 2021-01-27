@@ -46,7 +46,13 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
             children: [
               Container(
                 margin: EdgeInsets.only(bottom: 8.0),
-                child: Text("プランコードを入力またはQRコードを読み込んでください")
+                child: FittedBox(
+                  fit: BoxFit.fitWidth,
+                  child: Text(
+                      "プランコードを入力またはQRコードを読み込んでください",
+                      overflow: TextOverflow.visible,
+                  ),
+                )
               ),
               Form(
                 key: _formKey,
