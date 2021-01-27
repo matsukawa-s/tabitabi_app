@@ -40,17 +40,16 @@ class _LoginPageState extends State<LoginPage> {
 //                          color: Colors.grey,
 //                          fontSize: 16,
 //                          fontWeight: FontWeight.bold,
-//                          decoration: TextDecoration.underline,
 //                        ),
-//                        textAlign: TextAlign.start,
+//                        textAlign: TextAlign.center,
 //                      )
 //                  ),
                   Container(
                     height: MediaQuery.of(context).size.height / 3,
                     child: Center(
                         child: Image.asset(
-                          'images/logo_round.png',
-                          width: MediaQuery.of(context).size.width / 3,
+                          'images/logo.png',
+                          width: MediaQuery.of(context).size.width,
                         )
                     ),
                   ),
@@ -69,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           TextFormField(
                             decoration: InputDecoration(
-                              hintText: 'exsample@ecc.com',
+                              hintText: 'exsample@gmail.com',
                               hintStyle: TextStyle(
                                 color: Colors.black26,
                                 fontSize: 16

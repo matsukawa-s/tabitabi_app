@@ -122,146 +122,148 @@ class _AddTagPageState extends State<AddTagPage> {
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Padding(
-              padding: EdgeInsets.only(top: 20.0),
-              child: Text("目的に合ったタグを追加しよう！"),
-            )
-          ),
-          Row(
-            children: [
-              Container(
-                margin: EdgeInsets.only(left: 20.0, top: 20.0),
-                height: 50.0,
-                width: MediaQuery.of(context).size.width - MediaQuery.of(context).size.width / 3 + 30,
-                child: TextField(
-                  controller: _textEditingController,
-                  decoration: InputDecoration(
-                    contentPadding: EdgeInsets.all(10.0),
-                    hintText: "追加したいタグを入力",
-                    labelStyle: TextStyle(color: Colors.black),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide(
-                        color: Color(0xffACACAC),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.black),
-                  onChanged: (value){text = value;},
-                  onSubmitted: (value){_onTapAddButton();},
-                ),
-              ),
-              GestureDetector(
-                child: Container(
-                  margin: EdgeInsets.only(left: 10.0, top: 20.0, right: 20.0),
-                  height: 48,
-                  width: MediaQuery.of(context).size.width / 3 - 80,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10.0),
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  child: Center(
-                    child: Text("追加", style: TextStyle(color: Colors.white),),
-                  ),
-                ),
-                onTap: (){
-                  _onTapAddButton();
-                },
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Padding(
+                padding: EdgeInsets.only(top: 20.0),
+                child: Text("目的に合ったタグを追加しよう！"),
               )
-            ],
-          ),
-          Center(
-            child: Container(
-              margin: EdgeInsets.only(top: 20),
-              height: 3,
-              width: MediaQuery.of(context).size.width - 50,
-              child: Divider(
-                color: Colors.black,
+            ),
+            Row(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(left: 20.0, top: 20.0),
+                  height: 50.0,
+                  width: MediaQuery.of(context).size.width - MediaQuery.of(context).size.width / 3 + 30,
+                  child: TextField(
+                    controller: _textEditingController,
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.all(10.0),
+                      hintText: "追加したいタグを入力",
+                      labelStyle: TextStyle(color: Colors.black),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: BorderSide(
+                          color: Color(0xffACACAC),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    ),
+                    style: TextStyle(color: Colors.black),
+                    onChanged: (value){text = value;},
+                    onSubmitted: (value){_onTapAddButton();},
+                  ),
+                ),
+                GestureDetector(
+                  child: Container(
+                    margin: EdgeInsets.only(left: 10.0, top: 20.0, right: 20.0),
+                    height: 48,
+                    width: MediaQuery.of(context).size.width / 3 - 80,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10.0),
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    child: Center(
+                      child: Text("追加", style: TextStyle(color: Colors.white),),
+                    ),
+                  ),
+                  onTap: (){
+                    _onTapAddButton();
+                  },
+                )
+              ],
+            ),
+            Center(
+              child: Container(
+                margin: EdgeInsets.only(top: 20),
+                height: 3,
+                width: MediaQuery.of(context).size.width - 50,
+                child: Divider(
+                  color: Colors.black,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 20.0, left: 20.0),
-            child: Text("追加済(タップで削除！)"),
-          ),
-          if(_addTag.length != 0)
+            Padding(
+              padding: EdgeInsets.only(top: 20.0, left: 20.0),
+              child: Text("追加済(タップで削除！)"),
+            ),
+            if(_addTag.length != 0)
+              Container(
+                margin: EdgeInsets.only(top: 10.0, left: 20.0, right: 20.0),
+                child: Wrap(
+                  spacing: 10.0,
+                  runSpacing: 10.0,
+                  children: [
+                    for(int i=0; i<_addTag.length; i++)
+                      GestureDetector(
+                        child: AddTagPart(title: _addTag[i].tagName),
+                        onTap: (){
+                          _removeTag(i);
+                        },
+                      )
+                  ],
+                ),
+              ),
+            if(_addTag.length == 0)
+              Center(
+                child: Container(
+                  color: Color(0xffE5E5E5),
+                  height: 100,
+                  width: 300,
+                  margin: EdgeInsets.only(top: 20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text("まだタグは追加されていません！"),
+                      Text("新しいタグを追加しよう！"),
+                    ],
+                  ),
+                ),
+              ),
+            Center(
+              child: Container(
+                margin: EdgeInsets.only(top: 20),
+                height: 3,
+                width: MediaQuery.of(context).size.width - 50,
+                child: Divider(
+                  color: Colors.black,
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 20.0, left: 20.0),
+              child: Text("よく使われるタグ　(タップで追加！)"),
+            ),
             Container(
               margin: EdgeInsets.only(top: 10.0, left: 20.0, right: 20.0),
               child: Wrap(
                 spacing: 10.0,
                 runSpacing: 10.0,
                 children: [
-                  for(int i=0; i<_addTag.length; i++)
+                  for(int i=0; i<_recommendTag.length; i++)
                     GestureDetector(
-                      child: AddTagPart(title: _addTag[i].tagName),
+                      child: RecommendTagPart(title: _recommendTag[i].tagName),
                       onTap: (){
-                        _removeTag(i);
+                        _addToRecommend(_recommendTag[i]);
+                        setState(() {
+                          _recommendTag.removeAt(i);
+                        });
                       },
                     )
                 ],
               ),
             ),
-          if(_addTag.length == 0)
-            Center(
-              child: Container(
-                color: Color(0xffE5E5E5),
-                height: 100,
-                width: 300,
-                margin: EdgeInsets.only(top: 20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text("まだタグは追加されていません！"),
-                    Text("新しいタグを追加しよう！"),
-                  ],
-                ),
-              ),
-            ),
-          Center(
-            child: Container(
-              margin: EdgeInsets.only(top: 20),
-              height: 3,
-              width: MediaQuery.of(context).size.width - 50,
-              child: Divider(
-                color: Colors.black,
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 20.0, left: 20.0),
-            child: Text("よく使われるタグ　(タップで追加！)"),
-          ),
-          Container(
-            margin: EdgeInsets.only(top: 10.0, left: 20.0, right: 20.0),
-            child: Wrap(
-              spacing: 10.0,
-              runSpacing: 10.0,
-              children: [
-                for(int i=0; i<_recommendTag.length; i++)
-                  GestureDetector(
-                    child: RecommendTagPart(title: _recommendTag[i].tagName),
-                    onTap: (){
-                      _addToRecommend(_recommendTag[i]);
-                      setState(() {
-                        _recommendTag.removeAt(i);
-                      });
-                    },
-                  )
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       )
     );
   }
