@@ -168,7 +168,10 @@ class _SpotDetailsPageState extends State<SpotDetailsPage> {
                               itemCount: planContainingSpots.length,
                               scrollDirection: Axis.horizontal,
                               itemBuilder: (BuildContext context,int index){
-                                return PlanItem(plan: planContainingSpots[index]);
+                                return Container(
+                                    margin: EdgeInsets.only(right: 4.0),
+                                    child: PlanItem(plan: planContainingSpots[index])
+                                );
                               }
                           ),
                         ),

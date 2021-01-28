@@ -13,6 +13,8 @@ import 'package:smart_select/smart_select.dart';
 import 'package:tabitabi_app/network_utils/google_map.dart';
 import 'package:tabitabi_app/spot_details_page.dart';
 
+import 'components/spot_item.dart';
+
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
 class FavoriteSpotPage extends StatefulWidget {
@@ -174,7 +176,7 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
         );
         model.getFavoriteSpots();
       },
-      child: _buildSpotItem(spot),
+      child: SpotItem(spot: spot,),
     );
   }
 

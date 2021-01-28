@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/google_map.dart';
@@ -37,14 +38,15 @@ class SpotItem extends StatelessWidget {
           children: [
             Expanded(
               flex: 4,
-              child: Container(
-                width: double.infinity,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: Image.network(
-                    GoogleMapApi().fullPhotoPath(spot.imageUrl),
-                    fit: BoxFit.fill,
-                  ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: CachedNetworkImage(
+                  imageUrl: GoogleMapApi().fullPhotoPath(spot.imageUrl),
+                  progressIndicatorBuilder: (context, url, downloadProgress) =>
+                      CircularProgressIndicator(value: downloadProgress.progress),
+                  errorWidget: (context, url, error) => Icon(Icons.error),
+                  fit: BoxFit.fill,
+                  width: double.infinity,
                 ),
               ),
             ),
