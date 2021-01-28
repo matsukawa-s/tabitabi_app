@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
-import 'dart:io';
 import 'dart:typed_data';
 
 Future<Uint8List> getBytesFromCanvas(int width, int height, int order) async {

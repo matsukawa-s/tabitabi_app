@@ -5,17 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:http/http.dart' as http;
-import 'package:page_transition/page_transition.dart';
 import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/components/spot_item.dart';
 import 'package:tabitabi_app/join_plan_page.dart';
 import 'package:tabitabi_app/makeplan/makeplan_initial_page.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
-import 'package:tabitabi_app/network_utils/google_map.dart';
-import 'package:tabitabi_app/spot_details_page.dart';
 import 'package:tabitabi_app/top_prefectures_spot_list_page.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'model/plan.dart';
 
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];

@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tabitabi_app/makeplan/makeplan_top_page.dart';
 import 'package:tabitabi_app/model/plan.dart';
-import 'package:tabitabi_app/network_utils/google_map.dart';
 
 class PlanItem extends StatelessWidget {
   final double width;

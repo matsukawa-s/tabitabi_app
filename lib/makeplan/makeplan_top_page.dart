@@ -25,7 +25,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'share_provider.dart';
 import 'impressions_add_page.dart';
 import 'package:tabitabi_app/data/review_data.dart';
-import 'dart:io';
 
 enum WhyFarther { EditPlan, OpenPlan, JoinPlan, DeletePlan }
 

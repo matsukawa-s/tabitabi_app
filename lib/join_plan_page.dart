@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart' as http;
 import 'package:page_transition/page_transition.dart';
 import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/makeplan/qr_scan_page.dart';

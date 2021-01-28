@@ -17,7 +17,6 @@ import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:tabitabi_app/components/plan_item.dart';
-import 'package:tabitabi_app/makeplan/makeplan_top_page.dart';
 import 'package:tabitabi_app/map_search_page.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tabitabi_app/model/map.dart';

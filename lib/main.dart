@@ -8,18 +8,13 @@ import 'package:tabitabi_app/data/tag_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tabitabi_app/initial_login_check_page.dart';
 import 'package:tabitabi_app/providers/plan_provider.dart';
-import 'login.dart';
 import 'model/map.dart';
-import 'model/plan.dart';
 import 'model/spot_model.dart';
 import 'navigationbar_provider.dart';
 import 'package:tabitabi_app/plan_search_detail_page.dart';
-import 'package:tabitabi_app/top_page.dart';
 import 'network_utils/api.dart';
 import 'plan_search_history.dart';
-import 'package:http/http.dart';
 import 'result_provider.dart';
-import 'navigationbar_provider.dart';
 import 'plan_search_model.dart';
 import 'makeplan/makeplan_initial_page.dart';
 

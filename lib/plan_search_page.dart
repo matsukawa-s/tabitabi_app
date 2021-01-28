@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:like_button/like_button.dart';
 import 'package:provider/provider.dart';
 import 'package:tabitabi_app/plan_search_model.dart';
 import 'package:tabitabi_app/makeplan/makeplan_top_page.dart';

@@ -5,7 +5,6 @@ import 'package:tabitabi_app/components/add_tag_part.dart';
 import 'package:http/http.dart' as http;
 import 'package:tabitabi_app/network_utils/api.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/foundation.dart';
 import 'package:tabitabi_app/data/tag_data.dart';
 
 class AddTagPage extends StatefulWidget {
