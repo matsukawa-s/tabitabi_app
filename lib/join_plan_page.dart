@@ -14,6 +14,7 @@ class JoinPlanPage extends StatefulWidget {
 }
 
 class _JoinPlanPageState extends State<JoinPlanPage> {
+  final _formKey = GlobalKey<FormState>();
   var _planCodeController = TextEditingController();
   Size size;
   Plan plan;
@@ -30,8 +31,6 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
 
   @override
   Widget build(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-
     return Scaffold(
       appBar: AppBar(
         title: Text("プランを探す"),
@@ -79,8 +78,14 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
                                   const Radius.circular(10.0),
                                 )
                             ),
-                            counterText: ''
+                            counterText: '',
                           ),
+                          validator: (value) {
+                            if (value.isEmpty) {
+                              return 'プランコードを入力してください。';
+                            }
+                            return null;
+                          },
                         ),
                         IconButton(
                           icon: Icon(
@@ -149,7 +154,11 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
     return Container(
       margin: EdgeInsets.only(top: 50.0),
       child: RaisedButton.icon(
-          onPressed: () => searchPlan(),
+          onPressed: () => {
+            if (_formKey.currentState.validate()) {
+                  searchPlan()
+            }
+          },
           icon: Icon(Icons.search),
           label: Text("プランを検索する")),
     );

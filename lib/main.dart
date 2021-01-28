@@ -152,7 +152,6 @@ class MyHomePage extends StatelessWidget {
 
     if(pageIndex == 0){                 // TopPageAppBar
       return topPageAppbar(context);
-        return null;
     }else if(pageIndex == 1){           // SearchPageAppBar
       return searchPageAppBar(context);
     }else if(pageIndex == 2){           // MapPageAppBar
