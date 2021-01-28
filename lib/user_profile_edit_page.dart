@@ -92,17 +92,6 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
                         },
                       ),
                   ),
-//                  Builder(
-//                    builder: (BuildContext context){
-//                      return Container(
-//                        margin: EdgeInsets.only(top: 16.0),
-//                        child: RaisedButton(
-//                          onPressed: saveProfile,
-//                          child: Text("変更を保存する"),
-//                        ),
-//                      );
-//                    },
-//                  )
                 ],
               ),
             ),
@@ -121,6 +110,9 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
 
     if(res.statusCode == 200){
       Fluttertoast.showToast(msg: "プロフィールを変更しました");
+      setState(() {
+        isSubmit = false;
+      });
     }
   }
 

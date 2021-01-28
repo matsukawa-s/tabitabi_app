@@ -43,7 +43,9 @@ class SpotItem extends StatelessWidget {
                 child: CachedNetworkImage(
                   imageUrl: GoogleMapApi().fullPhotoPath(spot.imageUrl),
                   progressIndicatorBuilder: (context, url, downloadProgress) =>
-                      CircularProgressIndicator(value: downloadProgress.progress),
+                      Center(
+                          child: CircularProgressIndicator(value: downloadProgress.progress)
+                      ),
                   errorWidget: (context, url, error) => Icon(Icons.error),
                   fit: BoxFit.fill,
                   width: double.infinity,

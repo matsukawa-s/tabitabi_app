@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:page_transition/page_transition.dart';
+import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/makeplan/qr_scan_page.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 
@@ -21,10 +23,10 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
   String planCode;
   String message = "";
   bool isSearch; // true: 検索,false: 結果表示
+  String searchResultPlanCode;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     isSearch = false;
   }
@@ -44,85 +46,103 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                margin: EdgeInsets.only(bottom: 8.0),
-                child: FittedBox(
-                  fit: BoxFit.fitWidth,
-                  child: Text(
-                      "プランコードを入力またはQRコードを読み込んでください",
-                      overflow: TextOverflow.visible,
-                  ),
-                )
-              ),
-              Form(
-                key: _formKey,
+                height: MediaQuery.of(context).size.height * 2/5,
                 child: Column(
                   children: [
-                    Stack(
-                      alignment: Alignment.centerRight,
-                      children: [
-                        TextFormField(
-                          controller: _planCodeController,
-//                          maxLength: 16,
-                          decoration: InputDecoration(
-                            labelText: 'プランコード',
-                            enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.all(
-                                  const Radius.circular(10.0),
-                                ),
-                                borderSide: BorderSide(
-                                  color: Colors.black38
-                                )
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.all(
-                                  const Radius.circular(10.0),
-                                )
-                            ),
-                            counterText: '',
-                          ),
-                          validator: (value) {
-                            if (value.isEmpty) {
-                              return 'プランコードを入力してください。';
-                            }
-                            return null;
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                              Icons.qr_code_scanner,
-                              color: const Color(0xfff96800)
-                          ),
-                          onPressed: () async {
-                            FocusScope.of(context).requestFocus(FocusNode());
-                            //QRコードで読み取る
-                            final result = await Navigator.push(
-                              context,
-                              PageTransition(
-                                  type: PageTransitionType.fade,
-                                  child: QRViewExample(),
-                                  inheritTheme: true,
-                                  ctx: context
-                              ),
-                            );
-                            print(result);
-                            _planCodeController.text = result;
-                          },
-                        )
-                      ],
-                    ),
-                    if(isSearch) _buildPlanView(plan) else _buildSearchButton(),
                     Container(
-                      margin: EdgeInsets.only(top: 20),
-                      child: Text(
-                          message,
-                          style: TextStyle(
-                            fontSize: 18
+                      margin: EdgeInsets.only(bottom: 8.0),
+                      child: FittedBox(
+                        fit: BoxFit.fitWidth,
+                        child: Text(
+                            "プランコードを入力またはQRコードを読み込んでください",
+                            overflow: TextOverflow.visible,
+                        ),
+                      )
+                    ),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _planCodeController,
+                            decoration: InputDecoration(
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                    Icons.qr_code_scanner,
+                                    color: const Color(0xfff96800)
+                                ),
+                                onPressed: () async {
+                                  FocusScope.of(context).requestFocus(FocusNode());
+                                  //QRコードで読み取る
+                                  final result = await Navigator.push(
+                                    context,
+                                    PageTransition(
+                                        type: PageTransitionType.fade,
+                                        child: QRViewExample(),
+                                        inheritTheme: true,
+                                        ctx: context
+                                    ),
+                                  );
+                                  print(result);
+                                  _planCodeController.text = result;
+                                },
+                              ),
+                              labelText: 'プランコード',
+                              enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(
+                                    const Radius.circular(10.0),
+                                  ),
+                                  borderSide: BorderSide(
+                                      color: Colors.black26
+                                  )
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(
+                                    const Radius.circular(10.0),
+                                  ),
+                                  borderSide: BorderSide(
+                                      color: Colors.black54
+                                  )
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(
+                                    const Radius.circular(10.0),
+                                  )
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(
+                                    const Radius.circular(10.0),
+                                  )
+                              ),
+                              counterText: '',
+                            ),
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return 'プランコードを入力してください。';
+                              }
+                              return null;
+                            },
                           ),
+                          Container(
+//                      margin: EdgeInsets.only(top: 6),
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              message,
+                              style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14
+                              ),
+                            ),
+                          ),
+                          _buildSearchButton(),
+                        ],
                       ),
-                    )
+                    ),
                   ],
                 ),
-              )
+              ),
+              if(isSearch) _buildPlanView(plan),
             ],
           ),
         ),
@@ -139,6 +159,7 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
       setState(() {
         message = '';
         plan = Plan.fromJson(body["plan"]);
+        searchResultPlanCode = plan.planCode;
         isSearch = true;
       });
     }else{
@@ -152,72 +173,94 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
 
   Widget _buildSearchButton(){
     return Container(
-      margin: EdgeInsets.only(top: 50.0),
+      margin: EdgeInsets.only(left: 10.0,top: 20,right: 10.0),
+      width: double.infinity,
       child: RaisedButton.icon(
           onPressed: () => {
             if (_formKey.currentState.validate()) {
                   searchPlan()
             }
           },
+          padding: EdgeInsets.all(8.0),
           icon: Icon(Icons.search),
-          label: Text("プランを検索する")),
+          color: Colors.orange,
+          textColor: Colors.white,
+          shape: const StadiumBorder(),
+          label: Text(
+            "プランを検索する",
+            style: TextStyle(fontWeight: FontWeight.bold,fontSize: 14),
+          )
+      ),
     );
   }
 
   //プランに参加する
-  joinPlan() async{
+  joinPlan() async {
     final data = {
-      "plan_code" : _planCodeController.text.toString()
+      "plan_code": searchResultPlanCode ?? ''
     };
 
     var res = await Network().postData(data, "member/store");
     var body = jsonDecode(res.body);
 
-    setState(() {
-      message = body["message"];
-    });
+    Fluttertoast.showToast(msg: body["message"] ?? 'エラー');
   }
 
   Widget _buildPlanView(Plan plan){
-    return Column(
-      children: [
-        Container(
-//          margin: EdgeInsets.only(top: 50.0),
-          padding: EdgeInsets.all(10.0),
-//          color: Colors.black12,
-//          decoration: BoxDecoration(
-//            border: Border.all(color: Colors.black12),
-//            borderRadius: BorderRadius.circular(10),
-//          ),
-          child: Column(
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          Divider(),
+          Row(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("作成者：${plan.user["name"]}"),
-                  Container(
-                      width: 1000,
-                      child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,)
-                  ),
-                  Text(
-                      "${plan.title}",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold
-                      ),
-                  ),
-//                  Text(plan.description),
-                ],
+              Padding(
+                padding: const EdgeInsets.all(6.0),
+                child: _buildIconImageInUserTop(plan.user['icon_path'],14),
               ),
+              Container(
+                  width: MediaQuery.of(context).size.width / 4,
+                  child: Text(plan.user['name'],style: TextStyle(fontWeight: FontWeight.bold),overflow: TextOverflow.ellipsis,)
+              ),
+              Text("さんのプランに参加しますか？",style: TextStyle(fontSize: 12),overflow: TextOverflow.ellipsis,)
             ],
           ),
-        ),
-        RaisedButton.icon(
-            onPressed: () => joinPlan(),
-            icon: Icon(Icons.check),
-            label: Text("このプランに参加する")
-        ),
-      ],
+          PlanItem(
+            plan: plan,
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.width * 2/5,
+          ),
+          Container(
+            margin: EdgeInsets.only(top: 20.0),
+            width: double.infinity,
+            child: RaisedButton.icon(
+                padding: EdgeInsets.all(8.0),
+                onPressed: () => joinPlan(),
+                icon: Icon(Icons.check),
+                shape: const StadiumBorder(),
+                color: Colors.blueAccent,
+                textColor: Colors.white,
+                label: Text("このプランに参加する",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 14),)
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildIconImageInUserTop(String iconPath, double size){
+    final double iconSize = size;
+    if(iconPath == null){
+      return CircleAvatar(
+        backgroundColor: Colors.grey,
+        radius: iconSize,
+      );
+    }else{
+      return CircleAvatar(
+        backgroundColor: Colors.black12,
+        radius: iconSize,
+        backgroundImage: NetworkImage(Network().imagesDirectory("user_icons") + iconPath),
+      );
+    }
   }
 }

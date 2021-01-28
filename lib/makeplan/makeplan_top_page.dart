@@ -1133,6 +1133,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                                                 color: Colors.white,
                                                 fontSize: 16.0
                                             ),
+                                            overflow: TextOverflow.clip
                                           ),
                                         )
                                       ],
@@ -1166,12 +1167,21 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                                     ),
                                   ),
                                 Padding(
-                                  padding: EdgeInsets.only(right: 10.0),
-                                  child: Text(_planName, style: TextStyle(color: Colors.white, fontSize: 32.0)),
+                                  padding: EdgeInsets.only(right: 10.0,left: 5.0),
+                                  child: Text(
+                                      _planName,
+                                      style: TextStyle(color: Colors.white, fontSize: 32.0),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.fade
+                                  ),
                                 ),
                                 Padding(
-                                  padding: EdgeInsets.only(right: 5.0, bottom: 3.0),
-                                  child: Text(_tagText, style: TextStyle(color: Colors.white)),
+                                  padding: EdgeInsets.only(right: 5.0, bottom: 3.0,left: 5.0),
+                                  child: Text(
+                                      _tagText,
+                                      style: TextStyle(color: Colors.white),
+                                      maxLines: 2,
+                                  ),
                                 )
                               ],
                             ),

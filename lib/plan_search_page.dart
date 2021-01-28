@@ -121,7 +121,7 @@ class PlanSearchPage extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          _buildIconImageInUserTop(model.plans[index].user["icon_path"] ?? '', 16.0),
+                          _buildIconImageInUserTop(model.plans[index].user["icon_path"], 16.0),
                           Padding(
                             padding: EdgeInsets.only(left: 5.0),
                             child: Text(

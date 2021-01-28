@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:page_transition/page_transition.dart';
 import 'package:tabitabi_app/components/plan_item.dart';
+import 'package:tabitabi_app/components/spot_item.dart';
 import 'package:tabitabi_app/join_plan_page.dart';
 import 'package:tabitabi_app/makeplan/makeplan_initial_page.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
@@ -270,52 +271,12 @@ class TopPage extends StatelessWidget {
                             scrollDirection: Axis.horizontal,
                             itemCount: popularSpots.length,
                             itemBuilder: (BuildContext context,int index){
-                              return GestureDetector(
-                                onTap: (){
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => SpotDetailsPage(
-                                          spotId: popularSpots[index].spotId,
-                                          placeId: popularSpots[index].placeId,
-                                        ),
-                                      )
-                                  );
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.all(2.0),
-                                  height: popularSpotItemSize,
+                              return Container(
+                                margin: EdgeInsets.only(right: 4.0),
+                                child: SpotItem(
+                                  spot: popularSpots[index],
                                   width: popularSpotItemSize,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                        flex: 4,
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(6.0),
-                                          clipBehavior: Clip.antiAlias,
-                                          child: CachedNetworkImage(
-                                            imageUrl: GoogleMapApi().fullPhotoPath(popularSpots[index].imageUrl),
-                                            progressIndicatorBuilder: (context, url, downloadProgress) =>
-                                                CircularProgressIndicator(value: downloadProgress.progress),
-                                            errorWidget: (context, url, error) => Icon(Icons.error),
-                                            fit: BoxFit.fill,
-                                            width: popularSpotItemSize,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 1,
-                                        child: Text(
-                                          popularSpots[index].spotName,
-                                          overflow: TextOverflow.ellipsis,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      )
-                                    ],
-                                  )
+                                  height: popularSpotItemSize,
                                 ),
                               );
                             },
@@ -449,12 +410,13 @@ class TopPage extends StatelessWidget {
             onPressed: (){
               Navigator.push(
                 context,
-                PageTransition(
-                    type: PageTransitionType.fade,
-                    child: JoinPlanPage(),
-                    inheritTheme: true,
-                    ctx: context
-                ),
+                MaterialPageRoute(builder: (context) => JoinPlanPage())
+//                PageTransition(
+//                    type: PageTransitionType.fade,
+//                    child: JoinPlanPage(),
+//                    inheritTheme: true,
+//                    ctx: context
+//                ),
               );
             }
         ),
