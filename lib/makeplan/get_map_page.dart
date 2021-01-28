@@ -53,6 +53,7 @@ class _GetMapState extends State<GetMap> {
                   print(latLang.longitude.toString() + "," +latLang.latitude.toString());
                 },
                 markers: _markers,
+                zoomControlsEnabled: true,
                 mapType: MapType.terrain,
                 onMapCreated: _onMapCreated,
                 initialCameraPosition: CameraPosition(

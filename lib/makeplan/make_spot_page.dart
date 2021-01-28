@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'dart:io';
 import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
@@ -79,7 +80,8 @@ class _MakeSpotPageState extends State<MakeSpotPage> {
       )
     );
 
-    Navigator.of(context).pop(returnValue);
+//    Navigator.of(context).pop(returnValue);
+    Fluttertoast.showToast(msg: "オリジナルスポットを登録しました");
 
   }
 
@@ -252,7 +254,7 @@ class _MakeSpotPageState extends State<MakeSpotPage> {
                       ),
                     ),
                     onTap: (){
-                      _addSpot();
+                        _addSpot();
                     },
                   )
                 ],
