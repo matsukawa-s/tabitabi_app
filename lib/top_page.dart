@@ -5,17 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:http/http.dart' as http;
-import 'package:page_transition/page_transition.dart';
 import 'package:tabitabi_app/components/plan_item.dart';
+import 'package:tabitabi_app/components/spot_item.dart';
 import 'package:tabitabi_app/join_plan_page.dart';
 import 'package:tabitabi_app/makeplan/makeplan_initial_page.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
-import 'package:tabitabi_app/network_utils/google_map.dart';
-import 'package:tabitabi_app/spot_details_page.dart';
 import 'package:tabitabi_app/top_prefectures_spot_list_page.dart';
-
-import 'makeplan/makeplan_top_page.dart';
 import 'model/plan.dart';
 
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
@@ -36,7 +32,7 @@ class TopPage extends StatelessWidget {
         if(snapshot.hasData){
           final List<dynamic> todayPlansTmp = snapshot.data["today_plans"] ?? []; //今日のプラン
           final List<dynamic> popularPlansTmp = snapshot.data["popular_plans"] ?? []; //人気のプラン
-          final List<dynamic> popularSpots = snapshot.data["popular_spots"] ?? []; //人気のスポット
+          final List<dynamic> popularSpotsTmp = snapshot.data["popular_spots"] ?? []; //人気のスポット
           final List<dynamic> prefecturesSpotsTmp = snapshot.data["prefectures_spots"] ?? [];
           
           final List<Plan> todayPlans = List.generate(
@@ -45,6 +41,10 @@ class TopPage extends StatelessWidget {
 
           final List<Plan> popularPlans = List.generate(
               popularPlansTmp.length, (index) => Plan.fromJson(popularPlansTmp[index])
+          );
+
+          final List<Spot> popularSpots = List.generate(
+              popularSpotsTmp.length, (index) => Spot.fromJson(popularSpotsTmp[index])
           );
           
           final List<Prefecture> prefecturesSpots = List.generate(
@@ -169,48 +169,6 @@ class TopPage extends StatelessWidget {
                                   )
                                 ],
                               );
-//                              return GestureDetector(
-//                                onTap: () => Navigator.push(
-//                                  context,
-//                                  MaterialPageRoute(
-//                                    builder: (context) {
-//                                      return MakePlanTop(planId: todayPlans[index]["id"]);
-//                                    },
-//                                  ),
-//                                ),
-//                                child: Container(
-////                                margin: EdgeInsets.all(4.0),
-//                                  padding: EdgeInsets.all(2.0),
-//                                  width: size.width - pagePadding*2,
-//                                  child: Column(
-//                                    children: [
-//                                      Expanded(
-//                                          flex: 4,
-//                                          child: ClipRRect(
-//                                            borderRadius: BorderRadius.circular(6.0),
-//                                            child: Container(
-//                                              child: Image.asset("images/osakajo.jpg",fit: BoxFit.fill,),
-//                                              width: size.width - pagePadding*2,
-//                                            ),
-//                                          )
-//                                      ),
-//                                      Expanded(
-//                                        flex: 1,
-//                                        child: Row(
-//                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                                          children: [
-//                                            Text(
-//                                              todayPlans[index]["title"],
-////                                          style: TextStyle(fontWeight: FontWeight.bold),
-//                                            ),
-//                                            Text(todayPlans[index]["start_day"] + ' ~ ' + todayPlans[index]["end_day"])
-//                                          ],
-//                                        ),
-//                                      ),
-//                                    ],
-//                                  ),
-//                                ),
-//                              );
                             }
                         ),
                       ),
@@ -309,49 +267,12 @@ class TopPage extends StatelessWidget {
                             scrollDirection: Axis.horizontal,
                             itemCount: popularSpots.length,
                             itemBuilder: (BuildContext context,int index){
-                              return GestureDetector(
-                                onTap: (){
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => SpotDetailsPage(
-                                          spotId: popularSpots[index]["id"],
-                                          placeId: popularSpots[index]["place_id"],
-                                        ),
-                                      )
-                                  );
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.all(2.0),
-                                  height: popularSpotItemSize,
+                              return Container(
+                                margin: EdgeInsets.only(right: 4.0),
+                                child: SpotItem(
+                                  spot: popularSpots[index],
                                   width: popularSpotItemSize,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                        flex: 4,
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(6.0),
-                                          clipBehavior: Clip.antiAlias,
-                                          child: Image.network(
-                                            GoogleMapApi().fullPhotoPath(popularSpots[index]["image_url"]),
-                                            fit: BoxFit.fill,
-                                            width: popularSpotItemSize,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 1,
-                                        child: Text(
-                                          popularSpots[index]["spot_name"],
-                                          overflow: TextOverflow.ellipsis,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      )
-                                    ],
-                                  )
+                                  height: popularSpotItemSize,
                                 ),
                               );
                             },
@@ -485,12 +406,13 @@ class TopPage extends StatelessWidget {
             onPressed: (){
               Navigator.push(
                 context,
-                PageTransition(
-                    type: PageTransitionType.fade,
-                    child: JoinPlanPage(),
-                    inheritTheme: true,
-                    ctx: context
-                ),
+                MaterialPageRoute(builder: (context) => JoinPlanPage())
+//                PageTransition(
+//                    type: PageTransitionType.fade,
+//                    child: JoinPlanPage(),
+//                    inheritTheme: true,
+//                    ctx: context
+//                ),
               );
             }
         ),

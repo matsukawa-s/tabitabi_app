@@ -6,8 +6,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:location/location.dart' as loc;
-import 'package:http/http.dart' as http;
-import 'package:tabitabi_app/spot_details_page.dart';
 
 import 'model/map.dart';
 

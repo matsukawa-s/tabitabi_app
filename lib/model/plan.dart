@@ -1,8 +1,7 @@
-import 'package:flutter/cupertino.dart';
-
 class Plan{
   var id;
   var title;
+  var planCode;
   var description;
   var startDay;
   var endDay;
@@ -22,6 +21,7 @@ class Plan{
   Plan(
       this.id,
       this.title,
+      this.planCode,
       this.description,
       this.startDay,
       this.endDay,
@@ -42,6 +42,7 @@ class Plan{
   Plan.fromJson(Map<String, dynamic> json)
       : id = json['id'],
         title = json['title'],
+        planCode = json['plan_code'],
         description = json['description'],
         startDay = json['start_day'],
         endDay = json['end_day'],

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -16,7 +17,6 @@ import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:tabitabi_app/components/plan_item.dart';
-import 'package:tabitabi_app/makeplan/makeplan_top_page.dart';
 import 'package:tabitabi_app/map_search_page.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tabitabi_app/model/map.dart';
@@ -372,10 +372,19 @@ class _MapPageState extends State<MapPage> {
                         return Container(
                           width: MediaQuery.of(context).size.width / 3,
 //                          margin: EdgeInsets.only(right: 4.0),
-                          child: Image.network(
-                            GoogleMapApi().fullPhotoPath(place.photos[index]),
+                          child: CachedNetworkImage(
+                            imageUrl: GoogleMapApi().fullPhotoPath(place.photos[index]),
+                            progressIndicatorBuilder: (context, url, downloadProgress) =>
+                                Center(child: CircularProgressIndicator(value: downloadProgress.progress)),
+                            errorWidget: (context, url, error) => Center(child: Icon(Icons.error)),
                             fit: BoxFit.fill,
+//                            width: double.infinity,
+//                            height: double.infinity,
                           ),
+//                          child: Image.network(
+//                            GoogleMapApi().fullPhotoPath(place.photos[index]),
+//                            fit: BoxFit.fill,
+//                          ),
                         );
                       }
                   ),
@@ -487,9 +496,12 @@ class _MapPageState extends State<MapPage> {
                                             color: Colors.black12,
                                             child: Center(child: Text("no image")),
                                           )
-                                          : Image.network(
-                                            GoogleMapApi().fullPhotoPath(places[index].photos[0].photoReference),
-                                            fit:BoxFit.fill,
+                                          : CachedNetworkImage(
+                                            imageUrl: GoogleMapApi().fullPhotoPath(places[index].photos[0].photoReference),
+                                            progressIndicatorBuilder: (context, url, downloadProgress) =>
+                                                Center(child: CircularProgressIndicator(value: downloadProgress.progress)),
+                                            errorWidget: (context, url, error) => Center(child: Icon(Icons.error)),
+                                            fit: BoxFit.fill,
                                           ),
                                     ),
                                   ),
@@ -499,7 +511,7 @@ class _MapPageState extends State<MapPage> {
                                     child: FittedBox(
                                       child: Text(
                                           places[index].name ?? '',
-//                                        style: TextStyle(color: Colors.white),
+                                          overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   )
@@ -744,7 +756,7 @@ class _MapPageState extends State<MapPage> {
           );
         }else{
           return Container(
-            height: 100,
+            height: 1,
 //            color: Colors.pink,
 //            child: Text("-----------何か表示する------------"),
           );

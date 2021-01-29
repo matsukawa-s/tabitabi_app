@@ -1,17 +1,15 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 import 'package:tabitabi_app/model/spot_model.dart';
-import 'package:tabitabi_app/network_utils/api.dart';
 import 'package:smart_select/smart_select.dart';
 import 'package:tabitabi_app/network_utils/google_map.dart';
 import 'package:tabitabi_app/spot_details_page.dart';
+
+import 'components/spot_item.dart';
 
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
@@ -174,7 +172,7 @@ class _FavoriteSpotPageState extends State<FavoriteSpotPage> {
         );
         model.getFavoriteSpots();
       },
-      child: _buildSpotItem(spot),
+      child: SpotItem(spot: spot,),
     );
   }
 

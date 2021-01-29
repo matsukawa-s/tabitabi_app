@@ -25,7 +25,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'share_provider.dart';
 import 'impressions_add_page.dart';
 import 'package:tabitabi_app/data/review_data.dart';
-import 'dart:io';
 
 enum WhyFarther { EditPlan, OpenPlan, JoinPlan, DeletePlan }
 
@@ -1100,7 +1099,8 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                             padding: EdgeInsets.only(bottom: 30.0),
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: _imageUrl == null ? AssetImage("images/2304099_m.jpg") : NetworkImage(_imageUrl),
+                                image: _imageUrl == null
+                                    ? AssetImage("images/2304099_m.jpg") : NetworkImage(_imageUrl),
                                 //image: NetworkImage("https://picsum.photos/1500/800"),
                                 colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.darken),
                                 fit: BoxFit.cover,
@@ -1119,7 +1119,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 if(userFlag == 0)
-                                  Padding(
+                                  Container(
                                     padding: EdgeInsets.only(right: 10.0),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
@@ -1133,6 +1133,7 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                                                 color: Colors.white,
                                                 fontSize: 16.0
                                             ),
+                                            overflow: TextOverflow.ellipsis
                                           ),
                                         )
                                       ],
@@ -1166,12 +1167,21 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
                                     ),
                                   ),
                                 Padding(
-                                  padding: EdgeInsets.only(right: 10.0),
-                                  child: Text(_planName, style: TextStyle(color: Colors.white, fontSize: 32.0)),
+                                  padding: EdgeInsets.only(right: 10.0,left: 5.0),
+                                  child: Text(
+                                      _planName,
+                                      style: TextStyle(color: Colors.white, fontSize: 32.0),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.fade
+                                  ),
                                 ),
                                 Padding(
-                                  padding: EdgeInsets.only(right: 5.0, bottom: 3.0),
-                                  child: Text(_tagText, style: TextStyle(color: Colors.white)),
+                                  padding: EdgeInsets.only(right: 5.0, bottom: 3.0,left: 5.0),
+                                  child: Text(
+                                      _tagText,
+                                      style: TextStyle(color: Colors.white),
+                                      maxLines: 2,
+                                  ),
                                 )
                               ],
                             ),

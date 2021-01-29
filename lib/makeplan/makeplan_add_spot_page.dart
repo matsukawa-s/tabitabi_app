@@ -28,63 +28,57 @@ class _AddSpotPageState extends State<AddSpotPage> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: (){
-        Navigator.of(context).pop(_selectedSpots);
-        return Future.value(false);
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('スポットの追加'),
-          backgroundColor: Colors.white.withOpacity(0.7),
-          actions: [
-            FlatButton(
-                onPressed: () => Navigator.of(context).pop(_selectedSpots),
-                child: Text("決定")
-            )
-          ],
-        ),
-        body: Column(
-          children: [
-            Container(
-              height: 40.0,
-              child: TabBar(
-                controller: _tabController,
-                tabs: [
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 5.0),
-                    child: Text("お気に入り", style: TextStyle(color: Colors.black),),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 5.0),
-                    child: Text("地図から", style: TextStyle(color: Colors.black)),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 5.0),
-                    child: Text("自分で作る", style: TextStyle(color: Colors.black)),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  Container(
-                    child: FavoriteSpotPage(mode: true,callback: callback),
-                  ),
-                  Container(
-                    child: MapPage(title: 'MAP', addFlag: true,),
-                  ),
-                  Container(
-                    child: MakeSpotPage(),
-                  ),
-                ],
-              ),
-            )
-          ],
-        )
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('スポットの追加'),
+        backgroundColor: Colors.white.withOpacity(0.7),
+        actions: [
+          FlatButton(
+              onPressed: () => Navigator.of(context).pop(_selectedSpots),
+              child: Text("決定",style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),)
+          )
+        ],
       ),
+      body: Column(
+        children: [
+          Container(
+//            height: 40.0,
+            child: TabBar(
+              controller: _tabController,
+              tabs: [
+                Padding(
+                  padding: EdgeInsets.all(6.0),
+                  child: Text("お気に入り", style: TextStyle(color: Colors.black),),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(6.0),
+                  child: Text("地図から", style: TextStyle(color: Colors.black)),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(6.0),
+                  child: Text("自分で作る", style: TextStyle(color: Colors.black)),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                Container(
+                  child: FavoriteSpotPage(mode: true,callback: callback),
+                ),
+                Container(
+                  child: MapPage(title: 'MAP', addFlag: true,),
+                ),
+                Container(
+                  child: MakeSpotPage(),
+                ),
+              ],
+            ),
+          )
+        ],
+      )
     );
   }
 }

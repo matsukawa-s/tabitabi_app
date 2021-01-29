@@ -42,6 +42,8 @@ class _QRViewExampleState extends State<QRViewExample> {
     return Scaffold(
       appBar: AppBar(
         title: Text("プランコードを読み取る"),
+        centerTitle: true,
+        backgroundColor: Colors.white,
       ),
       body: Column(
         children: <Widget>[

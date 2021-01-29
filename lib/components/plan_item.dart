@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tabitabi_app/makeplan/makeplan_top_page.dart';
 import 'package:tabitabi_app/model/plan.dart';
@@ -43,12 +44,15 @@ class PlanItem extends StatelessWidget {
                         height: height ?? defaultHeight,
                         fit: BoxFit.fill,
                       )
-                    : Image.network(
-                        plan.imageUrl,
-                        width: width ?? defaultWidth,
-                        height: height ?? defaultHeight,
+                    : CachedNetworkImage(
+                        imageUrl: plan.imageUrl,
+                        progressIndicatorBuilder: (context, url, downloadProgress) =>
+                            Center(child: CircularProgressIndicator(value: downloadProgress.progress)),
+                        errorWidget: (context, url, error) => Center(child: Icon(Icons.error)),
                         fit: BoxFit.fill,
-                      )
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
             ),
             Positioned(
               bottom: 0,

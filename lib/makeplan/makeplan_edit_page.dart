@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:bubble/bubble.dart';
 import 'package:http/http.dart' as http;
@@ -7,7 +6,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:intl/intl.dart';
-import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 import 'package:tabitabi_app/components/map_marker.dart';
 import 'package:tabitabi_app/data/itinerary_part_data.dart';
@@ -18,7 +16,6 @@ import 'package:tabitabi_app/data/spot_data.dart';
 import 'package:tabitabi_app/data/itinerary_data.dart';
 import 'package:tabitabi_app/components/makeplan_edit_traffic_part.dart';
 import 'package:tabitabi_app/makeplan/makeplan_add_spot_page.dart';
-import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/makeplan/direction_api.dart';
 
 //ドラッグ&ドロップ時にデータ
