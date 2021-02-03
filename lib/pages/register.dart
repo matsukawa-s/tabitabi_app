@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'main.dart';
-import 'network_utils/api.dart';
+import '../main.dart';
+import '../network_utils/api.dart';
 
 class RegisterPage extends StatefulWidget {
   @override

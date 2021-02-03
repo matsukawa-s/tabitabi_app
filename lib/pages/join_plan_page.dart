@@ -7,7 +7,7 @@ import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/makeplan/qr_scan_page.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 
-import 'model/plan.dart';
+import '../model/plan.dart';
 
 class JoinPlanPage extends StatefulWidget {
   @override
@@ -58,84 +58,87 @@ class _JoinPlanPageState extends State<JoinPlanPage> {
                         ),
                       )
                     ),
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _planCodeController,
-                            decoration: InputDecoration(
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                    Icons.qr_code_scanner,
-                                    color: const Color(0xfff96800)
+                    GestureDetector(
+                      onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _planCodeController,
+                              decoration: InputDecoration(
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                      Icons.qr_code_scanner,
+                                      color: const Color(0xfff96800)
+                                  ),
+                                  onPressed: () async {
+                                    FocusScope.of(context).requestFocus(FocusNode());
+                                    //QRコードで読み取る
+                                    final result = await Navigator.push(
+                                      context,
+                                      PageTransition(
+                                          type: PageTransitionType.fade,
+                                          child: QRViewExample(),
+                                          inheritTheme: true,
+                                          ctx: context
+                                      ),
+                                    );
+                                    print(result);
+                                    _planCodeController.text = result;
+                                  },
                                 ),
-                                onPressed: () async {
-                                  FocusScope.of(context).requestFocus(FocusNode());
-                                  //QRコードで読み取る
-                                  final result = await Navigator.push(
-                                    context,
-                                    PageTransition(
-                                        type: PageTransitionType.fade,
-                                        child: QRViewExample(),
-                                        inheritTheme: true,
-                                        ctx: context
+                                labelText: 'プランコード',
+                                enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(
+                                      const Radius.circular(10.0),
                                     ),
-                                  );
-                                  print(result);
-                                  _planCodeController.text = result;
-                                },
+                                    borderSide: BorderSide(
+                                        color: Colors.black26
+                                    )
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(
+                                      const Radius.circular(10.0),
+                                    ),
+                                    borderSide: BorderSide(
+                                        color: Colors.black54
+                                    )
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(
+                                      const Radius.circular(10.0),
+                                    )
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(
+                                      const Radius.circular(10.0),
+                                    )
+                                ),
+                                counterText: '',
                               ),
-                              labelText: 'プランコード',
-                              enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(
-                                    const Radius.circular(10.0),
-                                  ),
-                                  borderSide: BorderSide(
-                                      color: Colors.black26
-                                  )
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(
-                                    const Radius.circular(10.0),
-                                  ),
-                                  borderSide: BorderSide(
-                                      color: Colors.black54
-                                  )
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(
-                                    const Radius.circular(10.0),
-                                  )
-                              ),
-                              focusedErrorBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(
-                                    const Radius.circular(10.0),
-                                  )
-                              ),
-                              counterText: '',
+                              validator: (value) {
+                                if (value.isEmpty) {
+                                  return 'プランコードを入力してください。';
+                                }
+                                return null;
+                              },
                             ),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return 'プランコードを入力してください。';
-                              }
-                              return null;
-                            },
-                          ),
-                          Container(
+                            Container(
 //                      margin: EdgeInsets.only(top: 6),
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              message,
-                              style: TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                message,
+                                style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14
+                                ),
                               ),
                             ),
-                          ),
-                          _buildSearchButton(),
-                        ],
+                            _buildSearchButton(),
+                          ],
+                        ),
                       ),
                     ),
                   ],

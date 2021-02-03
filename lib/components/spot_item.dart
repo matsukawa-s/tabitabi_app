@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/google_map.dart';
-import 'package:tabitabi_app/spot_details_page.dart';
+import 'package:tabitabi_app/pages/spot_details_page.dart';
 
 class SpotItem extends StatelessWidget {
   final double width;

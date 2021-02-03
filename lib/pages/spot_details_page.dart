@@ -7,8 +7,8 @@ import "package:google_maps_webservice/places.dart";
 import 'package:http/http.dart' as http;
 import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
-import 'model/plan.dart';
-import 'network_utils/google_map.dart';
+import '../model/plan.dart';
+import '../network_utils/google_map.dart';
 
 class SpotDetailsPage extends StatefulWidget {
   SpotDetailsPage({

@@ -6,16 +6,15 @@ import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:tabitabi_app/data/tag_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tabitabi_app/initial_login_check_page.dart';
+import 'package:tabitabi_app/pages/initial_login_check_page.dart';
 import 'package:tabitabi_app/providers/plan_provider.dart';
 import 'model/map.dart';
 import 'model/spot_model.dart';
-import 'navigationbar_provider.dart';
-import 'package:tabitabi_app/plan_search_detail_page.dart';
+import 'providers/navigationbar_provider.dart';
+import 'package:tabitabi_app/pages/plan_search_detail_page.dart';
 import 'network_utils/api.dart';
-import 'plan_search_history.dart';
-import 'result_provider.dart';
-import 'plan_search_model.dart';
+import 'pages/plan_search_history.dart';
+import 'model/plan_search_model.dart';
 import 'makeplan/makeplan_initial_page.dart';
 
 //ユーザーページの右上ポップアップメニュー
@@ -26,9 +25,6 @@ Future main() async{
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<ResultProvider>(
-          create: (context) => ResultProvider(),
-        ),
         ChangeNotifierProvider<NavigationBarProvider>(
           create: (context) => NavigationBarProvider(),
         ),

@@ -3,11 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:tabitabi_app/components/plan_item.dart';
 import 'package:tabitabi_app/makeplan/makeplan_top_page.dart';
-import 'package:tabitabi_app/user_profile_edit_page.dart';
-
-import 'model/plan.dart';
-import 'network_utils/api.dart';
-
+import 'package:tabitabi_app/model/plan.dart';
+import 'package:tabitabi_app/network_utils/api.dart';
+import 'package:tabitabi_app/pages/user_profile_edit_page.dart';
 class UserPage extends StatefulWidget {
   @override
   _UserPageState createState() => _UserPageState();

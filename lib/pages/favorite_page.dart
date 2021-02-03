@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'navigationbar_provider.dart';
+import '../providers/navigationbar_provider.dart';
 
 class FavoritePage extends StatelessWidget {
   final String title;

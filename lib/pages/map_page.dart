@@ -17,17 +17,17 @@ import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 import 'package:tabitabi_app/components/plan_item.dart';
-import 'package:tabitabi_app/map_search_page.dart';
+import 'package:tabitabi_app/pages/map_search_page.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tabitabi_app/model/map.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/network_utils/google_map.dart';
-import 'package:tabitabi_app/spot_details_page.dart';
+import 'package:tabitabi_app/pages/spot_details_page.dart';
 
-import 'model/plan.dart';
-import 'network_utils/api.dart';
+import '../model/plan.dart';
+import '../network_utils/api.dart';
 
 final _kGoogleApiKey = DotEnv().env['Google_API_KEY'];
 
@@ -609,10 +609,13 @@ class _MapPageState extends State<MapPage> {
                                 scrollDirection: Axis.horizontal,
                                 itemCount: planContainingSpots.length,
                                 itemBuilder: (BuildContext context,int index){
-                                  return PlanItem(
-                                    plan: planContainingSpots[index],
-                                    width: planContainingSpotsWidth,
-                                    height: planContainingSpotsHeight,
+                                  return Container(
+                                    margin: EdgeInsets.only(right: 4.0),
+                                    child: PlanItem(
+                                      plan: planContainingSpots[index],
+                                      width: planContainingSpotsWidth,
+                                      height: planContainingSpotsHeight,
+                                    ),
                                   );
 //                                  return GestureDetector(
                                 },

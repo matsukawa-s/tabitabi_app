@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tabitabi_app/plan_search_model.dart';
+import 'package:tabitabi_app/model/plan_search_model.dart';
 
 class PlanSearchDetailPage extends StatelessWidget {
   final double space = 15;
