@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tabitabi_app/plan_search_model.dart';
+import 'package:tabitabi_app/model/plan_search_model.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
-import 'model/Tag.dart';
+import '../model/Tag.dart';
 
 class PlanSearchHistoryPage extends StatelessWidget {
   Color iconColor = Colors.orange[300];

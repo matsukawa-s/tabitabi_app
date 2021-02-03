@@ -1,14 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:tabitabi_app/favorite_plan_page.dart';
-import 'package:tabitabi_app/favorite_spot_page.dart';
-import 'package:tabitabi_app/map_page_second.dart';
-import 'package:tabitabi_app/user_page.dart';
+import 'package:tabitabi_app/pages/favorite_plan_page.dart';
+import 'package:tabitabi_app/pages/favorite_spot_page.dart';
+import 'package:tabitabi_app/pages/user_page.dart';
 
-import 'top_page.dart';
-import 'plan_search_page.dart';
-import 'map_page.dart';
-import 'favorite_page.dart';
+import '../pages/top_page.dart';
+import '../pages/plan_search_page.dart';
+import '../pages/map_page.dart';
+import '../pages/favorite_page.dart';
 
 class NavigationBarProvider extends ChangeNotifier {
   int _selectedIndex = 0;

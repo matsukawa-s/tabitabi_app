@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tabitabi_app/model/plan.dart';
 import 'package:tabitabi_app/network_utils/api.dart';
 
-import 'model/Tag.dart';
+import 'Tag.dart';
 
 
 class PlanSearchModel with ChangeNotifier {

@@ -1,10 +1,10 @@
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tabitabi_app/login.dart';
+import 'package:tabitabi_app/pages/login.dart';
 import 'package:tabitabi_app/main.dart';
 
-import 'makeplan/makeplan_top_page.dart';
+import '../makeplan/makeplan_top_page.dart';
 
 class InitialLoginCheckPage extends StatelessWidget {
   _checkAuth(BuildContext context) async{
