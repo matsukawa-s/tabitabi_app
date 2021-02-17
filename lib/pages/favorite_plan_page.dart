@@ -72,6 +72,7 @@ class FavoritePlanPage extends StatelessWidget {
 //              ),
 //            ),
 //          );
+          print("test");
           return Consumer<PlanProvider>(
             builder: (context, plan, child) => Container(
               padding: EdgeInsets.all(contentsPadding),

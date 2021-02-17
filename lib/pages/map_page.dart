@@ -371,20 +371,13 @@ class _MapPageState extends State<MapPage> {
                       itemBuilder: (BuildContext context, int index){
                         return Container(
                           width: MediaQuery.of(context).size.width / 3,
-//                          margin: EdgeInsets.only(right: 4.0),
                           child: CachedNetworkImage(
                             imageUrl: GoogleMapApi().fullPhotoPath(place.photos[index]),
                             progressIndicatorBuilder: (context, url, downloadProgress) =>
                                 Center(child: CircularProgressIndicator(value: downloadProgress.progress)),
                             errorWidget: (context, url, error) => Center(child: Icon(Icons.error)),
                             fit: BoxFit.fill,
-//                            width: double.infinity,
-//                            height: double.infinity,
                           ),
-//                          child: Image.network(
-//                            GoogleMapApi().fullPhotoPath(place.photos[index]),
-//                            fit: BoxFit.fill,
-//                          ),
                         );
                       }
                   ),

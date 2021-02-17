@@ -21,14 +21,15 @@ class PlanItem extends StatelessWidget {
     final double defaultWidth = (size.width) * 2/5;
 
     return GestureDetector(
-      onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => MakePlanTop(
-                planId: plan.id,
-              )
-          )
-      ),
+      onTap: () async{
+        var result = await Navigator.of(context,rootNavigator: true).push(
+            MaterialPageRoute(
+                builder: (context) => MakePlanTop(
+                  planId: plan.id,
+                )
+            )
+        );
+      },
       child: Container(
         width: width ?? defaultWidth,
         height: height ?? defaultHeight,

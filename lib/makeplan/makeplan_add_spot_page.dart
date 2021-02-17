@@ -3,6 +3,7 @@ import 'package:tabitabi_app/pages/favorite_spot_page.dart';
 import 'package:tabitabi_app/model/spot_model.dart';
 import 'package:tabitabi_app/makeplan/make_spot_page.dart';
 import 'package:tabitabi_app/pages/map_page.dart';
+import 'package:tabitabi_app/pages/map_page_fix.dart';
 class AddSpotPage extends StatefulWidget {
   @override
   _AddSpotPageState createState() => _AddSpotPageState();
@@ -69,7 +70,7 @@ class _AddSpotPageState extends State<AddSpotPage> with SingleTickerProviderStat
                   child: FavoriteSpotPage(mode: true,callback: callback),
                 ),
                 Container(
-                  child: MapPage(title: 'MAP', addFlag: true,),
+                  child: MapFixPage(addFlag: true,),
                 ),
                 Container(
                   child: MakeSpotPage(),
