@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tabitabi_app/pages/favorite_plan_page.dart';
 import 'package:tabitabi_app/pages/favorite_spot_page.dart';
+import 'package:tabitabi_app/pages/map_page_fix.dart';
+import 'package:tabitabi_app/pages/test_page.dart';
 import 'package:tabitabi_app/pages/user_page.dart';
 
 import '../pages/top_page.dart';
@@ -17,7 +19,9 @@ class NavigationBarProvider extends ChangeNotifier {
   static List<Widget> _pageList = [
     TopPage(),
     PlanSearchPage(),
-    MapPage(title: 'MAP', addFlag: false,),
+//    MapPage(title: 'MAP', addFlag: false,),
+//    MapPageFix(),
+    MapFixPage(),
     FavoritePage(title: 'FAVORITE'),
     UserPage(),
   ];

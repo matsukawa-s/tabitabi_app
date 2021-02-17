@@ -25,12 +25,13 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
 //      backgroundColor: Colors.orange[200].withOpacity(0.7),
       body: SafeArea(
-        child: Container(
-          padding: EdgeInsets.all(16.0),
-          height: MediaQuery.of(context).size.height,
-          child: Center(
-            child: Column(
-              children: [
+        child: SingleChildScrollView(
+          child: Container(
+            padding: EdgeInsets.all(16.0),
+            height: MediaQuery.of(context).size.height,
+            child: Center(
+              child: Column(
+                children: [
 //                  Container(
 //                      width: double.infinity,
 //                      child: Text(
@@ -43,128 +44,129 @@ class _LoginPageState extends State<LoginPage> {
 //                        textAlign: TextAlign.center,
 //                      )
 //                  ),
-                Container(
-                  height: MediaQuery.of(context).size.height / 3,
-                  child: Center(
-                      child: Image.asset(
-                        'images/logo.png',
-                        width: MediaQuery.of(context).size.width,
+                  Container(
+                    height: MediaQuery.of(context).size.height / 3,
+                    child: Center(
+                        child: Image.asset(
+                          'images/logo.png',
+                          width: MediaQuery.of(context).size.width,
+                        )
+                    ),
+                  ),
+                  Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'メールアドレス',
+                            style: TextStyle(
+                                color: Colors.black54,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold
+                            ),
+                          ),
+                          TextFormField(
+                            decoration: InputDecoration(
+                              hintText: 'exsample@gmail.com',
+                              hintStyle: TextStyle(
+                                color: Colors.black26,
+                                fontSize: 16
+                              )
+                            ),
+                            validator: (inputEmail){
+                              if(inputEmail.isEmpty){
+                                return 'メールアドレスを入力してください';
+                              }
+                              _email = inputEmail;
+                              return null;
+                            },
+                          ),
+                          Container(
+                            margin: EdgeInsets.all(10),
+                          ),
+                          Text(
+                            'パスワード',
+                            style: TextStyle(
+                                color: Colors.black54,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold
+                            ),
+                          ),
+                          TextFormField(
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              hintText: '8文字以上で入力してください。',
+                              hintStyle: TextStyle(
+                                color: Colors.black26,
+                                fontSize: 16
+                              )
+                            ),
+                            validator: (inputPassword){
+                              if(inputPassword.isEmpty){
+                                return 'パスワードを入力してください';
+                              }
+                              _password = inputPassword;
+                              return null;
+                            },
+                          ),
+                          Container(
+                            child: Text(
+                              errorMessage,
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                          Container(
+                            width: double.infinity,
+                            margin: EdgeInsets.all(12.0),
+                            child: RaisedButton(
+                                padding: EdgeInsets.all(10.0),
+                                child: Text(
+                                    "ログイン",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold
+                                    ),
+                                ),
+                                color: Colors.orange,
+                                textColor: Colors.white,
+                                shape: const StadiumBorder(),
+                                onPressed: (){
+                                  if(_formKey.currentState.validate()){
+                                    _login();
+                                  }
+                                }
+                            ),
+                          ),
+                        ],
                       )
                   ),
-                ),
-                Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'メールアドレス',
+                  Divider(),
+                  FlatButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                              type: PageTransitionType.fade,
+                              child: RegisterPage(),
+                              inheritTheme: true,
+                              ctx: context
+                          ),
+                        );
+                      },
+                      child: Text(
+                          "新規登録はこちら",
                           style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold
+                            color: Colors.black54,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold
                           ),
-                        ),
-                        TextFormField(
-                          decoration: InputDecoration(
-                            hintText: 'exsample@gmail.com',
-                            hintStyle: TextStyle(
-                              color: Colors.black26,
-                              fontSize: 16
-                            )
-                          ),
-                          validator: (inputEmail){
-                            if(inputEmail.isEmpty){
-                              return 'メールアドレスを入力してください';
-                            }
-                            _email = inputEmail;
-                            return null;
-                          },
-                        ),
-                        Container(
-                          margin: EdgeInsets.all(10),
-                        ),
-                        Text(
-                          'パスワード',
-                          style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold
-                          ),
-                        ),
-                        TextFormField(
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            hintText: '8文字以上で入力してください。',
-                            hintStyle: TextStyle(
-                              color: Colors.black26,
-                              fontSize: 16
-                            )
-                          ),
-                          validator: (inputPassword){
-                            if(inputPassword.isEmpty){
-                              return 'パスワードを入力してください';
-                            }
-                            _password = inputPassword;
-                            return null;
-                          },
-                        ),
-                        Container(
-                          child: Text(
-                            errorMessage,
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                        Container(
-                          width: double.infinity,
-                          margin: EdgeInsets.all(12.0),
-                          child: RaisedButton(
-                              padding: EdgeInsets.all(10.0),
-                              child: Text(
-                                  "ログイン",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold
-                                  ),
-                              ),
-                              color: Colors.orange,
-                              textColor: Colors.white,
-                              shape: const StadiumBorder(),
-                              onPressed: (){
-                                if(_formKey.currentState.validate()){
-                                  _login();
-                                }
-                              }
-                          ),
-                        ),
-                      ],
-                    )
-                ),
-                Divider(),
-                FlatButton(
-                    onPressed: (){
-                      Navigator.push(
-                        context,
-                        PageTransition(
-                            type: PageTransitionType.fade,
-                            child: RegisterPage(),
-                            inheritTheme: true,
-                            ctx: context
-                        ),
-                      );
-                    },
-                    child: Text(
-                        "新規登録はこちら",
-                        style: TextStyle(
-                          color: Colors.black54,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold
-                        ),
-                    )
-                )
-              ],
-            ),
-          )
+                      )
+                  )
+                ],
+              ),
+            )
+          ),
         ),
       ),
     );

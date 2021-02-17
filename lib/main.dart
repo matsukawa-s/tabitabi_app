@@ -2,11 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:get_it/get_it.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:tabitabi_app/data/tag_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tabitabi_app/pages/initial_login_check_page.dart';
+import 'package:tabitabi_app/providers/MapPageNavigationService.dart';
+import 'package:tabitabi_app/providers/map_provider.dart';
 import 'package:tabitabi_app/providers/plan_provider.dart';
 import 'model/map.dart';
 import 'model/spot_model.dart';
@@ -20,7 +23,16 @@ import 'makeplan/makeplan_initial_page.dart';
 //ユーザーページの右上ポップアップメニュー
 enum WhyFarther { Logout }
 
+final bottomNavKey = GlobalKey();
+
+GetIt locator = GetIt.instance;
+
+void setupLocator() {
+  locator.registerLazySingleton(() => MapPageNavigationService());
+}
+
 Future main() async{
+  setupLocator();
   await DotEnv().load('.env');
   runApp(
     MultiProvider(
@@ -42,6 +54,9 @@ Future main() async{
         ),
         ChangeNotifierProvider<PlanProvider>(
             create: (context) => PlanProvider()
+        ),
+        ChangeNotifierProvider<MapProvider>(
+            create: (context) => MapProvider()
         )
       ],
       child: MaterialApp(
@@ -74,6 +89,7 @@ class MyHomePage extends StatelessWidget {
         bottomNavigationBar: Consumer<NavigationBarProvider>(
             builder: (_, model, __) {
               return BottomNavigationBar(
+                key: bottomNavKey,
                 type: BottomNavigationBarType.fixed,
                 items: const <BottomNavigationBarItem>[
                   BottomNavigationBarItem(

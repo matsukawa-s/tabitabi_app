@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tabitabi_app/providers/map_provider.dart';
 import '../model/map.dart';
 
 class MapSearchPage extends StatefulWidget {
@@ -17,8 +18,8 @@ class _MapSearchPageState extends State<MapSearchPage> {
   TextEditingController _searchKeywordController = TextEditingController();
   final kGoogleApiKey = DotEnv().env['Google_API_KEY'];
   List<PlacesSearchResult> items = [];
-  var focusNode = new FocusNode(); //検索バーのフォーカス制御用
-  MapViewModel mapModel;
+  var focusNode = FocusNode(); //検索バーのフォーカス制御用
+  MapProvider mapModel;
   var history = {};
   bool isHistoryOrSearch; // true:検索履歴表示,false:検索結果表示
 
@@ -29,8 +30,9 @@ class _MapSearchPageState extends State<MapSearchPage> {
 //    FocusScope.of(context).requestFocus(focusNode);
     isHistoryOrSearch = false;
     //Mapモデル作成し、コントローラーを監視する
-    mapModel = Provider.of<MapViewModel>(context,listen: false);
+    mapModel = Provider.of<MapProvider>(context,listen: false);
     _searchKeywordController = TextEditingController(text: mapModel.getSearchText());
+//  _searchKeywordController = mapModel.searchKeywordController;
   }
 
   Future<bool> getHistory() async{
@@ -63,7 +65,7 @@ class _MapSearchPageState extends State<MapSearchPage> {
                   child: Column(
                     children: [
                       Container(
-                        margin: EdgeInsets.only(top: 16,left: 8,right: 8),
+                        margin: EdgeInsets.only(top: 8,left: 8,right: 8),
                         decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border.all(color: Colors.black),
@@ -75,7 +77,7 @@ class _MapSearchPageState extends State<MapSearchPage> {
                           onSubmitted: (String str) => searchPlaces(''),
                           controller: _searchKeywordController,
                           style: TextStyle(
-                              fontSize: 18
+                              fontSize: 16
                           ),
                           decoration: InputDecoration(
                             prefixIcon: IconButton(
