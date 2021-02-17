@@ -318,6 +318,13 @@ class _TrafficPartState extends State<TrafficPart> {
                                     ),
                                   ),
                                   onTap: (){
+                                    if(hour != "0"){
+                                      time += hour + "時間";
+                                    }
+                                    if(minutes1 != "0"){
+                                      time += minutes1;
+                                    }
+                                    time += minutes2 + "分";
                                     Navigator.of(context, rootNavigator: true).pop(context);
                                   },
                                 )

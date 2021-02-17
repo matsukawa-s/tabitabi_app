@@ -649,7 +649,7 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
       String day = DateFormat('yyyy-MM-dd').format(_travelDateTime[_tabController.index]);
 
       //APIから時間取れなかったとき
-      if(trafficTime == ""){
+      if(trafficTime == "" || trafficTime == "0分"){
         trafficTime = await _showTrafficTimeDialog();
       }
       if(trafficTime == ""){
@@ -834,6 +834,13 @@ class _MakePlanEditState extends State<MakePlanEdit> with TickerProviderStateMix
                                     ),
                                   ),
                                   onTap: (){
+                                    if(hour != "0"){
+                                      time += hour + "時間";
+                                    }
+                                    if(minutes1 != "0"){
+                                      time += minutes1;
+                                    }
+                                    time += minutes2 + "分";
                                     Navigator.of(context, rootNavigator: true).pop(context);
                                   },
                                 )
