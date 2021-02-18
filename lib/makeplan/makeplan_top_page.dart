@@ -985,11 +985,21 @@ class _MakePlanTopState extends State<MakePlanTop> with TickerProviderStateMixin
 
   //お気に入り
   Future<void> _updateFavorite() async{
+    http.Response res;
     var data = {
       'plan_id' : widget.planId,
     };
+    print(data);
     // データベースのお気に入りデータを更新
-    await Network().postData(data, 'plan/favorite/store');
+    if(favoriteFlag){
+      print("favoriteFlag true");
+      res = await Network().postData(data, 'plan/favorite/delete');
+    }else{
+      print("favoriteFlag false");
+      res = await Network().postData(data, 'plan/favorite/store');
+    }
+    print(res.statusCode);
+    print(res.body);
     setState(() {
       favoriteFlag = !favoriteFlag;
     });

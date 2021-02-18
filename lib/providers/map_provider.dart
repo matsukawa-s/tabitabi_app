@@ -122,8 +122,9 @@ class MapProvider extends ChangeNotifier {
     markers.clear();
     markers.add(
         Marker(
-            markerId: MarkerId("NOW LOCATION"),
-            position: LatLng(lat, lng)
+            markerId: MarkerId(place.name ?? "NOW LOCATION"),
+            position: LatLng(lat, lng),
+            infoWindow: InfoWindow(title: place.name ?? "NOW LOCATION")
         )
     );
     print(markers);
@@ -144,7 +145,7 @@ class MapProvider extends ChangeNotifier {
     return place.isFavorite;
   }
 
-  Future<void> addSpot() async{
+  Future addSpot() async{
     var data = place.toJson();
     http.Response res = await Network().postData(data, 'spot/store/if');
 
@@ -162,6 +163,7 @@ class MapProvider extends ChangeNotifier {
           isLike: 0,
         )
     );
+    return returnValue;
   }
 
   //検索結果から選択した一つの地点へ移動する

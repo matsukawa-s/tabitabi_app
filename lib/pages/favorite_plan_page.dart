@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tabitabi_app/components/plan_item.dart';
+import 'package:tabitabi_app/makeplan/makeplan_top_page.dart';
 import 'package:tabitabi_app/model/plan.dart';
 import 'package:tabitabi_app/providers/plan_provider.dart';
 
@@ -32,47 +33,6 @@ class FavoritePlanPage extends StatelessWidget {
             );
           }
 
-//          return ChangeNotifierProvider<PlanProvider>(
-//            create: (_) => PlanProvider(),
-//            child: Container(
-//              padding: EdgeInsets.all(contentsPadding),
-//              child: planProvider.plans.isEmpty
-//                  ? Center(
-//                child: Text("お気に入りにしているプランはありません"),
-//              )
-//                  : GridView.builder(
-//                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-//                      crossAxisCount: 2,
-//                      mainAxisSpacing: 4,
-//                      crossAxisSpacing: 4,
-//                      childAspectRatio: itemWidth / itemHeight
-//                  ),
-//                  itemCount: planProvider.plans.length,
-//                  itemBuilder: (BuildContext context,int index){
-//                    return Stack(
-//                      children: [
-//                        PlanItem(
-//                          plan: planProvider.plans[index],
-//                          width: itemWidth,
-//                          height: itemHeight,
-//                        ),
-//                        Positioned(
-//                            top: 0,
-//                            right: 0,
-//                            child: IconButton(
-//                                iconSize: 28,
-//                                icon: Icon(Icons.favorite,color: Colors.pink[400],),
-//                                onPressed: () => planProvider.deleteFavoritePlan(planProvider.plans[index])
-//                            )
-//                        )
-//                      ],
-//                    );
-////                        return _buildPlanItem(plan.plans[index]);
-//                  }
-//              ),
-//            ),
-//          );
-          print("test");
           return Consumer<PlanProvider>(
             builder: (context, plan, child) => Container(
               padding: EdgeInsets.all(contentsPadding),
@@ -91,10 +51,22 @@ class FavoritePlanPage extends StatelessWidget {
                       itemBuilder: (BuildContext context,int index){
                         return Stack(
                           children: [
-                            PlanItem(
-                              plan: plan.plans[index],
-                              width: itemWidth,
-                              height: itemHeight,
+                            GestureDetector(
+                              onTap: () async{
+                                var result = await Navigator.of(context,rootNavigator: true).push(
+                                    MaterialPageRoute(
+                                        builder: (context) => MakePlanTop(
+                                          planId: plan.plans[index].id,
+                                        )
+                                    )
+                                );
+                                Provider.of<PlanProvider>(context,listen: false).getFavoritePlans();
+                              },
+                              child: PlanItemNotTap(
+                                plan: plan.plans[index],
+                                width: itemWidth,
+                                height: itemHeight,
+                              ),
                             ),
                             Positioned(
                               top: 0,
