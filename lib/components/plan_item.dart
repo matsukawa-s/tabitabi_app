@@ -87,3 +87,76 @@ class PlanItem extends StatelessWidget {
     );
   }
 }
+
+class PlanItemNotTap extends StatelessWidget {
+  final double width;
+  final double height;
+  final Plan plan;
+
+  PlanItemNotTap({
+    this.width,
+    this.height,
+    this.plan
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final double defaultHeight = (size.width) * 2/5 * 4/5;
+    final double defaultWidth = (size.width) * 2/5;
+
+    return Container(
+      width: width ?? defaultWidth,
+      height: height ?? defaultHeight,
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10.0),
+            child: plan.imageUrl == null
+                ? Image.asset(
+              "images/osakajo.jpg",
+              width: width ?? defaultWidth,
+              height: height ?? defaultHeight,
+              fit: BoxFit.fill,
+            )
+                : CachedNetworkImage(
+              imageUrl: plan.imageUrl,
+              progressIndicatorBuilder: (context, url, downloadProgress) =>
+                  Center(child: CircularProgressIndicator(value: downloadProgress.progress)),
+              errorWidget: (context, url, error) => Center(child: Icon(Icons.error)),
+              fit: BoxFit.fill,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            width: width ?? defaultWidth,
+            child: Container(
+              padding: EdgeInsets.only(left: 2.0, bottom: 2.0),
+              height: (height ?? defaultHeight) * 1/5,
+              decoration: BoxDecoration(
+                  color: Colors.black38,
+                  borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(10.0),
+                      bottomRight: Radius.circular(10.0)
+                  )
+              ),
+              alignment: Alignment.centerLeft,
+              child: Text(
+                plan.title,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.left,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}

@@ -28,16 +28,63 @@ class PlanSearchDetailPage extends StatelessWidget {
 //          height: 100,
           child: Consumer<PlanSearchModel>(
             builder: (_,model, __){
-              return Container(
-                child: ListView(
-                  children: [
-                    _listTitle('並び替え'),
-                    _listItem('アップロード', model,context,0),
-                    _listItem('お気に入り数', model,context,1),
-                    _listItem('閲覧数', model,context,2),
-                    _listItem('参考数', model,context,3),
-                  ],
-                ),
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        _listTitle('並び替え'),
+                        _listItem('アップロード', model,context,0),
+                        _listItem('お気に入り数', model,context,1),
+                        _listItem('閲覧数', model,context,2),
+                        _listItem('参考数', model,context,3),
+//                        Divider(),
+//                        Container(
+//                          color: Colors.white,
+//                          padding: EdgeInsets.only(left: 4,right: 4),
+//                          child: Column(
+//                            children: [
+//                              CheckboxListTile(
+//                                  controlAffinity: ListTileControlAffinity.leading,
+//                                  title: Text("日程で絞り込む",style: TextStyle(color: Colors.black),),
+//                                  value: model.filterDayFlag,
+//                                  onChanged: (bool value){
+//                                    model.changeFilterDayFlag();
+//                                  }
+//                              ),
+//                              Row(
+//                                children: [
+//                                  Expanded(
+//                                    child: TextFormField(
+//                                      controller: model.dayController,
+//                                      onChanged: (String value){
+//                                        model.filterDay();
+//                                      },
+//                                      keyboardType: TextInputType.number, // キーボードは数値のみ
+//                                      textAlign: TextAlign.right,
+//                                      decoration: InputDecoration(
+//                                        fillColor: Colors.white,
+//                                        border: InputBorder.none
+//                                      ),
+//                                    ),
+//                                    flex: 5,
+//                                  ),
+//                                  Expanded(
+//                                      child: Padding(
+//                                        padding: const EdgeInsets.all(8.0),
+//                                        child: Text("日程"),
+//                                      ),
+//                                    flex: 1,
+//                                  )
+//                                ],
+//                              ),
+//                            ],
+//                          ),
+//                        )
+                      ],
+                    ),
+                  ),
+                ],
               );
             }
           ),

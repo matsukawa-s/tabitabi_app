@@ -13,6 +13,23 @@ class PlanSearchModel with ChangeNotifier {
   //検索履歴を保存するローカルストレージ
   var prefsKey = 'plan_search_history';
   var searchController = TextEditingController();
+
+  var dayController = TextEditingController();
+  bool filterDayFlag = false;
+
+  changeFilterDayFlag(){
+    filterDayFlag = !filterDayFlag;
+    notifyListeners();
+  }
+
+  void filterDay(){
+    print("filterDay");
+    var a = _plans.where((element){
+      return _getDateTime(element.startDay, element.endDay) == int.parse(dayController.text.toString());
+    });
+    notifyListeners();
+  }
+
   void setSearchControllerText(text){
     searchController.text = text;
     notifyListeners();
@@ -209,5 +226,26 @@ class PlanSearchModel with ChangeNotifier {
     // 空のリストで上書きして検索履歴を削除
     prefs.setStringList(prefsKey, history);
     notifyListeners();
+  }
+
+  int _getDateTime(DateTime startDate, DateTime endDate){
+    print("_getDateTime");
+    List<DateTime> dateList = [];
+
+    //1日だけのとき
+    if(startDate == endDate){
+      dateList.add(startDate);
+      return dateList.length;
+    }
+
+    //2日以上あるとき
+    DateTime date = startDate;
+    DateTime lastDate = DateTime(endDate.year, endDate.month, endDate.day+1);
+    while(date != lastDate){
+      dateList.add(date);
+      date = DateTime(date.year, date.month, date.day+1);
+    }
+    print(dateList.length);
+    return dateList.length;
   }
 }

@@ -143,7 +143,7 @@ class _MapFixPageState extends State<MapFixPage> {
                             height: 20,
                             margin: EdgeInsets.only(bottom: 2.0),
                             child: Text(
-                              "この地域のスポット",
+                              "現在地周辺のスポット",
                               style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black87),
                             )
                         ),
@@ -170,17 +170,11 @@ class _MapFixPageState extends State<MapFixPage> {
                                         onTap: () async {
                                           await model.movePoint(model.places[index].placeId);
                                           FocusScope.of(context).unfocus(); //キーボード閉じる
-                                          navigatorKey.currentState.push(
+                                          final result = await navigatorKey.currentState.push(
                                             MaterialPageRoute(
                                               builder: (context) => MapSpotDerailsPage(),
                                             ),
                                           );
-
-//                                          Navigator.of(context).push(
-//                                            MaterialPageRoute(
-//                                              builder: (context) => MapSpotDerailsPage(),
-//                                            ),
-//                                          );
                                         },
                                         child: Column(
                                           children: [

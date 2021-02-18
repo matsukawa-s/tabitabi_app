@@ -124,12 +124,12 @@ class _MapSpotDerailsPageState extends State<MapSpotDerailsPage> {
                           child: GestureDetector(
                             child: Icon(
                               Icons.add_circle_sharp,
-                              size: 45.0 ,
+                              size: 36,
                               color: Theme.of(context).primaryColor,
                             ),
                             onTap: (){
-                              _mapProvider.addSpot();
-//                              Navigator.of(context).pop(returnValue);
+                              final item = _mapProvider.addSpot();
+                              Navigator.of(context,rootNavigator: true).pop(item);
                             },
                           ),
                         )
